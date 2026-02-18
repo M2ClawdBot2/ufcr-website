@@ -163,30 +163,33 @@ function closeLightbox() {
 
 // ========== COUNTER ANIMATION ==========
 document.querySelectorAll('.stat-number').forEach(counter => {
-  const target = parseInt(counter.dataset.target);
-  ScrollTrigger.create({
-    trigger: counter,
-    start: 'top 80%',
-    once: true,
-    onEnter: () => {
-      const obj = { val: 0 };
-      gsap.to(obj, {
-        val: target,
-        duration: 2.5,
-        ease: 'power2.out',
-        onUpdate: () => {
-          const val = Math.floor(obj.val);
-          if (val >= 1000000) {
-            counter.textContent = (val / 1000000).toFixed(val % 1000000 === 0 ? 0 : 1) + 'M+';
-          } else if (val >= 1000) {
-            counter.textContent = Math.floor(val / 1000) + 'K+';
-          } else {
-            counter.textContent = val.toLocaleString();
-          }
+  const target = parseInt(counter.getAttribute('data-target'));
+  if (!target) return;
+  
+  gsap.fromTo(counter, 
+    { innerText: 0 },
+    {
+      innerText: target,
+      duration: 3,
+      ease: 'power2.out',
+      snap: { innerText: 1 },
+      scrollTrigger: {
+        trigger: counter,
+        start: 'top 85%',
+        once: true
+      },
+      onUpdate: function() {
+        const val = Math.floor(this.targets()[0].innerText || 0);
+        if (val >= 1000000) {
+          counter.textContent = (val / 1000000).toFixed(1).replace('.0', '') + 'M+';
+        } else if (val >= 100000) {
+          counter.textContent = Math.floor(val / 1000) + 'K+';
+        } else {
+          counter.textContent = val.toLocaleString();
         }
-      });
+      }
     }
-  });
+  );
 });
 
 // ========== SMOOTH SCROLL ==========
