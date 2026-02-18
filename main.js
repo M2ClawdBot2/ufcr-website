@@ -161,6 +161,34 @@ function closeLightbox() {
   document.body.style.overflow = '';
 }
 
+// ========== COUNTER ANIMATION ==========
+document.querySelectorAll('.stat-number').forEach(counter => {
+  const target = parseInt(counter.dataset.target);
+  ScrollTrigger.create({
+    trigger: counter,
+    start: 'top 80%',
+    once: true,
+    onEnter: () => {
+      const obj = { val: 0 };
+      gsap.to(obj, {
+        val: target,
+        duration: 2.5,
+        ease: 'power2.out',
+        onUpdate: () => {
+          const val = Math.floor(obj.val);
+          if (val >= 1000000) {
+            counter.textContent = (val / 1000000).toFixed(val % 1000000 === 0 ? 0 : 1) + 'M+';
+          } else if (val >= 1000) {
+            counter.textContent = Math.floor(val / 1000) + 'K+';
+          } else {
+            counter.textContent = val.toLocaleString();
+          }
+        }
+      });
+    }
+  });
+});
+
 // ========== SMOOTH SCROLL ==========
 document.querySelectorAll('a[href^="#"]').forEach(anchor => {
   anchor.addEventListener('click', function(e) {
