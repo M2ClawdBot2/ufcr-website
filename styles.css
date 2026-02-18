@@ -599,6 +599,121 @@ a { text-decoration: none; color: inherit; }
   margin-top: 8px;
 }
 
+/* Progress bar */
+.progress-track {
+  position: relative;
+  width: 100%;
+  max-width: 700px;
+  height: 40px;
+  margin: 32px auto 0;
+  background: rgba(255,255,255,0.06);
+  border: 2px solid rgba(255,255,255,0.1);
+  border-radius: 20px;
+  overflow: visible;
+}
+
+.progress-fill {
+  position: absolute;
+  top: 0; left: 0; bottom: 0;
+  width: 0%;
+  background: linear-gradient(90deg, var(--blue), var(--orange), #FF2D2D);
+  border-radius: 18px;
+  transition: none;
+  box-shadow: 0 0 0px rgba(250,70,22,0);
+}
+
+.progress-glow {
+  position: absolute;
+  top: -4px; bottom: -4px; left: 0;
+  width: 0%;
+  border-radius: 22px;
+  background: transparent;
+  pointer-events: none;
+  transition: none;
+}
+
+/* Cracks that appear near the end */
+.progress-crack {
+  position: absolute;
+  background: var(--orange);
+  opacity: 0;
+  z-index: 5;
+}
+.crack-1 {
+  right: 8px; top: -6px;
+  width: 3px; height: 14px;
+  transform: rotate(25deg);
+}
+.crack-2 {
+  right: 20px; bottom: -8px;
+  width: 2px; height: 16px;
+  transform: rotate(-15deg);
+}
+.crack-3 {
+  right: 2px; top: 50%;
+  width: 18px; height: 3px;
+  transform: translateY(-50%) rotate(5deg);
+}
+
+/* Shards that fly out on break */
+.progress-shards {
+  position: absolute;
+  right: -10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 40px;
+  height: 60px;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.shard {
+  position: absolute;
+  background: var(--orange);
+  border-radius: 2px;
+  opacity: 0;
+}
+.shard-1 { width: 8px; height: 4px; top: 10px; left: 5px; }
+.shard-2 { width: 6px; height: 6px; top: 20px; left: 10px; }
+.shard-3 { width: 10px; height: 3px; top: 30px; left: 0; }
+.shard-4 { width: 5px; height: 8px; top: 15px; left: 15px; }
+.shard-5 { width: 7px; height: 5px; top: 40px; left: 8px; background: #FF2D2D; }
+.shard-6 { width: 4px; height: 7px; top: 5px; left: 20px; background: var(--gold); }
+.shard-7 { width: 9px; height: 3px; top: 45px; left: 15px; background: #FF2D2D; }
+.shard-8 { width: 5px; height: 5px; top: 25px; left: 25px; background: var(--gold); }
+
+/* Explosion flash */
+.progress-explosion {
+  position: absolute;
+  right: -20px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(250,70,22,0.6) 0%, transparent 70%);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 8;
+}
+
+/* Broken state */
+.progress-track.broken {
+  border-color: var(--orange);
+  animation: trackShake 0.5s ease-out;
+}
+.progress-track.broken .progress-fill {
+  box-shadow: 0 0 30px rgba(250,70,22,0.6), 0 0 60px rgba(255,45,45,0.3);
+}
+
+@keyframes trackShake {
+  0%, 100% { transform: translateX(0); }
+  10% { transform: translateX(-4px) rotate(-0.5deg); }
+  30% { transform: translateX(3px) rotate(0.3deg); }
+  50% { transform: translateX(-2px); }
+  70% { transform: translateX(1px); }
+}
+
 .featured-desc {
   text-align: center;
   font-size: 1.15rem;

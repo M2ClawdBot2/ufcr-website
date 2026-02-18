@@ -161,36 +161,110 @@ function closeLightbox() {
   document.body.style.overflow = '';
 }
 
-// ========== COUNTER ANIMATION ==========
-document.querySelectorAll('.stat-number').forEach(counter => {
-  const target = parseInt(counter.getAttribute('data-target'));
-  if (!target) return;
-  
-  gsap.fromTo(counter, 
-    { innerText: 0 },
-    {
-      innerText: target,
-      duration: 3,
-      ease: 'power2.out',
-      snap: { innerText: 1 },
-      scrollTrigger: {
-        trigger: counter,
-        start: 'top 85%',
-        once: true
-      },
-      onUpdate: function() {
-        const val = Math.floor(this.targets()[0].innerText || 0);
-        if (val >= 1000000) {
-          counter.textContent = (val / 1000000).toFixed(1).replace('.0', '') + 'M+';
-        } else if (val >= 100000) {
-          counter.textContent = Math.floor(val / 1000) + 'K+';
-        } else {
-          counter.textContent = val.toLocaleString();
-        }
+// ========== COUNTER + PROGRESS BAR (SCROLL-LINKED) ==========
+const statNumber = document.querySelector('.stat-number');
+const progressFill = document.querySelector('.progress-fill');
+const progressGlow = document.querySelector('.progress-glow');
+const progressTrack = document.querySelector('.progress-track');
+
+if (statNumber && progressFill && progressTrack) {
+  const target = parseInt(statNumber.getAttribute('data-target')) || 10000000;
+  let hasBroken = false;
+
+  // Scroll-linked timeline
+  const counterTL = gsap.timeline({
+    scrollTrigger: {
+      trigger: '#featured',
+      start: 'top 70%',
+      end: 'bottom 30%',
+      scrub: 0.3,  // directly tied to scroll speed
+    }
+  });
+
+  // Animate progress bar fill from 0 to 105% (overflows!)
+  counterTL.to(progressFill, {
+    width: '105%',
+    duration: 1,
+    ease: 'none',
+  }, 0);
+
+  // Glow intensifies
+  counterTL.to(progressGlow, {
+    width: '105%',
+    boxShadow: '0 0 40px rgba(250,70,22,0.5), 0 0 80px rgba(255,45,45,0.3)',
+    duration: 1,
+    ease: 'none',
+  }, 0);
+
+  // Counter number
+  const counterObj = { val: 0 };
+  counterTL.to(counterObj, {
+    val: target,
+    duration: 1,
+    ease: 'none',
+    onUpdate: () => {
+      const val = Math.floor(counterObj.val);
+      if (val >= 1000000) {
+        statNumber.textContent = (val / 1000000).toFixed(1).replace('.0', '') + 'M+';
+      } else if (val >= 100000) {
+        statNumber.textContent = Math.floor(val / 1000).toLocaleString() + 'K+';
+      } else if (val >= 1000) {
+        statNumber.textContent = Math.floor(val / 1000) + 'K+';
+      } else {
+        statNumber.textContent = val.toLocaleString();
+      }
+
+      // Break effect at 90%+
+      const pct = val / target;
+      if (pct > 0.85 && !hasBroken) {
+        hasBroken = true;
+        progressTrack.classList.add('broken');
+        
+        // Cracks appear
+        gsap.to('.progress-crack', {
+          opacity: 1,
+          duration: 0.2,
+          stagger: 0.05,
+        });
+
+        // Explosion flash
+        gsap.to('.progress-explosion', {
+          opacity: 1,
+          scale: 1.5,
+          duration: 0.3,
+          ease: 'power2.out',
+          onComplete: () => {
+            gsap.to('.progress-explosion', { opacity: 0, duration: 0.5 });
+          }
+        });
+
+        // Shards fly out
+        document.querySelectorAll('.shard').forEach((shard, i) => {
+          gsap.to(shard, {
+            opacity: 1,
+            x: 30 + Math.random() * 80,
+            y: (Math.random() - 0.5) * 120,
+            rotation: Math.random() * 360,
+            scale: 0,
+            duration: 0.8 + Math.random() * 0.4,
+            ease: 'power2.out',
+            delay: i * 0.03,
+          });
+        });
+      }
+
+      // Reset break if scrolling back up
+      if (pct < 0.8 && hasBroken) {
+        hasBroken = false;
+        progressTrack.classList.remove('broken');
+        gsap.to('.progress-crack', { opacity: 0, duration: 0.2 });
+        document.querySelectorAll('.shard').forEach(shard => {
+          gsap.set(shard, { opacity: 0, x: 0, y: 0, rotation: 0, scale: 1 });
+        });
       }
     }
-  );
-});
+  }, 0);
+}
 
 // ========== SMOOTH SCROLL ==========
 document.querySelectorAll('a[href^="#"]').forEach(anchor => {
