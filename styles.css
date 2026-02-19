@@ -545,77 +545,16 @@ a { text-decoration: none; color: inherit; }
   display: flex;
   align-items: center;
   justify-content: center;
-  background:
-    repeating-linear-gradient(
-      0deg,
-      transparent,
-      transparent 30px,
-      rgba(0,0,0,0.015) 30px,
-      rgba(0,0,0,0.015) 31px
-    ),
-    repeating-linear-gradient(
-      90deg,
-      transparent,
-      transparent 30px,
-      rgba(0,0,0,0.01) 30px,
-      rgba(0,0,0,0.01) 31px
-    ),
-    radial-gradient(ellipse at 15% 50%, rgba(160,140,100,0.2) 0%, transparent 50%),
-    radial-gradient(ellipse at 85% 25%, rgba(150,130,90,0.18) 0%, transparent 45%),
-    radial-gradient(ellipse at 50% 85%, rgba(170,150,110,0.15) 0%, transparent 40%),
-    radial-gradient(ellipse at 35% 15%, rgba(0,0,0,0.06) 0%, transparent 35%),
-    radial-gradient(ellipse at 75% 75%, rgba(0,0,0,0.05) 0%, transparent 35%),
-    radial-gradient(ellipse at 60% 40%, rgba(0,0,0,0.04) 0%, transparent 30%),
-    radial-gradient(circle at 25% 70%, rgba(180,160,110,0.12) 0%, transparent 25%),
-    radial-gradient(circle at 80% 55%, rgba(0,0,0,0.03) 0%, transparent 20%),
-    linear-gradient(135deg, #efe8d8 0%, #e5dcc8 20%, #ece4d0 40%, #ddd4be 60%, #e8e0cc 80%, #f0e8d6 100%) !important;
+  background: url('assets/images/crumpled-paper.jpg') center center / cover no-repeat !important;
   color: var(--gray-900) !important;
 }
 
-/* Paper crumple overlay — heavy creases */
-.blog-section::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background:
-    /* Major diagonal creases */
-    linear-gradient(125deg, transparent 30%, rgba(0,0,0,0.08) 31%, rgba(0,0,0,0.04) 32%, transparent 33%),
-    linear-gradient(125deg, transparent 55%, rgba(0,0,0,0.06) 56%, rgba(0,0,0,0.03) 57%, transparent 58%),
-    linear-gradient(235deg, transparent 25%, rgba(0,0,0,0.07) 26%, rgba(0,0,0,0.03) 27%, transparent 28%),
-    linear-gradient(235deg, transparent 60%, rgba(0,0,0,0.05) 61%, rgba(0,0,0,0.02) 62%, transparent 63%),
-    /* Highlight ridges (light catching folds) */
-    linear-gradient(125deg, transparent 32%, rgba(255,255,255,0.12) 33%, transparent 34%),
-    linear-gradient(235deg, transparent 27%, rgba(255,255,255,0.1) 28%, transparent 29%),
-    linear-gradient(235deg, transparent 62%, rgba(255,255,255,0.08) 63%, transparent 64%),
-    /* Cross creases */
-    linear-gradient(45deg, transparent 40%, rgba(0,0,0,0.05) 41%, rgba(0,0,0,0.02) 42%, transparent 43%),
-    linear-gradient(45deg, transparent 70%, rgba(0,0,0,0.04) 71%, transparent 72%),
-    linear-gradient(310deg, transparent 35%, rgba(0,0,0,0.06) 36%, rgba(0,0,0,0.02) 37%, transparent 38%),
-    linear-gradient(310deg, transparent 65%, rgba(0,0,0,0.04) 66%, transparent 67%),
-    /* Cross highlights */
-    linear-gradient(45deg, transparent 42%, rgba(255,255,255,0.09) 43%, transparent 44%),
-    linear-gradient(310deg, transparent 37%, rgba(255,255,255,0.07) 38%, transparent 39%),
-    /* Horizontal wrinkles */
-    linear-gradient(180deg, transparent 20%, rgba(0,0,0,0.03) 21%, transparent 22%),
-    linear-gradient(180deg, transparent 45%, rgba(0,0,0,0.04) 46%, rgba(255,255,255,0.05) 47%, transparent 48%),
-    linear-gradient(180deg, transparent 75%, rgba(0,0,0,0.03) 76%, transparent 77%),
-    /* Vertical wrinkles */
-    linear-gradient(90deg, transparent 15%, rgba(0,0,0,0.03) 16%, transparent 17%),
-    linear-gradient(90deg, transparent 50%, rgba(0,0,0,0.02) 51%, rgba(255,255,255,0.04) 52%, transparent 53%),
-    linear-gradient(90deg, transparent 80%, rgba(0,0,0,0.03) 81%, transparent 82%);
-  pointer-events: none;
-  z-index: 1;
-}
-
-/* Paper edge shadow + worn edges */
+/* Paper edge vignette */
 .blog-section::after {
   content: '';
   position: absolute;
   inset: 0;
-  box-shadow: 
-    inset 0 0 100px rgba(0,0,0,0.12),
-    inset 0 0 40px rgba(0,0,0,0.06),
-    inset 0 0 10px rgba(0,0,0,0.04);
+  box-shadow: inset 0 0 80px rgba(0,0,0,0.1);
   pointer-events: none;
   z-index: 1;
 }

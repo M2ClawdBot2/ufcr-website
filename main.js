@@ -67,7 +67,7 @@ if (eagleImg) {
   gsap.to(eagleImg, {
     x: () => window.innerWidth + 600,
     y: -20,
-    rotation: 0.5,
+    rotation: 0,
     ease: 'power1.inOut',
     scrollTrigger: {
       trigger: '.eagle-transition',
@@ -77,9 +77,9 @@ if (eagleImg) {
     }
   });
 
-  // Subtle wing bob
+  // Subtle wing bob (y only, no rotation)
   gsap.to(eagleImg, {
-    y: '-=12',
+    marginTop: '-12px',
     yoyo: true,
     repeat: -1,
     duration: 0.6,
