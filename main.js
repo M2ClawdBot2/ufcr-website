@@ -62,27 +62,27 @@ gsap.to('.hero-bg', {
 });
 
 // ========== EAGLE FLY-ACROSS ==========
-const eagleSvg = document.querySelector('.eagle-svg');
-if (eagleSvg) {
-  gsap.to(eagleSvg, {
-    x: () => window.innerWidth + 400,
-    y: -40,
-    rotation: 5,
-    ease: 'none',
+const eagleImg = document.querySelector('.eagle-img');
+if (eagleImg) {
+  gsap.to(eagleImg, {
+    x: () => window.innerWidth + 500,
+    y: -30,
+    rotation: 3,
+    ease: 'power1.inOut',
     scrollTrigger: {
       trigger: '.eagle-transition',
-      start: 'top 80%',
-      end: 'top 20%',
+      start: 'top 85%',
+      end: 'top 15%',
       scrub: 0.3,
     }
   });
 
   // Subtle wing bob
-  gsap.to(eagleSvg, {
-    y: '-=15',
+  gsap.to(eagleImg, {
+    y: '-=12',
     yoyo: true,
     repeat: -1,
-    duration: 0.8,
+    duration: 0.6,
     ease: 'sine.inOut',
   });
 }
