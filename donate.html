@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Donate — UFCR</title>
+  <meta name="description" content="Support the University of Florida College Republicans. Every dollar funds free speech on campus.">
+  <link rel="icon" href="assets/images/shield-logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    :root {
+      --blue: #0021A5;
+      --orange: #FA4616;
+      --gold: #F0A830;
+      --white: #FFFFFF;
+      --navy: #001845;
+      --dark: #0A0E1A;
+      --gray-100: #F5F5F7;
+      --gray-200: #E8E8ED;
+      --gray-600: #86868B;
+      --gray-900: #1D1D1F;
+      --font-body: 'Inter', -apple-system, sans-serif;
+      --font-heading: 'Oswald', 'Inter', sans-serif;
+      --ease: cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; font-size: 16px; }
+    body {
+      font-family: var(--font-body);
+      color: var(--white);
+      background: var(--dark);
+      overflow-x: hidden;
+      min-height: 100vh;
+    }
+    a { text-decoration: none; color: inherit; }
+    img { max-width: 100%; display: block; }
+
+    /* ========== BACKGROUND ========== */
+    .page-bg {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      background: 
+        radial-gradient(ellipse at 20% 0%, rgba(0,33,165,0.15) 0%, transparent 60%),
+        radial-gradient(ellipse at 80% 100%, rgba(250,70,22,0.08) 0%, transparent 50%),
+        var(--dark);
+    }
+
+    /* Animated grid lines */
+    .grid-bg {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      background-image: 
+        linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+      background-size: 60px 60px;
+      mask-image: radial-gradient(ellipse at center, black 30%, transparent 80%);
+      -webkit-mask-image: radial-gradient(ellipse at center, black 30%, transparent 80%);
+    }
+
+    /* Floating particles */
+    .particles {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+    .particle {
+      position: absolute;
+      width: 4px;
+      height: 4px;
+      background: var(--orange);
+      border-radius: 50%;
+      opacity: 0;
+      animation: floatUp linear infinite;
+    }
+    .particle:nth-child(odd) { background: var(--gold); }
+    .particle:nth-child(3n) { background: var(--blue); width: 3px; height: 3px; }
+
+    @keyframes floatUp {
+      0% { opacity: 0; transform: translateY(100vh) scale(0); }
+      10% { opacity: 0.6; }
+      90% { opacity: 0.6; }
+      100% { opacity: 0; transform: translateY(-10vh) scale(1); }
+    }
+
+    /* ========== NAV ========== */
+    .nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      height: 80px;
+      background: rgba(10,14,26,0.8);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .nav-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .nav-logo img {
+      width: auto;
+      height: 44px;
+      border-radius: 6px;
+      background: white;
+      padding: 2px;
+    }
+    .nav-logo span {
+      font-family: var(--font-heading);
+      font-size: 1.4rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+    }
+    .nav-back {
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      transition: color 0.3s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .nav-back:hover { color: var(--white); }
+    .nav-back i { font-size: 0.7rem; }
+
+    /* ========== MAIN CONTENT ========== */
+    .content {
+      position: relative;
+      z-index: 1;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 120px 24px 80px;
+    }
+
+    /* ========== HERO TEXT ========== */
+    .donate-hero {
+      text-align: center;
+      margin-bottom: 60px;
+      max-width: 700px;
+    }
+
+    .donate-label {
+      font-family: var(--font-heading);
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 16px;
+      opacity: 0;
+      transform: translateY(20px);
+    }
+
+    .donate-title {
+      font-family: var(--font-heading);
+      font-size: clamp(2.5rem, 6vw, 4.5rem);
+      font-weight: 700;
+      line-height: 1.05;
+      letter-spacing: 0.02em;
+      margin-bottom: 20px;
+      opacity: 0;
+      transform: translateY(30px);
+    }
+
+    .donate-title .highlight {
+      background: linear-gradient(135deg, var(--orange), var(--gold));
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .donate-desc {
+      font-size: 1.15rem;
+      line-height: 1.7;
+      color: rgba(255,255,255,0.55);
+      opacity: 0;
+      transform: translateY(20px);
+    }
+
+    /* ========== AMOUNT SELECTOR ========== */
+    .donate-card {
+      width: 100%;
+      max-width: 640px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 20px;
+      padding: 48px 40px;
+      backdrop-filter: blur(20px);
+      position: relative;
+      overflow: hidden;
+      opacity: 0;
+      transform: translateY(40px) scale(0.97);
+    }
+
+    /* Glow border effect */
+    .donate-card::before {
+      content: '';
+      position: absolute;
+      inset: -1px;
+      border-radius: 21px;
+      padding: 1px;
+      background: linear-gradient(135deg, rgba(250,70,22,0.3), transparent 40%, transparent 60%, rgba(240,168,48,0.3));
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      pointer-events: none;
+    }
+
+    /* Corner accents */
+    .donate-card::after {
+      content: '';
+      position: absolute;
+      top: 0; right: 0;
+      width: 200px;
+      height: 200px;
+      background: radial-gradient(circle at top right, rgba(250,70,22,0.06), transparent 70%);
+      pointer-events: none;
+    }
+
+    .card-section-label {
+      font-family: var(--font-heading);
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.35);
+      margin-bottom: 20px;
+    }
+
+    /* Amount grid */
+    .amount-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .amount-btn {
+      position: relative;
+      background: rgba(255,255,255,0.04);
+      border: 2px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
+      padding: 20px 16px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.35s var(--ease);
+      overflow: hidden;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .amount-btn::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, var(--orange), #FF6B3D);
+      opacity: 0;
+      transition: opacity 0.35s var(--ease);
+      border-radius: 10px;
+    }
+
+    .amount-btn:hover {
+      border-color: rgba(250,70,22,0.4);
+      transform: translateY(-3px);
+      box-shadow: 0 8px 30px rgba(250,70,22,0.15);
+    }
+
+    .amount-btn.selected {
+      border-color: var(--orange);
+      transform: translateY(-3px);
+      box-shadow: 0 8px 30px rgba(250,70,22,0.25);
+    }
+    .amount-btn.selected::before { opacity: 1; }
+    .amount-btn.selected .amount-value { color: var(--white); }
+    .amount-btn.selected .amount-sub { color: rgba(255,255,255,0.8); }
+
+    .amount-value {
+      position: relative;
+      z-index: 1;
+      font-family: var(--font-heading);
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: var(--white);
+      letter-spacing: -0.01em;
+      transition: color 0.3s;
+    }
+
+    .amount-sub {
+      position: relative;
+      z-index: 1;
+      font-size: 0.7rem;
+      color: rgba(255,255,255,0.35);
+      margin-top: 4px;
+      letter-spacing: 0.05em;
+      transition: color 0.3s;
+    }
+
+    /* Ripple effect */
+    .ripple {
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(250,70,22,0.3);
+      transform: scale(0);
+      animation: rippleAnim 0.6s ease-out;
+      pointer-events: none;
+      z-index: 0;
+    }
+    @keyframes rippleAnim {
+      to { transform: scale(4); opacity: 0; }
+    }
+
+    /* Custom amount */
+    .custom-amount-row {
+      margin-bottom: 32px;
+    }
+
+    .custom-input-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .custom-input-wrapper .dollar-sign {
+      position: absolute;
+      left: 20px;
+      font-family: var(--font-heading);
+      font-size: 1.3rem;
+      font-weight: 600;
+      color: rgba(255,255,255,0.25);
+      pointer-events: none;
+      transition: color 0.3s;
+      z-index: 1;
+    }
+
+    .custom-input {
+      width: 100%;
+      background: rgba(255,255,255,0.04);
+      border: 2px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
+      padding: 18px 20px 18px 40px;
+      font-family: var(--font-heading);
+      font-size: 1.3rem;
+      font-weight: 600;
+      color: var(--white);
+      outline: none;
+      transition: all 0.3s var(--ease);
+      letter-spacing: 0.02em;
+    }
+    .custom-input::placeholder {
+      color: rgba(255,255,255,0.2);
+      font-weight: 500;
+    }
+    .custom-input:focus {
+      border-color: var(--orange);
+      box-shadow: 0 0 0 4px rgba(250,70,22,0.1);
+    }
+    .custom-input:focus ~ .dollar-sign,
+    .custom-input.has-value ~ .dollar-sign {
+      color: var(--orange);
+    }
+
+    /* Divider */
+    .divider {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);
+      margin: 32px 0;
+    }
+
+    /* Donate button */
+    .donate-btn {
+      width: 100%;
+      padding: 22px 40px;
+      background: linear-gradient(135deg, var(--orange), #FF6B3D);
+      border: none;
+      border-radius: 14px;
+      font-family: var(--font-heading);
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--white);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.4s var(--ease);
+    }
+
+    .donate-btn::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, #FF6B3D, var(--gold));
+      opacity: 0;
+      transition: opacity 0.4s;
+    }
+
+    .donate-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 40px rgba(250,70,22,0.4);
+    }
+    .donate-btn:hover::before { opacity: 1; }
+
+    .donate-btn:active {
+      transform: translateY(-1px) scale(0.98);
+    }
+
+    .donate-btn-text {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+    }
+
+    .donate-btn-text .arrow {
+      display: inline-block;
+      transition: transform 0.3s var(--ease);
+    }
+    .donate-btn:hover .arrow { transform: translateX(4px); }
+
+    /* Pulse ring on button */
+    .donate-btn .pulse-ring {
+      position: absolute;
+      inset: -4px;
+      border-radius: 18px;
+      border: 2px solid var(--orange);
+      opacity: 0;
+      animation: pulseRing 2s ease-out infinite;
+    }
+    @keyframes pulseRing {
+      0% { opacity: 0.5; transform: scale(1); }
+      100% { opacity: 0; transform: scale(1.05); }
+    }
+
+    /* ========== TRUST BADGES ========== */
+    .trust-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 24px;
+      margin-top: 24px;
+      flex-wrap: wrap;
+    }
+
+    .trust-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.78rem;
+      color: rgba(255,255,255,0.3);
+      letter-spacing: 0.04em;
+    }
+    .trust-badge i {
+      font-size: 0.85rem;
+      color: rgba(255,255,255,0.2);
+    }
+
+    /* ========== IMPACT SECTION ========== */
+    .impact-section {
+      width: 100%;
+      max-width: 640px;
+      margin-top: 60px;
+      opacity: 0;
+      transform: translateY(30px);
+    }
+
+    .impact-label {
+      font-family: var(--font-heading);
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 24px;
+      text-align: center;
+    }
+
+    .impact-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+
+    .impact-card {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 14px;
+      padding: 28px 20px;
+      text-align: center;
+      transition: all 0.4s var(--ease);
+    }
+    .impact-card:hover {
+      border-color: rgba(240,168,48,0.2);
+      transform: translateY(-4px);
+    }
+
+    .impact-icon {
+      font-size: 1.8rem;
+      margin-bottom: 12px;
+    }
+
+    .impact-card h4 {
+      font-family: var(--font-heading);
+      font-size: 0.95rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      margin-bottom: 6px;
+    }
+
+    .impact-card p {
+      font-size: 0.8rem;
+      color: rgba(255,255,255,0.4);
+      line-height: 1.5;
+    }
+
+    /* ========== FOOTER ========== */
+    .mini-footer {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      padding: 40px 24px;
+      border-top: 1px solid rgba(255,255,255,0.05);
+      margin-top: 80px;
+    }
+    .mini-footer p {
+      font-size: 0.8rem;
+      color: rgba(255,255,255,0.2);
+    }
+    .mini-footer a {
+      color: rgba(255,255,255,0.35);
+      transition: color 0.3s;
+    }
+    .mini-footer a:hover { color: var(--white); }
+
+    /* ========== RESPONSIVE ========== */
+    @media (max-width: 640px) {
+      .content { padding: 100px 16px 60px; }
+      .donate-card { padding: 32px 24px; border-radius: 16px; }
+      .amount-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+      .amount-btn { padding: 16px 12px; }
+      .amount-value { font-size: 1.35rem; }
+      .impact-grid { grid-template-columns: 1fr; }
+      .trust-row { flex-direction: column; gap: 12px; }
+    }
+
+    /* ========== ENTRANCE ANIMATIONS ========== */
+    .animate-in {
+      transition: opacity 0.8s var(--ease), transform 0.8s var(--ease);
+    }
+    .animate-in.visible {
+      opacity: 1 !important;
+      transform: none !important;
+    }
+
+    /* Stagger children */
+    .amount-btn {
+      opacity: 0;
+      transform: translateY(20px) scale(0.9);
+    }
+    .amount-btn.visible {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+
+    /* Selection glow effect */
+    @keyframes selectGlow {
+      0% { box-shadow: 0 0 0 rgba(250,70,22,0); }
+      50% { box-shadow: 0 0 40px rgba(250,70,22,0.3); }
+      100% { box-shadow: 0 8px 30px rgba(250,70,22,0.25); }
+    }
+    .amount-btn.just-selected {
+      animation: selectGlow 0.5s var(--ease);
+    }
+
+    /* Number counter animation */
+    @keyframes countPulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.08); }
+      100% { transform: scale(1); }
+    }
+    .donate-btn-text.updating {
+      animation: countPulse 0.3s var(--ease);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Background -->
+  <div class="page-bg"></div>
+  <div class="grid-bg"></div>
+  <div class="particles" id="particles"></div>
+
+  <!-- Nav -->
+  <nav class="nav">
+    <div class="nav-inner">
+      <a href="index.html" class="nav-logo">
+        <img src="assets/images/shield-logo.png" alt="UFCR Logo">
+        <span>UFCR</span>
+      </a>
+      <a href="index.html" class="nav-back"><i class="fas fa-arrow-left"></i> Back to Site</a>
+    </div>
+  </nav>
+
+  <!-- Main -->
+  <div class="content">
+
+    <!-- Hero Text -->
+    <div class="donate-hero">
+      <p class="donate-label animate-in">Support Free Speech</p>
+      <h1 class="donate-title animate-in">Fund the <span class="highlight">Movement</span></h1>
+      <p class="donate-desc animate-in">Every dollar goes directly to events, speakers, and defending free speech on campus. No corporate sponsors. Just patriots.</p>
+    </div>
+
+    <!-- Donation Card -->
+    <div class="donate-card animate-in">
+      <p class="card-section-label">Choose an Amount</p>
+
+      <div class="amount-grid">
+        <div class="amount-btn" data-amount="10">
+          <div class="amount-value">$10</div>
+          <div class="amount-sub">Starter</div>
+        </div>
+        <div class="amount-btn" data-amount="25">
+          <div class="amount-value">$25</div>
+          <div class="amount-sub">Supporter</div>
+        </div>
+        <div class="amount-btn selected" data-amount="50">
+          <div class="amount-value">$50</div>
+          <div class="amount-sub">Most Popular</div>
+        </div>
+        <div class="amount-btn" data-amount="100">
+          <div class="amount-value">$100</div>
+          <div class="amount-sub">Champion</div>
+        </div>
+        <div class="amount-btn" data-amount="500">
+          <div class="amount-value">$500</div>
+          <div class="amount-sub">Patriot</div>
+        </div>
+        <div class="amount-btn" data-amount="1000">
+          <div class="amount-value">$1,000</div>
+          <div class="amount-sub">Founding Donor</div>
+        </div>
+      </div>
+
+      <div class="custom-amount-row">
+        <div class="custom-input-wrapper">
+          <input type="text" class="custom-input" id="customAmount" placeholder="Custom Amount" inputmode="numeric">
+          <span class="dollar-sign">$</span>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <button class="donate-btn" id="donateBtn">
+        <span class="pulse-ring"></span>
+        <span class="donate-btn-text" id="donateBtnText">
+          Donate $50 <span class="arrow">→</span>
+        </span>
+      </button>
+
+      <div class="trust-row">
+        <div class="trust-badge"><i class="fas fa-lock"></i> Secure Payment</div>
+        <div class="trust-badge"><i class="fas fa-shield-halved"></i> Stripe Protected</div>
+        <div class="trust-badge"><i class="fas fa-heart"></i> Tax Info Provided</div>
+      </div>
+    </div>
+
+    <!-- Impact -->
+    <div class="impact-section animate-in">
+      <p class="impact-label">Where Your Money Goes</p>
+      <div class="impact-grid">
+        <div class="impact-card">
+          <div class="impact-icon">🎤</div>
+          <h4>Speaker Events</h4>
+          <p>Bringing bold voices to campus</p>
+        </div>
+        <div class="impact-card">
+          <div class="impact-icon">📢</div>
+          <h4>Campus Outreach</h4>
+          <p>Tabling, flyers, and real engagement</p>
+        </div>
+        <div class="impact-card">
+          <div class="impact-icon">🛡️</div>
+          <h4>Free Speech Defense</h4>
+          <p>Standing up when others won't</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Footer -->
+  <div class="mini-footer">
+    <p>&copy; 2026 University of Florida College Republicans · <a href="index.html">ufcr.online</a></p>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script>
+    // ========== PARTICLES ==========
+    const particlesEl = document.getElementById('particles');
+    for (let i = 0; i < 30; i++) {
+      const p = document.createElement('div');
+      p.className = 'particle';
+      p.style.left = Math.random() * 100 + '%';
+      p.style.animationDuration = (8 + Math.random() * 12) + 's';
+      p.style.animationDelay = (Math.random() * 10) + 's';
+      particlesEl.appendChild(p);
+    }
+
+    // ========== ENTRANCE ANIMATIONS ==========
+    const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
+
+    tl.to('.donate-label', { opacity: 1, y: 0, duration: 0.7, delay: 0.2 })
+      .to('.donate-title', { opacity: 1, y: 0, duration: 0.8 }, '-=0.4')
+      .to('.donate-desc', { opacity: 1, y: 0, duration: 0.7 }, '-=0.4')
+      .to('.donate-card', { opacity: 1, y: 0, scale: 1, duration: 0.9 }, '-=0.3');
+
+    // Stagger amount buttons
+    const amountBtns = document.querySelectorAll('.amount-btn');
+    tl.to(amountBtns, {
+      opacity: 1, y: 0, scale: 1,
+      duration: 0.5,
+      stagger: 0.06,
+      ease: 'back.out(1.4)'
+    }, '-=0.5');
+
+    // Impact section
+    tl.to('.impact-section', { opacity: 1, y: 0, duration: 0.8 }, '-=0.2');
+
+    // ========== AMOUNT SELECTION ==========
+    let selectedAmount = 50;
+    const donateBtn = document.getElementById('donateBtn');
+    const donateBtnText = document.getElementById('donateBtnText');
+    const customInput = document.getElementById('customAmount');
+
+    // Payment links map — replace these URLs with real Stripe Payment Links
+    const paymentLinks = {
+      10:   '#STRIPE_LINK_10',
+      25:   '#STRIPE_LINK_25',
+      50:   '#STRIPE_LINK_50',
+      100:  '#STRIPE_LINK_100',
+      500:  '#STRIPE_LINK_500',
+      1000: '#STRIPE_LINK_1000',
+      custom: '#STRIPE_LINK_CUSTOM'
+    };
+
+    function updateButton(amount, isCustom) {
+      selectedAmount = amount;
+      const formatted = amount >= 1000 
+        ? '$' + amount.toLocaleString() 
+        : '$' + amount;
+      donateBtnText.innerHTML = isCustom && !amount
+        ? 'Enter an Amount <span class="arrow">→</span>'
+        : `Donate ${formatted} <span class="arrow">→</span>`;
+      
+      // Pulse animation
+      donateBtnText.classList.add('updating');
+      setTimeout(() => donateBtnText.classList.remove('updating'), 300);
+    }
+
+    // Ripple effect
+    function createRipple(e, el) {
+      const ripple = document.createElement('span');
+      ripple.className = 'ripple';
+      const rect = el.getBoundingClientRect();
+      const size = Math.max(rect.width, rect.height) * 2;
+      ripple.style.width = ripple.style.height = size + 'px';
+      ripple.style.left = (e.clientX - rect.left - size / 2) + 'px';
+      ripple.style.top = (e.clientY - rect.top - size / 2) + 'px';
+      el.appendChild(ripple);
+      setTimeout(() => ripple.remove(), 600);
+    }
+
+    amountBtns.forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        // Deselect all
+        amountBtns.forEach(b => b.classList.remove('selected', 'just-selected'));
+        // Select this one
+        btn.classList.add('selected', 'just-selected');
+        setTimeout(() => btn.classList.remove('just-selected'), 500);
+        
+        // Clear custom input
+        customInput.value = '';
+        customInput.classList.remove('has-value');
+
+        // Ripple
+        createRipple(e, btn);
+
+        // Update button
+        const amount = parseInt(btn.dataset.amount);
+        updateButton(amount, false);
+
+        // Micro-bounce with GSAP
+        gsap.fromTo(btn, { scale: 0.92 }, { scale: 1, duration: 0.4, ease: 'back.out(2)' });
+      });
+    });
+
+    // Custom amount input
+    customInput.addEventListener('input', () => {
+      const raw = customInput.value.replace(/[^0-9]/g, '');
+      customInput.value = raw;
+      customInput.classList.toggle('has-value', raw.length > 0);
+
+      if (raw.length > 0) {
+        amountBtns.forEach(b => b.classList.remove('selected'));
+        updateButton(parseInt(raw) || 0, true);
+      } else {
+        // Re-select default
+        const defaultBtn = document.querySelector('.amount-btn[data-amount="50"]');
+        defaultBtn.classList.add('selected');
+        updateButton(50, false);
+      }
+    });
+
+    customInput.addEventListener('focus', () => {
+      if (customInput.value) {
+        amountBtns.forEach(b => b.classList.remove('selected'));
+      }
+    });
+
+    // ========== DONATE CLICK ==========
+    donateBtn.addEventListener('click', () => {
+      const isCustom = customInput.value.length > 0;
+      const amount = isCustom ? parseInt(customInput.value) : selectedAmount;
+
+      if (!amount || amount <= 0) {
+        // Shake the button
+        gsap.to(donateBtn, {
+          x: [-8, 8, -6, 6, -3, 3, 0],
+          duration: 0.5,
+          ease: 'power2.out'
+        });
+        return;
+      }
+
+      // Get the payment link
+      let link = isCustom ? paymentLinks.custom : (paymentLinks[amount] || paymentLinks.custom);
+      
+      // If links aren't set up yet, show a message
+      if (link.startsWith('#STRIPE_LINK')) {
+        // Temporary: visual feedback that it works
+        gsap.to(donateBtn, { scale: 0.95, duration: 0.1, yoyo: true, repeat: 1 });
+        
+        // In production, this would redirect:
+        // window.location.href = link;
+        
+        // For now show it's wired up
+        const originalText = donateBtnText.innerHTML;
+        donateBtnText.innerHTML = 'Coming Soon! <span class="arrow">🔜</span>';
+        setTimeout(() => { donateBtnText.innerHTML = originalText; }, 2000);
+        return;
+      }
+
+      // Redirect to Stripe
+      window.location.href = link;
+    });
+
+    // ========== HOVER TILT ON CARD ==========
+    const card = document.querySelector('.donate-card');
+    card.addEventListener('mousemove', (e) => {
+      const rect = card.getBoundingClientRect();
+      const x = (e.clientX - rect.left) / rect.width - 0.5;
+      const y = (e.clientY - rect.top) / rect.height - 0.5;
+      gsap.to(card, {
+        rotateY: x * 3,
+        rotateX: -y * 3,
+        duration: 0.4,
+        ease: 'power2.out',
+        transformPerspective: 1000
+      });
+    });
+    card.addEventListener('mouseleave', () => {
+      gsap.to(card, { rotateY: 0, rotateX: 0, duration: 0.6, ease: 'power2.out' });
+    });
+  </script>
+</body>
+</html>
