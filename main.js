@@ -27,6 +27,16 @@ navLinks.querySelectorAll('a').forEach(link => {
   });
 });
 
+// Close mobile nav when clicking outside
+document.addEventListener('click', (e) => {
+  if (navLinks.classList.contains('open') && 
+      !navLinks.contains(e.target) && 
+      !navToggle.contains(e.target)) {
+    navToggle.classList.remove('active');
+    navLinks.classList.remove('open');
+  }
+});
+
 // ========== HERO ANIMATIONS ==========
 const heroTL = gsap.timeline({ delay: 0.3 });
 
