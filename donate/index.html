@@ -518,6 +518,74 @@
       line-height: 1.6;
     }
 
+    /* ========== PHOTOS STRIP ========== */
+    .photos-strip {
+      background: var(--dark);
+      padding: 60px 0;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Fade edges */
+    .photos-strip::before,
+    .photos-strip::after {
+      content: '';
+      position: absolute;
+      top: 0; bottom: 0;
+      width: 120px;
+      z-index: 2;
+      pointer-events: none;
+    }
+    .photos-strip::before {
+      left: 0;
+      background: linear-gradient(90deg, var(--dark), transparent);
+    }
+    .photos-strip::after {
+      right: 0;
+      background: linear-gradient(-90deg, var(--dark), transparent);
+    }
+
+    .photos-scroll {
+      display: flex;
+      gap: 16px;
+      animation: scrollPhotos 40s linear infinite;
+      width: max-content;
+    }
+
+    .photos-scroll:hover {
+      animation-play-state: paused;
+    }
+
+    @keyframes scrollPhotos {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+
+    .photo-item {
+      flex-shrink: 0;
+      width: 380px;
+      height: 260px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .photo-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      filter: grayscale(30%) contrast(1.1);
+      transition: filter 0.4s var(--ease), transform 0.4s var(--ease);
+    }
+
+    .photo-item:hover img {
+      filter: grayscale(0%) contrast(1);
+      transform: scale(1.05);
+    }
+
+    @media (max-width: 640px) {
+      .photo-item { width: 280px; height: 190px; }
+    }
+
     /* ========== QUOTE ========== */
     .quote-section {
       background: var(--dark);
@@ -686,6 +754,23 @@
           <div class="impact-desc">Standing up when the administration, student government, or mob tries to silence us.</div>
         </div>
       </div>
+    </div>
+  </section>
+
+  <!-- Photos -->
+  <section class="photos-strip">
+    <div class="photos-scroll">
+      <div class="photo-item"><img src="../assets/images/donate-rally.jpg" alt="UFCR Rally"></div>
+      <div class="photo-item"><img src="../assets/images/donate-meeting.jpg" alt="UFCR Meeting"></div>
+      <div class="photo-item"><img src="../assets/images/donate-speakers.jpg" alt="UFCR Speakers"></div>
+      <div class="photo-item"><img src="../assets/images/donate-crowd.jpg" alt="UFCR Event"></div>
+      <div class="photo-item"><img src="../assets/images/donate-audience.jpg" alt="UFCR Audience"></div>
+      <!-- duplicate for seamless loop -->
+      <div class="photo-item"><img src="../assets/images/donate-rally.jpg" alt="UFCR Rally"></div>
+      <div class="photo-item"><img src="../assets/images/donate-meeting.jpg" alt="UFCR Meeting"></div>
+      <div class="photo-item"><img src="../assets/images/donate-speakers.jpg" alt="UFCR Speakers"></div>
+      <div class="photo-item"><img src="../assets/images/donate-crowd.jpg" alt="UFCR Event"></div>
+      <div class="photo-item"><img src="../assets/images/donate-audience.jpg" alt="UFCR Audience"></div>
     </div>
   </section>
 
