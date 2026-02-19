@@ -267,82 +267,74 @@ if (statNumber && progressFill && progressTrack) {
 }
 
 // ========== BLOG STAMP REVEAL ==========
-const blogSection = document.querySelector('.blog-section');
-if (blogSection) {
+const blogStampHandle = document.querySelector('.blog-stamp-handle');
+if (blogStampHandle) {
   const stampTL = gsap.timeline({
     scrollTrigger: {
       trigger: '.blog-section',
       start: 'top 80%',
       end: 'center center',
-      scrub: 0.5,
+      scrub: 0.4,
     }
   });
 
-  // Stamp slams down
-  stampTL.to('.blog-stamp', {
-    scale: 1,
-    rotation: 0,
-    opacity: 1,
-    duration: 0.4,
-    ease: 'back.out(1.5)',
+  // Stamp handle moves down from above into frame
+  stampTL.to('.blog-stamp-handle', {
+    top: '35%',
+    duration: 0.5,
+    ease: 'none',
   }, 0);
 
-  // Stamp shadow/glow on impact
-  stampTL.to('.blog-stamp', {
-    boxShadow: '0 0 60px rgba(250,70,22,0.5), 0 0 120px rgba(250,70,22,0.2)',
-    duration: 0.2,
-  }, 0.35);
-
-  // Ink ring expands outward
-  stampTL.to('.blog-ink-ring', {
-    scale: 8,
-    opacity: 0.3,
-    duration: 0.5,
-    ease: 'power2.out',
-  }, 0.35);
-
-  // Ink ring fades
-  stampTL.to('.blog-ink-ring', {
-    opacity: 0,
-    duration: 0.2,
-  }, 0.7);
-
-  // Stamp shrinks and fades after impact
-  stampTL.to('.blog-stamp', {
-    scale: 0.6,
-    opacity: 0,
-    duration: 0.3,
-    ease: 'power2.in',
-  }, 0.6);
-
-  // Content reveals with blur-to-sharp
-  stampTL.to('.blog-reveal-content .section-label', {
-    opacity: 1,
-    filter: 'blur(0px)',
-    y: 0,
-    duration: 0.3,
+  // At 50% — stamp slams down fast (the press moment)
+  stampTL.to('.blog-stamp-handle', {
+    top: '42%',
+    duration: 0.1,
+    ease: 'power4.in',
   }, 0.5);
 
-  stampTL.to('.blog-reveal-content .section-heading', {
+  // Imprint appears on slam
+  stampTL.to('.blog-stamp-imprint', {
     opacity: 1,
-    filter: 'blur(0px)',
-    y: 0,
-    duration: 0.3,
-  }, 0.55);
+    duration: 0.05,
+  }, 0.58);
 
+  // Paper shake on impact
+  stampTL.to('.blog-section', {
+    x: -3,
+    duration: 0.02,
+  }, 0.58);
+  stampTL.to('.blog-section', {
+    x: 3,
+    duration: 0.02,
+  }, 0.60);
+  stampTL.to('.blog-section', {
+    x: -1,
+    duration: 0.02,
+  }, 0.62);
+  stampTL.to('.blog-section', {
+    x: 0,
+    duration: 0.02,
+  }, 0.64);
+
+  // Stamp lifts back up and exits
+  stampTL.to('.blog-stamp-handle', {
+    top: '-300px',
+    duration: 0.3,
+    ease: 'power2.in',
+  }, 0.65);
+
+  // Content fades in after stamp leaves
   stampTL.to('.blog-reveal-content .blog-desc', {
     opacity: 1,
-    filter: 'blur(0px)',
     y: 0,
-    duration: 0.3,
-  }, 0.6);
+    duration: 0.15,
+  }, 0.8);
 
   stampTL.to('.blog-reveal-content .blog-cta', {
     opacity: 1,
-    filter: 'blur(0px)',
     y: 0,
-    duration: 0.3,
-  }, 0.65);
+    duration: 0.15,
+  }, 0.85);
 }
 
 // ========== SMOOTH SCROLL ==========
