@@ -266,6 +266,85 @@ if (statNumber && progressFill && progressTrack) {
   }, 0);
 }
 
+// ========== BLOG STAMP REVEAL ==========
+const blogSection = document.querySelector('.blog-section');
+if (blogSection) {
+  const stampTL = gsap.timeline({
+    scrollTrigger: {
+      trigger: '.blog-section',
+      start: 'top 80%',
+      end: 'center center',
+      scrub: 0.5,
+    }
+  });
+
+  // Stamp slams down
+  stampTL.to('.blog-stamp', {
+    scale: 1,
+    rotation: 0,
+    opacity: 1,
+    duration: 0.4,
+    ease: 'back.out(1.5)',
+  }, 0);
+
+  // Stamp shadow/glow on impact
+  stampTL.to('.blog-stamp', {
+    boxShadow: '0 0 60px rgba(250,70,22,0.5), 0 0 120px rgba(250,70,22,0.2)',
+    duration: 0.2,
+  }, 0.35);
+
+  // Ink ring expands outward
+  stampTL.to('.blog-ink-ring', {
+    scale: 8,
+    opacity: 0.3,
+    duration: 0.5,
+    ease: 'power2.out',
+  }, 0.35);
+
+  // Ink ring fades
+  stampTL.to('.blog-ink-ring', {
+    opacity: 0,
+    duration: 0.2,
+  }, 0.7);
+
+  // Stamp shrinks and fades after impact
+  stampTL.to('.blog-stamp', {
+    scale: 0.6,
+    opacity: 0,
+    duration: 0.3,
+    ease: 'power2.in',
+  }, 0.6);
+
+  // Content reveals with blur-to-sharp
+  stampTL.to('.blog-reveal-content .section-label', {
+    opacity: 1,
+    filter: 'blur(0px)',
+    y: 0,
+    duration: 0.3,
+  }, 0.5);
+
+  stampTL.to('.blog-reveal-content .section-heading', {
+    opacity: 1,
+    filter: 'blur(0px)',
+    y: 0,
+    duration: 0.3,
+  }, 0.55);
+
+  stampTL.to('.blog-reveal-content .blog-desc', {
+    opacity: 1,
+    filter: 'blur(0px)',
+    y: 0,
+    duration: 0.3,
+  }, 0.6);
+
+  stampTL.to('.blog-reveal-content .blog-cta', {
+    opacity: 1,
+    filter: 'blur(0px)',
+    y: 0,
+    duration: 0.3,
+  }, 0.65);
+}
+
 // ========== SMOOTH SCROLL ==========
 document.querySelectorAll('a[href^="#"]').forEach(anchor => {
   anchor.addEventListener('click', function(e) {
