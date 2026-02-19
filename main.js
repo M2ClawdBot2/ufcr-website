@@ -175,8 +175,8 @@ if (statNumber && progressFill && progressTrack) {
   const counterTL = gsap.timeline({
     scrollTrigger: {
       trigger: '#featured',
-      start: 'top 70%',
-      end: 'bottom 30%',
+      start: 'top 90%',
+      end: 'center center',
       scrub: 0.3,  // directly tied to scroll speed
     }
   });
