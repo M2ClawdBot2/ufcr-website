@@ -61,32 +61,6 @@ gsap.to('.hero-bg', {
   }
 });
 
-// ========== EAGLE FLY-ACROSS ==========
-const eagleImg = document.querySelector('.eagle-img');
-if (eagleImg) {
-  gsap.to(eagleImg, {
-    x: () => window.innerWidth + 600,
-    y: -20,
-    rotation: 0,
-    ease: 'power1.inOut',
-    scrollTrigger: {
-      trigger: '.eagle-transition',
-      start: 'top 90%',
-      end: 'top 40%',
-      scrub: 0.2,
-    }
-  });
-
-  // Subtle wing bob (y only, no rotation)
-  gsap.to(eagleImg, {
-    marginTop: '-12px',
-    yoyo: true,
-    repeat: -1,
-    duration: 0.6,
-    ease: 'sine.inOut',
-  });
-}
-
 // ========== SCROLL ANIMATIONS ==========
 
 // Slide up + fade in
