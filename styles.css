@@ -35,6 +35,10 @@ body {
   overflow-x: hidden;
 }
 
+html {
+  overflow-x: hidden;
+}
+
 .container {
   max-width: 1200px;
   margin: 0 auto;
@@ -300,30 +304,11 @@ a { text-decoration: none; color: inherit; }
   50% { opacity: 1; transform: scaleY(1); }
 }
 
-/* ========== EAGLE TRANSITION ========== */
-.eagle-transition {
-  position: relative;
-  height: 0;
-  overflow: visible;
-  z-index: 50;
-  pointer-events: none;
-}
-
-.eagle-img {
-  position: absolute;
-  top: -80px;
-  left: -300px;
-  width: 400px;
-  height: auto;
-  filter: drop-shadow(0 8px 20px rgba(0,0,0,0.3));
-  pointer-events: none;
-  transform: scaleX(-1);
-}
-
 /* ========== SECTIONS ========== */
 .section {
   padding: 120px 0;
   position: relative;
+  overflow: hidden;
 }
 
 .section-light { background: var(--gray-100); }
@@ -754,7 +739,7 @@ a { text-decoration: none; color: inherit; }
   background: rgba(255,255,255,0.06);
   border: 2px solid rgba(255,255,255,0.1);
   border-radius: 20px;
-  overflow: visible;
+  overflow: hidden;
 }
 
 .progress-fill {
