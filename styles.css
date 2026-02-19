@@ -300,6 +300,24 @@ a { text-decoration: none; color: inherit; }
   50% { opacity: 1; transform: scaleY(1); }
 }
 
+/* ========== EAGLE TRANSITION ========== */
+.eagle-transition {
+  position: relative;
+  height: 0;
+  overflow: visible;
+  z-index: 50;
+  pointer-events: none;
+}
+
+.eagle-svg {
+  position: absolute;
+  top: -60px;
+  left: -200px;
+  width: 200px;
+  height: auto;
+  filter: drop-shadow(0 4px 12px rgba(0,0,0,0.2));
+}
+
 /* ========== SECTIONS ========== */
 .section {
   padding: 120px 0;
