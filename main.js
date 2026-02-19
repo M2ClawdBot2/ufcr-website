@@ -65,15 +65,15 @@ gsap.to('.hero-bg', {
 const eagleImg = document.querySelector('.eagle-img');
 if (eagleImg) {
   gsap.to(eagleImg, {
-    x: () => window.innerWidth + 500,
-    y: -30,
-    rotation: 3,
+    x: () => window.innerWidth + 600,
+    y: -20,
+    rotation: 0.5,
     ease: 'power1.inOut',
     scrollTrigger: {
       trigger: '.eagle-transition',
-      start: 'top 85%',
-      end: 'top 15%',
-      scrub: 0.3,
+      start: 'top 90%',
+      end: 'top 40%',
+      scrub: 0.2,
     }
   });
 
