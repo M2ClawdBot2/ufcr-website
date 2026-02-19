@@ -194,15 +194,15 @@
     .amount-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 2px;
-      background: rgba(255,255,255,0.06);
-      margin-bottom: 2px;
+      gap: 3px;
+      margin-bottom: 3px;
     }
 
     .amount-tile {
       position: relative;
-      background: var(--dark);
-      padding: 40px 20px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      padding: 36px 20px;
       text-align: center;
       cursor: pointer;
       transition: all 0.3s var(--ease);
@@ -211,7 +211,7 @@
       -webkit-tap-highlight-color: transparent;
     }
 
-    /* Hover stripe */
+    /* Top accent bar on hover */
     .amount-tile::before {
       content: '';
       position: absolute;
@@ -225,26 +225,19 @@
     }
     .amount-tile:hover::before { transform: scaleX(1); }
 
-    /* Selected state — full fill */
-    .amount-tile::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: var(--orange);
-      opacity: 0;
-      transition: opacity 0.35s var(--ease);
-      z-index: 0;
+    .amount-tile:hover {
+      background: rgba(255,255,255,0.1);
+      border-color: rgba(250,70,22,0.4);
     }
-    .amount-tile.selected::after { opacity: 1; }
+
+    /* Selected state */
+    .amount-tile.selected {
+      background: var(--orange);
+      border-color: var(--orange);
+    }
     .amount-tile.selected::before { transform: scaleX(1); background: var(--gold); }
 
-    .amount-tile:hover {
-      background: rgba(255,255,255,0.02);
-    }
-
     .tile-amount {
-      position: relative;
-      z-index: 1;
       font-family: var(--font-heading);
       font-size: 2.2rem;
       font-weight: 700;
@@ -255,19 +248,17 @@
     .amount-tile:hover .tile-amount { transform: scale(1.05); }
 
     .tile-label {
-      position: relative;
-      z-index: 1;
       font-family: var(--font-heading);
       font-size: 0.65rem;
       font-weight: 600;
       letter-spacing: 0.2em;
       text-transform: uppercase;
-      color: rgba(255,255,255,0.3);
+      color: rgba(255,255,255,0.4);
       margin-top: 8px;
       transition: color 0.3s;
     }
-    .amount-tile.selected .tile-label { color: rgba(255,255,255,0.85); }
-    .amount-tile:hover .tile-label { color: rgba(255,255,255,0.5); }
+    .amount-tile.selected .tile-label { color: rgba(255,255,255,0.9); }
+    .amount-tile:hover .tile-label { color: rgba(255,255,255,0.6); }
 
     /* Corner notch on selected */
     .tile-check {
@@ -275,7 +266,7 @@
       top: 0; right: 0;
       width: 0; height: 0;
       border-style: solid;
-      border-width: 0 32px 32px 0;
+      border-width: 0 28px 28px 0;
       border-color: transparent var(--gold) transparent transparent;
       opacity: 0;
       transition: opacity 0.3s;
@@ -285,8 +276,8 @@
       content: '✓';
       position: absolute;
       top: 2px;
-      right: -26px;
-      font-size: 0.6rem;
+      right: -23px;
+      font-size: 0.55rem;
       color: var(--navy);
       font-weight: 700;
     }
@@ -475,12 +466,12 @@
     .impact-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 2px;
-      background: rgba(255,255,255,0.06);
+      gap: 3px;
     }
 
     .impact-item {
-      background: var(--navy);
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
       padding: 48px 32px;
       text-align: center;
       position: relative;
