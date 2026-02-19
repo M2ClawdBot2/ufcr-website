@@ -563,6 +563,11 @@
     .mini-footer a:hover { color: var(--white); }
 
     /* ========== RESPONSIVE ========== */
+    /* Fallback: ensure tiles are always visible */
+    .amount-tile, .impact-item, .quote-text {
+      visibility: visible !important;
+    }
+
     @media (max-width: 640px) {
       .amount-grid { grid-template-columns: repeat(2, 1fr); }
       .impact-grid { grid-template-columns: 1fr; }
@@ -712,7 +717,7 @@
       duration: 0.5,
       stagger: 0.08,
       ease: 'back.out(1.2)',
-      scrollTrigger: { trigger: '.amount-grid', start: 'top 85%' }
+      delay: 1.0
     });
 
     // Impact items
@@ -720,13 +725,13 @@
       opacity: 0, y: 40,
       duration: 0.6,
       stagger: 0.15,
-      scrollTrigger: { trigger: '.impact-grid', start: 'top 80%' }
+      scrollTrigger: { trigger: '.impact-grid', start: 'top 90%' }
     });
 
     // Quote
     gsap.from('.quote-text', {
       opacity: 0, y: 30, duration: 0.8,
-      scrollTrigger: { trigger: '.quote-section', start: 'top 85%' }
+      scrollTrigger: { trigger: '.quote-section', start: 'top 90%' }
     });
 
     // ========== AMOUNT SELECTION ==========
