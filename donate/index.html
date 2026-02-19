@@ -701,9 +701,7 @@
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
   <script>
-    gsap.registerPlugin(ScrollTrigger);
 
     // ========== ENTRANCE ==========
     const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
@@ -711,27 +709,17 @@
       .to('.hero-title', { opacity: 1, y: 0, duration: 0.8 }, '-=0.3')
       .to('.hero-sub', { opacity: 1, y: 0, duration: 0.6 }, '-=0.3');
 
-    // Stagger tiles in
-    gsap.from('.amount-tile', {
-      opacity: 0, y: 30, scale: 0.95,
-      duration: 0.5,
-      stagger: 0.08,
-      ease: 'back.out(1.2)',
-      delay: 1.0
-    });
-
-    // Impact items
-    gsap.from('.impact-item', {
-      opacity: 0, y: 40,
-      duration: 0.6,
-      stagger: 0.15,
-      scrollTrigger: { trigger: '.impact-grid', start: 'top 90%' }
-    });
-
-    // Quote
-    gsap.from('.quote-text', {
-      opacity: 0, y: 30, duration: 0.8,
-      scrollTrigger: { trigger: '.quote-section', start: 'top 90%' }
+    // Stagger tiles in after page load
+    window.addEventListener('load', () => {
+      document.querySelectorAll('.amount-tile').forEach((tile, i) => {
+        tile.style.opacity = '0';
+        tile.style.transform = 'translateY(20px)';
+        setTimeout(() => {
+          tile.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+          tile.style.opacity = '1';
+          tile.style.transform = 'translateY(0)';
+        }, 800 + i * 80);
+      });
     });
 
     // ========== AMOUNT SELECTION ==========
