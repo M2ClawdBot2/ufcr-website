@@ -63,7 +63,7 @@
     <li>Move your helicopter with mouse or finger</li>
     <li>Your spotlight shines below the chopper</li>
     <li>Illegals approach the wall and start climbing — you have 10 seconds</li>
-    <li>Spotlight them and <strong>hold the light</strong> until the ICE truck arrives</li>
+    <li>Spotlight them and <strong>hold the light for 3 seconds</strong> until the ICE truck grabs them</li>
     <li>If you move the light away, the truck turns back</li>
     <li>One illegal over the wall = game over</li>
   </ul>
@@ -89,16 +89,18 @@ const CV = document.getElementById('game');
 const cx = CV.getContext('2d');
 
 let W, H, dpr;
+const ZOOM = 1.25;
 function resize() {
   dpr = window.devicePixelRatio || 1;
   W = window.innerWidth; H = window.innerHeight;
   CV.width = W * dpr; CV.height = H * dpr;
   CV.style.width = W + 'px'; CV.style.height = H + 'px';
-  cx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  cx.setTransform(dpr * ZOOM, 0, 0, dpr * ZOOM, 0, 0);
+  W = W / ZOOM; H = H / ZOOM;
   // Recalc zones
-  NAV_H = 44 + 36; // nav + hud
-  WALL_Y = NAV_H + 40;
-  WALL_H = 32;
+  NAV_H = (44 + 36) / ZOOM;
+  WALL_Y = NAV_H + 32;
+  WALL_H = 26;
   GROUND_TOP = WALL_Y + WALL_H + 10;
   SPAWN_Y = H + 20;
   CITY_Y = WALL_Y - 20; // above wall = city
@@ -129,7 +131,7 @@ const COL = {
 let gameRunning = false;
 let score = 0, wave = 1, lastTime = 0;
 let heliX, heliY, targetX, targetY;
-let illegals = [], trucks = [], effects = [], stars = [];
+let illegals = [], trucks = [], effects = [], stars = [], tireTracks = [];
 let spawnTimer = 0, waveCount = 0;
 let heliAngle = 0, heliBladeAngle = 0;
 
@@ -143,8 +145,8 @@ function getWaveConfig(w) {
   return {
     spawnInterval: Math.max(1.5, 5 - (w-1) * 0.4),
     climbTime: 10, // always 10s to climb
-    truckSpeed: 120 + w * 10,
-    truckArriveTime: Math.max(1.5, 3.5 - (w-1) * 0.2), // time spotlight must hold
+    truckSpeed: 320 + w * 30,
+    truckArriveTime: 3, // 3 seconds spotlight to deport
     maxSimultaneous: Math.min(6, 1 + Math.floor(w * 0.6)),
   };
 }
@@ -201,8 +203,8 @@ heliX = W / 2; heliY = H / 2;
 targetX = heliX; targetY = heliY;
 
 function setTarget(px, py) {
-  targetX = px;
-  targetY = Math.max(NAV_H + 20, py);
+  targetX = px / ZOOM;
+  targetY = Math.max(NAV_H + 16, py / ZOOM);
 }
 
 CV.addEventListener('mousemove', e => setTarget(e.clientX, e.clientY));
@@ -374,6 +376,21 @@ function drawHelicopter(x, y) {
 
 function drawTruck(t) {
   const s = 12;
+
+  // Dust cloud behind truck when moving
+  if (!t.arrived || t.returning) {
+    const dustDir = t.returning ? 1 : -1;
+    for (let i = 0; i < 3; i++) {
+      const dx = dustDir * (10 + i * 8 + Math.random() * 6);
+      const dy = (Math.random() - 0.5) * 8;
+      const r = 4 + Math.random() * 5;
+      cx.fillStyle = `rgba(160,140,100,${0.12 - i * 0.03})`;
+      cx.beginPath();
+      cx.arc(t.x + dx * (t.returning ? -1 : 1) - s * (t.returning ? -1 : 1), t.y + s * 0.2 + dy, r, 0, Math.PI * 2);
+      cx.fill();
+    }
+  }
+
   // Shadow
   cx.fillStyle = 'rgba(0,0,0,0.2)';
   cx.fillRect(t.x - s * 1.2 + 2, t.y + s * 0.4 + 2, s * 2.4, s * 0.3);
@@ -565,6 +582,14 @@ function draw() {
   cx.beginPath(); cx.moveTo(0, H - 30); cx.lineTo(W, H - 30); cx.stroke();
   cx.setLineDash([]);
 
+  // Tire tracks
+  tireTracks.forEach(tt => {
+    const a = Math.min(1, tt.life) * 0.25;
+    cx.fillStyle = `rgba(20,15,8,${a})`;
+    cx.fillRect(tt.x - tt.w/2, tt.y - 1, tt.w, 2);
+    cx.fillRect(tt.x - tt.w/2, tt.y + 3, tt.w, 2);
+  });
+
   // Wall
   drawWall();
 
@@ -724,11 +749,20 @@ function update(dt) {
     if (!target || target.caught || !target.spotted) {
       t.returning = true;
     }
+    const prevX = t.x;
     if (t.returning) {
-      t.x -= t.speed * dt * 1.5;
+      t.x -= t.speed * dt * 2;
       if (t.x < -50) t.active = false;
     } else {
       if (t.x < t.targetX - 20) t.x += t.speed * dt;
+      else {
+        // Brake skid when arriving
+        if (!t.arrived) { t.arrived = true; tireTracks.push({ x: t.x - 15, y: t.y + 8, w: 25, life: 4 }); }
+      }
+    }
+    // Leave tire tracks while moving fast
+    if (Math.abs(t.x - prevX) > 2) {
+      tireTracks.push({ x: t.x, y: t.y + 8, w: 6, life: 3 + Math.random() });
     }
   });
 
@@ -745,6 +779,8 @@ function update(dt) {
   illegals = illegals.filter(i => !(i.caught && i.catchAnim > 1.5));
   effects.forEach(e => e.life -= dt * 1.2);
   effects = effects.filter(e => e.life > 0);
+  tireTracks.forEach(tt => tt.life -= dt);
+  tireTracks = tireTracks.filter(tt => tt.life > 0);
 
   updateHUD();
 }
@@ -761,7 +797,7 @@ function loop(ts) {
 // ─── START / END ───
 function startGame() {
   score = 0; wave = 1; waveCount = 0;
-  illegals = []; trucks = []; effects = [];
+  illegals = []; trucks = []; effects = []; tireTracks = [];
   spawnTimer = 2;
   heliX = W / 2; heliY = H * 0.5;
   targetX = heliX; targetY = heliY;
