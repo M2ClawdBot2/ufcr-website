@@ -11,7 +11,6 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <style>
     :root {
-      --blue: #0021A5;
       --orange: #FA4616;
       --gold: #F0A830;
       --navy: #001845;
@@ -21,602 +20,628 @@
       --font-body: 'Inter', sans-serif;
       --font-heading: 'Oswald', sans-serif;
     }
-    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-    html, body { 
-      width: 100%; height: 100%; overflow: hidden;
-      font-family: var(--font-body); background: var(--dark); color: #fff;
-      -webkit-tap-highlight-color: transparent;
-      user-select: none;
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+    html, body {
+      width:100%; height:100%; overflow:hidden;
+      font-family: var(--font-body); background: #1a2a1a; color:#fff;
+      -webkit-tap-highlight-color: transparent; user-select:none;
     }
 
     /* NAV */
     .nav {
-      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-      height: 56px;
-      background: rgba(0,24,69,0.95);
-      backdrop-filter: blur(20px);
-      border-bottom: 1px solid rgba(255,255,255,0.06);
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 0 16px;
+      position:fixed; top:0; left:0; right:0; z-index:100; height:48px;
+      background:rgba(0,24,69,0.95); backdrop-filter:blur(20px);
+      border-bottom:1px solid rgba(255,255,255,0.06);
+      display:flex; align-items:center; justify-content:space-between; padding:0 12px;
     }
-    .nav-logo { display: flex; align-items: center; gap: 8px; text-decoration: none; color: #fff; }
-    .nav-logo img { height: 32px; border-radius: 4px; background: #fff; padding: 1px; }
-    .nav-logo span { font-family: var(--font-heading); font-size: 1.1rem; font-weight: 700; letter-spacing: 0.08em; }
-    .nav-back { font-size: 0.75rem; color: rgba(255,255,255,0.5); text-decoration: none; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 600; }
-    .nav-back:hover { color: #fff; }
-
-    /* GAME AREA */
-    .game-wrapper {
-      position: fixed; top: 56px; left: 0; right: 0; bottom: 0;
-      display: flex; flex-direction: column;
-    }
+    .nav-logo { display:flex; align-items:center; gap:6px; text-decoration:none; color:#fff; }
+    .nav-logo img { height:28px; border-radius:3px; background:#fff; padding:1px; }
+    .nav-logo span { font-family:var(--font-heading); font-size:1rem; font-weight:700; letter-spacing:0.08em; }
+    .nav-back { font-size:0.7rem; color:rgba(255,255,255,0.5); text-decoration:none; letter-spacing:0.1em; text-transform:uppercase; font-weight:600; }
 
     /* HUD */
     .hud {
-      display: flex; justify-content: space-between; align-items: center;
-      padding: 12px 20px;
-      background: rgba(0,24,69,0.6);
-      border-bottom: 1px solid rgba(255,255,255,0.05);
-      flex-shrink: 0;
+      position:fixed; top:48px; left:0; right:0; z-index:90;
+      display:flex; justify-content:space-between; padding:8px 16px;
+      background:rgba(0,24,69,0.7); backdrop-filter:blur(10px);
+      border-bottom:1px solid rgba(255,255,255,0.05);
     }
-    .hud-item { text-align: center; }
-    .hud-label { font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.15em; color: rgba(255,255,255,0.4); margin-bottom: 2px; }
-    .hud-value { font-family: var(--font-heading); font-size: 1.4rem; font-weight: 700; }
-    .hud-value.score { color: var(--gold); }
-    .hud-value.timer { color: var(--orange); }
-    .hud-value.missed { color: var(--red); }
-    .hud-value.level { color: var(--green); }
+    .hud-item { text-align:center; flex:1; }
+    .hud-label { font-size:0.55rem; text-transform:uppercase; letter-spacing:0.15em; color:rgba(255,255,255,0.35); }
+    .hud-value { font-family:var(--font-heading); font-size:1.2rem; font-weight:700; }
+    .hud-value.score { color:var(--gold); }
+    .hud-value.timer { color:var(--orange); }
+    .hud-value.missed { color:var(--red); }
+    .hud-value.level { color:var(--green); }
 
-    /* FIELD */
-    .field {
-      flex: 1; position: relative; overflow: hidden;
-      background: linear-gradient(180deg, #1a3a2a 0%, #2d5a3a 40%, #8B7355 40%, #A0896C 100%);
-    }
-
-    /* Fence */
-    .fence {
-      position: absolute; left: 0; right: 0; top: 38%;
-      height: 50px; z-index: 10;
-      display: flex; justify-content: center; align-items: flex-end;
-    }
-    .fence-segment {
-      width: 3px; height: 40px; background: #888; margin: 0 18px;
-      position: relative; border-radius: 1px;
-    }
-    .fence-segment::before {
-      content: ''; position: absolute; top: 5px; left: -10px;
-      width: 23px; height: 2px; background: #777;
-    }
-    .fence-segment::after {
-      content: ''; position: absolute; top: 20px; left: -10px;
-      width: 23px; height: 2px; background: #777;
-    }
-    .fence-wire {
-      position: absolute; top: -2px; left: 5%; right: 5%;
-      height: 2px; background: repeating-linear-gradient(90deg, #999 0px, #999 8px, transparent 8px, transparent 12px);
-    }
-
-    /* HOLES */
-    .holes-container {
-      position: absolute; top: 10%; left: 0; right: 0; bottom: 5%;
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      grid-template-rows: repeat(3, 1fr);
-      gap: 8px;
-      padding: 10px;
-      z-index: 20;
-    }
-
-    .hole {
-      position: relative;
-      display: flex; align-items: flex-end; justify-content: center;
-      cursor: pointer;
-    }
-
-    .hole-ground {
-      position: absolute; bottom: 8%; left: 10%; right: 10%;
-      height: 28px;
-      background: radial-gradient(ellipse, #5a4a3a 0%, #4a3a2a 60%, transparent 72%);
-      border-radius: 50%;
-      z-index: 2;
-    }
-
-    /* CHARACTER */
-    .character {
-      position: absolute; bottom: 18%; left: 50%;
-      transform: translateX(-50%) translateY(100%);
-      width: 64px; height: 80px;
-      z-index: 1;
-      transition: none;
-      pointer-events: none;
-      opacity: 0;
-    }
-    .character.visible {
-      opacity: 1;
-      animation: popUp 0.2s ease-out forwards;
-    }
-    .character.deported {
-      animation: deported 0.4s ease-in forwards;
-    }
-    .character.escaped {
-      animation: escape 0.3s ease-in forwards;
-    }
-
-    .char-body {
-      width: 100%; height: 100%;
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      font-size: 3rem;
-      position: relative;
-    }
-    .char-emoji { font-size: 3.2rem; line-height: 1; }
-
-    /* Hit effect */
-    .hit-effect {
-      position: absolute; top: 50%; left: 50%;
-      transform: translate(-50%, -50%);
-      font-family: var(--font-heading);
-      font-size: 1.2rem; font-weight: 700;
-      color: var(--orange);
-      pointer-events: none;
-      animation: hitPop 0.6s ease-out forwards;
-      z-index: 50;
-      text-shadow: 0 2px 8px rgba(0,0,0,0.6);
-    }
-
-    .miss-effect {
-      position: absolute; top: 50%; left: 50%;
-      transform: translate(-50%, -50%);
-      font-family: var(--font-heading);
-      font-size: 1.4rem; font-weight: 700;
-      color: var(--red);
-      pointer-events: none;
-      animation: hitPop 0.8s ease-out forwards;
-      z-index: 50;
-    }
-
-    @keyframes popUp {
-      0% { transform: translateX(-50%) translateY(100%); }
-      80% { transform: translateX(-50%) translateY(-10%); }
-      100% { transform: translateX(-50%) translateY(0%); }
-    }
-    @keyframes deported {
-      0% { transform: translateX(-50%) translateY(0%) scale(1); opacity: 1; }
-      50% { transform: translateX(-50%) translateY(-20%) scale(1.1); }
-      100% { transform: translateX(-50%) translateY(100%) scale(0.5); opacity: 0; }
-    }
-    @keyframes escape {
-      0% { transform: translateX(-50%) translateY(0%); opacity: 1; }
-      100% { transform: translateX(-50%) translateY(-200%); opacity: 0; }
-    }
-    @keyframes hitPop {
-      0% { opacity: 1; transform: translate(-50%, -50%) scale(0.5); }
-      30% { transform: translate(-50%, -50%) scale(1.3); }
-      100% { opacity: 0; transform: translate(-50%, -80%) scale(1); }
+    /* CANVAS */
+    canvas {
+      position:fixed; top:0; left:0; width:100%; height:100%;
+      display:block;
     }
 
     /* SCREENS */
     .screen-overlay {
-      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(10,14,26,0.95);
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      z-index: 200;
-      padding: 24px;
-      text-align: center;
+      position:fixed; top:0; left:0; right:0; bottom:0;
+      background:rgba(10,14,26,0.92); display:flex; flex-direction:column;
+      align-items:center; justify-content:center; z-index:200; padding:24px; text-align:center;
     }
-    .screen-overlay.hidden { display: none; }
+    .screen-overlay.hidden { display:none; }
     .screen-title {
-      font-family: var(--font-heading);
-      font-size: clamp(2.5rem, 8vw, 4.5rem);
-      font-weight: 700; text-transform: uppercase;
-      letter-spacing: 0.04em;
-      margin-bottom: 8px;
+      font-family:var(--font-heading); font-size:clamp(2.5rem,8vw,4.5rem);
+      font-weight:700; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:8px;
     }
-    .screen-sub {
-      font-size: 1rem; color: rgba(255,255,255,0.5);
-      margin-bottom: 32px; max-width: 400px; line-height: 1.6;
-    }
-    .screen-stats {
-      margin-bottom: 32px;
-    }
-    .stat-row {
-      display: flex; justify-content: space-between; gap: 40px;
-      font-size: 1rem; padding: 8px 0;
-      border-bottom: 1px solid rgba(255,255,255,0.06);
-    }
-    .stat-label { color: rgba(255,255,255,0.4); }
-    .stat-val { font-weight: 700; color: var(--gold); }
+    .screen-sub { font-size:0.95rem; color:rgba(255,255,255,0.5); margin-bottom:28px; max-width:380px; line-height:1.6; }
+    .screen-stats { margin-bottom:28px; min-width:240px; }
+    .stat-row { display:flex; justify-content:space-between; font-size:0.95rem; padding:6px 0; border-bottom:1px solid rgba(255,255,255,0.06); }
+    .stat-label { color:rgba(255,255,255,0.4); }
+    .stat-val { font-weight:700; color:var(--gold); }
+    .level-badge { font-family:var(--font-heading); font-size:0.7rem; font-weight:600; letter-spacing:0.2em; text-transform:uppercase; color:var(--gold); margin-bottom:8px; }
     .btn {
-      font-family: var(--font-heading);
-      font-size: 1.1rem; font-weight: 600;
-      letter-spacing: 0.12em; text-transform: uppercase;
-      background: var(--orange); color: #fff;
-      border: none; padding: 14px 40px;
-      cursor: pointer; transition: all 0.3s;
+      font-family:var(--font-heading); font-size:1.05rem; font-weight:600;
+      letter-spacing:0.12em; text-transform:uppercase;
+      background:var(--orange); color:#fff; border:none; padding:13px 36px;
+      cursor:pointer; transition:all 0.3s;
     }
-    .btn:hover { background: #e03a0e; transform: translateY(-2px); }
-    .btn-secondary {
-      background: transparent; border: 1px solid rgba(255,255,255,0.2);
-      margin-top: 12px;
-    }
-    .btn-secondary:hover { background: rgba(255,255,255,0.08); }
-
-    .level-badge {
-      font-family: var(--font-heading);
-      font-size: 0.7rem; font-weight: 600;
-      letter-spacing: 0.2em; text-transform: uppercase;
-      color: var(--gold); margin-bottom: 8px;
-    }
-
-    /* Level up flash */
-    .level-flash {
-      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-      display: flex; align-items: center; justify-content: center;
-      z-index: 150; pointer-events: none;
-      opacity: 0;
-    }
-    .level-flash.show {
-      animation: flashIn 1.2s ease-out forwards;
-    }
-    .level-flash-text {
-      font-family: var(--font-heading);
-      font-size: clamp(2rem, 10vw, 5rem);
-      font-weight: 700; text-transform: uppercase;
-      color: var(--gold);
-      text-shadow: 0 0 40px rgba(240,168,48,0.5);
-    }
-    @keyframes flashIn {
-      0% { opacity: 0; }
-      15% { opacity: 1; }
-      70% { opacity: 1; }
-      100% { opacity: 0; }
-    }
-
-    /* Share card */
-    .share-btns { display: flex; gap: 12px; margin-top: 16px; }
+    .btn:hover { background:#e03a0e; transform:translateY(-2px); }
+    .share-btns { display:flex; gap:10px; margin-top:14px; }
     .share-btn {
-      font-family: var(--font-heading);
-      font-size: 0.75rem; font-weight: 600;
-      letter-spacing: 0.1em; text-transform: uppercase;
-      padding: 10px 20px; border: 1px solid rgba(255,255,255,0.15);
-      background: transparent; color: #fff; cursor: pointer;
-      display: flex; align-items: center; gap: 8px;
-      transition: all 0.3s;
+      font-family:var(--font-heading); font-size:0.7rem; font-weight:600;
+      letter-spacing:0.1em; text-transform:uppercase; padding:9px 16px;
+      border:1px solid rgba(255,255,255,0.15); background:transparent; color:#fff;
+      cursor:pointer; display:flex; align-items:center; gap:6px; transition:all 0.3s;
     }
-    .share-btn:hover { background: rgba(255,255,255,0.08); }
-
-    /* Responsive */
-    @media (max-width: 400px) {
-      .char-emoji { font-size: 2.5rem; }
-      .character { width: 50px; height: 65px; }
-      .hole-ground { height: 22px; }
-    }
+    .share-btn:hover { background:rgba(255,255,255,0.08); }
+    .instructions { max-width:340px; margin-bottom:24px; text-align:left; }
+    .instructions li { font-size:0.85rem; color:rgba(255,255,255,0.55); margin-bottom:6px; line-height:1.5; }
   </style>
 </head>
 <body>
 
-  <nav class="nav">
-    <a href="../" class="nav-logo">
-      <img src="../assets/images/shield-logo.png" alt="UFCR">
-      <span>UFCR</span>
-    </a>
-    <a href="../games/" class="nav-back"><i class="fas fa-arrow-left"></i> Games</a>
-  </nav>
+<nav class="nav">
+  <a href="../" class="nav-logo">
+    <img src="../assets/images/shield-logo.png" alt="UFCR">
+    <span>UFCR</span>
+  </a>
+  <a href="../games/" class="nav-back"><i class="fas fa-arrow-left"></i> Games</a>
+</nav>
 
-  <!-- START SCREEN -->
-  <div class="screen-overlay" id="startScreen">
-    <div class="level-badge">UFCR GAMES</div>
-    <div class="screen-title" style="color:var(--orange);">DEPORT</div>
-    <p class="screen-sub">Illegals are popping through the border. Tap them to deport before they escape. Miss too many and it's game over.</p>
-    <button class="btn" id="startBtn">Start Game</button>
+<div class="hud" id="hud" style="display:none;">
+  <div class="hud-item"><div class="hud-label">Score</div><div class="hud-value score" id="hudScore">0</div></div>
+  <div class="hud-item"><div class="hud-label">Level</div><div class="hud-value level" id="hudLevel">1</div></div>
+  <div class="hud-item"><div class="hud-label">Time</div><div class="hud-value timer" id="hudTimer">90</div></div>
+  <div class="hud-item"><div class="hud-label">Missed</div><div class="hud-value missed" id="hudMissed">0/15</div></div>
+</div>
+
+<!-- START -->
+<div class="screen-overlay" id="startScreen">
+  <div class="level-badge">UFCR GAMES</div>
+  <div class="screen-title" style="color:var(--orange);">DEPORT</div>
+  <p class="screen-sub">You're in the ICE helicopter patrolling the border zone. Spot illegal crossings and tap to dispatch agents before they escape into the city.</p>
+  <ul class="instructions">
+    <li>🚁 You patrol from above — the map scrolls automatically</li>
+    <li>🏃 Illegals appear and run toward the top of the screen</li>
+    <li>👆 <strong>Tap/click</strong> on them to dispatch ICE and deport</li>
+    <li>❌ Miss 15 and the border is breached — game over</li>
+    <li>⚡ They get faster and more frequent each level</li>
+  </ul>
+  <button class="btn" id="startBtn">Start Patrol</button>
+</div>
+
+<!-- GAME OVER -->
+<div class="screen-overlay hidden" id="gameOverScreen">
+  <div class="level-badge">PATROL ENDED</div>
+  <div class="screen-title" id="goTitle">Game Over</div>
+  <div class="screen-stats" id="goStats"></div>
+  <button class="btn" id="restartBtn">Patrol Again</button>
+  <div class="share-btns">
+    <button class="share-btn" id="shareBtn"><i class="fab fa-x-twitter"></i> Share</button>
+    <button class="share-btn" id="copyBtn"><i class="fas fa-copy"></i> Copy</button>
   </div>
+</div>
 
-  <!-- GAME OVER SCREEN -->
-  <div class="screen-overlay hidden" id="gameOverScreen">
-    <div class="level-badge">GAME OVER</div>
-    <div class="screen-title" id="goTitle">Game Over</div>
-    <div class="screen-stats" id="goStats"></div>
-    <button class="btn" id="restartBtn">Play Again</button>
-    <div class="share-btns">
-      <button class="share-btn" id="shareBtn"><i class="fab fa-x-twitter"></i> Share Score</button>
-      <button class="share-btn" id="copyBtn"><i class="fas fa-copy"></i> Copy</button>
-    </div>
-  </div>
+<canvas id="game"></canvas>
 
-  <!-- LEVEL FLASH -->
-  <div class="level-flash" id="levelFlash">
-    <div class="level-flash-text" id="levelFlashText"></div>
-  </div>
+<script>
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
 
-  <!-- GAME -->
-  <div class="game-wrapper" id="gameWrapper">
-    <div class="hud">
-      <div class="hud-item">
-        <div class="hud-label">Score</div>
-        <div class="hud-value score" id="hudScore">0</div>
-      </div>
-      <div class="hud-item">
-        <div class="hud-label">Level</div>
-        <div class="hud-value level" id="hudLevel">1</div>
-      </div>
-      <div class="hud-item">
-        <div class="hud-label">Time</div>
-        <div class="hud-value timer" id="hudTimer">60</div>
-      </div>
-      <div class="hud-item">
-        <div class="hud-label">Missed</div>
-        <div class="hud-value missed" id="hudMissed">0/10</div>
-      </div>
-    </div>
+let W, H, dpr;
+function resize() {
+  dpr = window.devicePixelRatio || 1;
+  W = window.innerWidth;
+  H = window.innerHeight;
+  canvas.width = W * dpr;
+  canvas.height = H * dpr;
+  canvas.style.width = W + 'px';
+  canvas.style.height = H + 'px';
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+resize();
+window.addEventListener('resize', resize);
 
-    <div class="field" id="field">
-      <div class="fence">
-        <div class="fence-wire"></div>
-        <div class="fence-segment"></div>
-        <div class="fence-segment"></div>
-        <div class="fence-segment"></div>
-        <div class="fence-segment"></div>
-        <div class="fence-segment"></div>
-        <div class="fence-segment"></div>
-        <div class="fence-segment"></div>
-        <div class="fence-segment"></div>
-        <div class="fence-segment"></div>
-        <div class="fence-segment"></div>
-      </div>
-      <div class="holes-container" id="holesContainer"></div>
-    </div>
-  </div>
+// GAME STATE
+const HUD_TOP = 48 + 44; // nav + hud height
+const MAX_MISSED = 15;
+const GAME_TIME = 90;
 
-  <script>
-    const EMOJIS = ['🏃', '🏃‍♂️', '🧑', '👤', '🕵️', '🤫', '😰', '🫣'];
-    const DEPORT_TEXTS = ['DEPORTED!', 'GONE!', 'BYE BYE!', 'ADIOS!', 'OUT!', 'ICE\'D!', 'REMOVED!', 'SENT BACK!'];
-    const ESCAPE_TEXTS = ['ESCAPED!', 'GOT AWAY!', 'MISSED!', 'TOO SLOW!'];
+let score = 0, missed = 0, level = 1, timeLeft = GAME_TIME;
+let totalDeported = 0, combo = 0, maxCombo = 0;
+let gameRunning = false, gameTimer = null;
+let scrollY = 0;
+let runners = [];
+let effects = [];
+let dispatches = [];
+let lastSpawn = 0;
+let spawnAccum = 0;
 
-    const MAX_MISSED = 10;
-    const GAME_TIME = 60;
-    const NUM_HOLES = 9;
+// TERRAIN
+const TERRAIN_COLORS = ['#2d5a3a','#3a6b4a','#2a5035','#356040'];
+const ROAD_Y_INTERVAL = 600;
+const BUILDING_COLORS = ['#4a4a5a','#5a5060','#3a3a4a','#555565','#484858'];
 
-    let score = 0;
-    let missed = 0;
-    let level = 1;
-    let timeLeft = GAME_TIME;
-    let gameRunning = false;
-    let gameTimer = null;
-    let spawnTimer = null;
-    let combo = 0;
-    let maxCombo = 0;
-    let totalDeported = 0;
+// Pre-generate terrain chunks
+let terrainChunks = [];
+function generateChunk(startY) {
+  const chunk = { startY, buildings: [], trees: [], roads: [] };
+  // Roads
+  if (Math.random() < 0.3) {
+    chunk.roads.push({ y: startY + Math.random() * 400 + 100, width: 20 + Math.random() * 15 });
+  }
+  // Buildings (near top = city)
+  const density = Math.max(0, 1 - (startY / 3000));
+  for (let i = 0; i < density * 8; i++) {
+    chunk.buildings.push({
+      x: Math.random() * W,
+      y: startY + Math.random() * 500,
+      w: 20 + Math.random() * 30,
+      h: 20 + Math.random() * 25,
+      color: BUILDING_COLORS[Math.floor(Math.random() * BUILDING_COLORS.length)],
+    });
+  }
+  // Trees (scattered)
+  for (let i = 0; i < 12; i++) {
+    chunk.trees.push({
+      x: Math.random() * W,
+      y: startY + Math.random() * 500,
+      r: 4 + Math.random() * 6,
+      color: TERRAIN_COLORS[Math.floor(Math.random() * TERRAIN_COLORS.length)],
+    });
+  }
+  return chunk;
+}
 
-    // Level config
-    function getLevelConfig(lvl) {
-      return {
-        spawnInterval: Math.max(400, 1200 - (lvl - 1) * 100),
-        visibleTime: Math.max(800, 2200 - (lvl - 1) * 180),
-        maxActive: Math.min(4, 1 + Math.floor(lvl / 2)),
-        pointsBase: 10 + (lvl - 1) * 5,
-      };
+// BORDER FENCE
+let fenceY = 0; // set on start
+
+// RUNNER
+function spawnRunner() {
+  const config = getLevelConfig(level);
+  const spawnX = 30 + Math.random() * (W - 60);
+  const spawnY = scrollY + H + 30; // below screen
+  const speed = config.runnerSpeed * (0.8 + Math.random() * 0.4);
+  const size = 10 + Math.random() * 4;
+  const sway = (Math.random() - 0.5) * 0.8;
+  runners.push({
+    x: spawnX, y: spawnY, speed, size, sway,
+    swayPhase: Math.random() * Math.PI * 2,
+    alive: true, deported: false,
+    deportAnim: 0,
+    color: `hsl(${20 + Math.random()*20}, ${40+Math.random()*20}%, ${50+Math.random()*15}%)`,
+  });
+}
+
+function getLevelConfig(lvl) {
+  return {
+    spawnInterval: Math.max(0.4, 1.5 - (lvl-1) * 0.12),
+    runnerSpeed: 55 + (lvl-1) * 12,
+    maxRunners: Math.min(20, 6 + lvl * 2),
+  };
+}
+
+// EFFECTS
+function addEffect(x, y, text, color) {
+  effects.push({ x, y, text, color, life: 1.0 });
+}
+function addDispatch(x, y) {
+  dispatches.push({ x, y, life: 1.0 });
+}
+
+// INPUT
+function getGamePos(clientX, clientY) {
+  return { x: clientX, y: clientY + scrollY - HUD_TOP };
+}
+
+function handleTap(clientX, clientY) {
+  if (!gameRunning) return;
+  const pos = getGamePos(clientX, clientY);
+
+  let hit = false;
+  // Find closest runner within tap radius
+  let bestDist = 40;
+  let bestIdx = -1;
+  for (let i = 0; i < runners.length; i++) {
+    const r = runners[i];
+    if (!r.alive || r.deported) continue;
+    const dx = r.x - pos.x;
+    const dy = r.y - pos.y;
+    const dist = Math.sqrt(dx*dx + dy*dy);
+    if (dist < bestDist) {
+      bestDist = dist;
+      bestIdx = i;
+    }
+  }
+
+  if (bestIdx >= 0) {
+    const r = runners[bestIdx];
+    r.deported = true;
+    r.deportAnim = 0;
+    r.alive = false;
+    combo++;
+    if (combo > maxCombo) maxCombo = combo;
+    totalDeported++;
+    const comboBonus = Math.floor(combo / 3) * 5;
+    const pts = 10 + (level-1)*5 + comboBonus;
+    score += pts;
+    const texts = ['DEPORTED!','ICE\'D!','GONE!','ADIOS!','REMOVED!','BYE BYE!','SENT BACK!'];
+    const label = combo >= 3 ? `${texts[Math.floor(Math.random()*texts.length)]} x${combo}` : `+${pts}`;
+    addEffect(r.x, r.y, label, var_gold);
+    addDispatch(r.x, r.y);
+    updateHUD();
+    checkLevelUp();
+  }
+}
+
+canvas.addEventListener('click', e => handleTap(e.clientX, e.clientY));
+canvas.addEventListener('touchstart', e => {
+  e.preventDefault();
+  const t = e.touches[0];
+  handleTap(t.clientX, t.clientY);
+}, { passive: false });
+
+const var_gold = '#F0A830';
+const var_orange = '#FA4616';
+const var_red = '#D32F2F';
+
+// HUD
+function updateHUD() {
+  document.getElementById('hudScore').textContent = score;
+  document.getElementById('hudLevel').textContent = level;
+  document.getElementById('hudTimer').textContent = timeLeft;
+  document.getElementById('hudMissed').textContent = `${missed}/${MAX_MISSED}`;
+}
+
+function checkLevelUp() {
+  if (totalDeported >= level * 10) {
+    level++;
+    addEffect(W/2, scrollY + H/2, `LEVEL ${level}`, var_gold);
+    updateHUD();
+  }
+}
+
+// DRAW
+function drawGround() {
+  // Base desert/terrain
+  const gy = -scrollY + HUD_TOP;
+  // Sky gradient at very top
+  const grad = ctx.createLinearGradient(0, 0, 0, H);
+  grad.addColorStop(0, '#1a3020');
+  grad.addColorStop(1, '#2a4a30');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, W, H);
+
+  // Grid lines (terrain texture)
+  ctx.strokeStyle = 'rgba(255,255,255,0.03)';
+  ctx.lineWidth = 1;
+  const gridSize = 80;
+  const offsetY = (scrollY * 0.5) % gridSize;
+  for (let y = -offsetY; y < H; y += gridSize) {
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+  }
+
+  // Border fence line
+  const fenceScreenY = fenceY - scrollY + HUD_TOP;
+  if (fenceScreenY > -20 && fenceScreenY < H + 20) {
+    // Fence
+    ctx.strokeStyle = '#888';
+    ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(0, fenceScreenY); ctx.lineTo(W, fenceScreenY); ctx.stroke();
+    // Barbed wire
+    ctx.strokeStyle = '#aaa';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([6, 4]);
+    ctx.beginPath(); ctx.moveTo(0, fenceScreenY - 4); ctx.lineTo(W, fenceScreenY - 4); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0, fenceScreenY + 4); ctx.lineTo(W, fenceScreenY + 4); ctx.stroke();
+    ctx.setLineDash([]);
+    // Posts
+    for (let x = 30; x < W; x += 60) {
+      ctx.fillStyle = '#777';
+      ctx.fillRect(x - 2, fenceScreenY - 14, 4, 28);
+    }
+    // Label
+    ctx.fillStyle = 'rgba(255,255,255,0.15)';
+    ctx.font = `600 10px ${getComputedStyle(document.body).getPropertyValue('--font-heading').trim() || 'Oswald'}`;
+    ctx.textAlign = 'center';
+    ctx.fillText('— U.S. BORDER —', W/2, fenceScreenY - 18);
+  }
+
+  // City zone indicator
+  const cityY = fenceY - 800 - scrollY + HUD_TOP;
+  if (cityY > -50 && cityY < H + 50) {
+    ctx.fillStyle = 'rgba(250,70,22,0.12)';
+    ctx.fillRect(0, 0, W, Math.max(0, cityY));
+    ctx.fillStyle = 'rgba(250,70,22,0.3)';
+    ctx.font = '600 9px Inter';
+    ctx.textAlign = 'center';
+    ctx.fillText('🏙️ CITY ZONE — DON\'T LET THEM REACH HERE', W/2, Math.max(20, cityY - 8));
+  }
+
+  // Scattered terrain details
+  const detailOffset = (scrollY * 0.3) % 200;
+  ctx.fillStyle = 'rgba(40,70,40,0.3)';
+  for (let i = 0; i < 30; i++) {
+    const tx = ((i * 137) % W);
+    const ty = ((i * 89 + detailOffset) % (H + 100)) - 50;
+    ctx.beginPath();
+    ctx.arc(tx, ty, 3 + (i % 4), 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+function drawRunner(r) {
+  const screenX = r.x;
+  const screenY = r.y - scrollY + HUD_TOP;
+  if (screenY < -30 || screenY > H + 30) return;
+
+  if (r.deported) {
+    // Flash red circle shrinking
+    const a = 1 - r.deportAnim;
+    ctx.beginPath();
+    ctx.arc(screenX, screenY, r.size * (1 + r.deportAnim), 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(250,70,22,${a * 0.4})`;
+    ctx.fill();
+    ctx.strokeStyle = `rgba(250,70,22,${a})`;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    return;
+  }
+
+  // Shadow
+  ctx.beginPath();
+  ctx.ellipse(screenX, screenY + r.size * 0.6, r.size * 0.7, r.size * 0.25, 0, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(0,0,0,0.3)';
+  ctx.fill();
+
+  // Body (dot with slight figure shape)
+  ctx.beginPath();
+  ctx.arc(screenX, screenY, r.size * 0.55, 0, Math.PI * 2);
+  ctx.fillStyle = r.color;
+  ctx.fill();
+
+  // Head
+  ctx.beginPath();
+  ctx.arc(screenX, screenY - r.size * 0.55, r.size * 0.3, 0, Math.PI * 2);
+  ctx.fillStyle = r.color;
+  ctx.fill();
+
+  // Detection ring (pulse)
+  const pulse = Math.sin(Date.now() * 0.005 + r.swayPhase) * 0.3 + 0.7;
+  ctx.beginPath();
+  ctx.arc(screenX, screenY, r.size * 1.2, 0, Math.PI * 2);
+  ctx.strokeStyle = `rgba(255,60,30,${pulse * 0.3})`;
+  ctx.lineWidth = 1;
+  ctx.stroke();
+}
+
+function drawEffects() {
+  effects.forEach(e => {
+    const screenY = e.y - scrollY + HUD_TOP;
+    const a = e.life;
+    const yOff = (1 - a) * -30;
+    ctx.fillStyle = e.color;
+    ctx.globalAlpha = a;
+    ctx.font = `700 ${14 + (1-a)*4}px Oswald, sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.fillText(e.text, e.x, screenY + yOff);
+    ctx.globalAlpha = 1;
+  });
+
+  dispatches.forEach(d => {
+    const screenY = d.y - scrollY + HUD_TOP;
+    const progress = 1 - d.life;
+    const radius = progress * 35;
+    ctx.beginPath();
+    ctx.arc(d.x, screenY, radius, 0, Math.PI * 2);
+    ctx.strokeStyle = `rgba(250,70,22,${d.life})`;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    // Crosshair
+    if (d.life > 0.5) {
+      const ca = (d.life - 0.5) * 2;
+      ctx.strokeStyle = `rgba(255,255,255,${ca * 0.6})`;
+      ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(d.x - 12, screenY); ctx.lineTo(d.x + 12, screenY); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(d.x, screenY - 12); ctx.lineTo(d.x, screenY + 12); ctx.stroke();
+    }
+  });
+}
+
+// Helicopter spotlight / scan line
+function drawHelicopter() {
+  // Scanning spotlight cone
+  const spotX = W / 2 + Math.sin(Date.now() * 0.001) * W * 0.2;
+  const grad = ctx.createRadialGradient(spotX, H * 0.4, 0, spotX, H * 0.4, 200);
+  grad.addColorStop(0, 'rgba(255,255,200,0.04)');
+  grad.addColorStop(1, 'rgba(255,255,200,0)');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, W, H);
+
+  // Scan line
+  const scanY = (Date.now() * 0.05) % H;
+  ctx.strokeStyle = 'rgba(0,255,100,0.06)';
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(0, scanY); ctx.lineTo(W, scanY); ctx.stroke();
+
+  // Minimap-style border indicator
+  ctx.fillStyle = 'rgba(0,0,0,0.4)';
+  ctx.fillRect(W - 44, HUD_TOP + 8, 36, 80);
+  ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+  ctx.strokeRect(W - 44, HUD_TOP + 8, 36, 80);
+  // Viewport indicator
+  const mapScale = 80 / (H * 4);
+  const viewTop = (scrollY) * mapScale;
+  ctx.fillStyle = 'rgba(250,70,22,0.4)';
+  ctx.fillRect(W - 43, HUD_TOP + 9 + viewTop, 34, H * mapScale);
+  // Runners on minimap
+  runners.forEach(r => {
+    if (!r.alive) return;
+    const mx = W - 44 + (r.x / W) * 36;
+    const my = HUD_TOP + 8 + (r.y - scrollY + H) * mapScale;
+    if (my > HUD_TOP + 8 && my < HUD_TOP + 88) {
+      ctx.fillStyle = '#ff4444';
+      ctx.fillRect(mx - 1, my - 1, 3, 3);
+    }
+  });
+  // Fence on minimap
+  const fenceMapY = HUD_TOP + 8 + (fenceY - scrollY + H) * mapScale;
+  if (fenceMapY > HUD_TOP + 8 && fenceMapY < HUD_TOP + 88) {
+    ctx.strokeStyle = '#888';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(W - 44, fenceMapY); ctx.lineTo(W - 8, fenceMapY); ctx.stroke();
+  }
+}
+
+// GAME LOOP
+let lastTime = 0;
+function gameLoop(ts) {
+  const dt = Math.min((ts - lastTime) / 1000, 0.05);
+  lastTime = ts;
+
+  if (gameRunning) {
+    // Scroll camera slowly upward (helicopter moving)
+    scrollY -= dt * (30 + level * 5);
+    // Keep scroll bounded
+    const minScroll = fenceY - H * 2;
+    if (scrollY < minScroll) scrollY = minScroll;
+
+    // Spawn runners
+    const config = getLevelConfig(level);
+    spawnAccum += dt;
+    if (spawnAccum >= config.spawnInterval && runners.filter(r => r.alive).length < config.maxRunners) {
+      spawnRunner();
+      spawnAccum = 0;
     }
 
-    // DOM
-    const holesContainer = document.getElementById('holesContainer');
-    const hudScore = document.getElementById('hudScore');
-    const hudLevel = document.getElementById('hudLevel');
-    const hudTimer = document.getElementById('hudTimer');
-    const hudMissed = document.getElementById('hudMissed');
-    const startScreen = document.getElementById('startScreen');
-    const gameOverScreen = document.getElementById('gameOverScreen');
-    const levelFlash = document.getElementById('levelFlash');
-    const levelFlashText = document.getElementById('levelFlashText');
+    // Update runners
+    runners.forEach(r => {
+      if (r.deported) {
+        r.deportAnim += dt * 3;
+        if (r.deportAnim >= 1) r.deported = false;
+        return;
+      }
+      if (!r.alive) return;
 
-    // Build holes
-    const holes = [];
-    for (let i = 0; i < NUM_HOLES; i++) {
-      const hole = document.createElement('div');
-      hole.className = 'hole';
-      hole.innerHTML = `
-        <div class="hole-ground"></div>
-        <div class="character" data-index="${i}">
-          <div class="char-body"><span class="char-emoji"></span></div>
-        </div>
-      `;
-      holesContainer.appendChild(hole);
-      const character = hole.querySelector('.character');
-      hole.addEventListener('click', () => onHoleClick(i));
-      hole.addEventListener('touchstart', (e) => { e.preventDefault(); onHoleClick(i); }, { passive: false });
-      holes.push({ el: hole, character, active: false, timeout: null });
-    }
+      // Move toward city (upward = negative Y)
+      r.y -= r.speed * dt;
+      r.x += Math.sin(r.swayPhase + r.y * 0.01) * r.sway;
+      r.x = Math.max(10, Math.min(W - 10, r.x));
 
-    function onHoleClick(index) {
-      const hole = holes[index];
-      if (!gameRunning || !hole.active) return;
-
-      hole.active = false;
-      clearTimeout(hole.timeout);
-
-      const config = getLevelConfig(level);
-      combo++;
-      if (combo > maxCombo) maxCombo = combo;
-      const comboBonus = Math.floor(combo / 3) * 5;
-      const points = config.pointsBase + comboBonus;
-      score += points;
-      totalDeported++;
-
-      // Animate deport
-      const char = hole.character;
-      char.classList.remove('visible');
-      char.classList.add('deported');
-
-      // Hit text
-      const txt = document.createElement('div');
-      txt.className = 'hit-effect';
-      txt.textContent = combo >= 3 ? `${DEPORT_TEXTS[Math.floor(Math.random() * DEPORT_TEXTS.length)]} x${combo}` : `+${points}`;
-      hole.el.appendChild(txt);
-      setTimeout(() => txt.remove(), 700);
-
-      setTimeout(() => {
-        char.classList.remove('deported');
-        char.style.opacity = '0';
-      }, 400);
-
-      updateHUD();
-      checkLevelUp();
-    }
-
-    function spawnCharacter() {
-      if (!gameRunning) return;
-      const config = getLevelConfig(level);
-
-      const activeCount = holes.filter(h => h.active).length;
-      if (activeCount >= config.maxActive) return;
-
-      const available = holes.map((h, i) => ({ h, i })).filter(x => !x.h.active);
-      if (available.length === 0) return;
-
-      const pick = available[Math.floor(Math.random() * available.length)];
-      const hole = pick.h;
-      hole.active = true;
-
-      const char = hole.character;
-      const emoji = EMOJIS[Math.floor(Math.random() * EMOJIS.length)];
-      char.querySelector('.char-emoji').textContent = emoji;
-      char.classList.remove('deported', 'escaped');
-      char.style.opacity = '1';
-      char.classList.add('visible');
-
-      // Auto escape
-      hole.timeout = setTimeout(() => {
-        if (!hole.active) return;
-        hole.active = false;
-        combo = 0;
+      // Escaped if far above fence into city
+      const escapeY = fenceY - 900;
+      if (r.y < escapeY) {
+        r.alive = false;
         missed++;
-
-        char.classList.remove('visible');
-        char.classList.add('escaped');
-
-        const txt = document.createElement('div');
-        txt.className = 'miss-effect';
-        txt.textContent = ESCAPE_TEXTS[Math.floor(Math.random() * ESCAPE_TEXTS.length)];
-        hole.el.appendChild(txt);
-        setTimeout(() => txt.remove(), 900);
-
-        setTimeout(() => {
-          char.classList.remove('escaped');
-          char.style.opacity = '0';
-        }, 300);
-
+        combo = 0;
+        addEffect(r.x, r.y, 'ESCAPED!', var_red);
         updateHUD();
         if (missed >= MAX_MISSED) endGame();
-      }, config.visibleTime);
-    }
-
-    function checkLevelUp() {
-      const threshold = level * 8;
-      if (totalDeported >= threshold) {
-        level++;
-        showLevelFlash(level);
-        updateHUD();
       }
-    }
-
-    function showLevelFlash(lvl) {
-      levelFlashText.textContent = `Level ${lvl}`;
-      levelFlash.classList.remove('show');
-      void levelFlash.offsetWidth;
-      levelFlash.classList.add('show');
-    }
-
-    function updateHUD() {
-      hudScore.textContent = score;
-      hudLevel.textContent = level;
-      hudTimer.textContent = timeLeft;
-      hudMissed.textContent = `${missed}/${MAX_MISSED}`;
-    }
-
-    function startGame() {
-      score = 0; missed = 0; level = 1; timeLeft = GAME_TIME;
-      combo = 0; maxCombo = 0; totalDeported = 0;
-      gameRunning = true;
-
-      holes.forEach(h => {
-        h.active = false;
-        clearTimeout(h.timeout);
-        h.character.classList.remove('visible', 'deported', 'escaped');
-        h.character.style.opacity = '0';
-      });
-
-      updateHUD();
-      startScreen.classList.add('hidden');
-      gameOverScreen.classList.add('hidden');
-
-      // Spawn loop
-      function spawnLoop() {
-        if (!gameRunning) return;
-        spawnCharacter();
-        const config = getLevelConfig(level);
-        const jitter = (Math.random() - 0.5) * config.spawnInterval * 0.4;
-        spawnTimer = setTimeout(spawnLoop, config.spawnInterval + jitter);
-      }
-      spawnLoop();
-
-      // Timer
-      gameTimer = setInterval(() => {
-        timeLeft--;
-        updateHUD();
-        if (timeLeft <= 0) endGame();
-      }, 1000);
-    }
-
-    function endGame() {
-      gameRunning = false;
-      clearInterval(gameTimer);
-      clearTimeout(spawnTimer);
-      holes.forEach(h => {
-        h.active = false;
-        clearTimeout(h.timeout);
-      });
-
-      const escaped = missed;
-      const goTitle = document.getElementById('goTitle');
-      const goStats = document.getElementById('goStats');
-
-      if (missed >= MAX_MISSED) {
-        goTitle.textContent = 'Border Breached!';
-        goTitle.style.color = 'var(--red)';
-      } else {
-        goTitle.textContent = 'Time\'s Up!';
-        goTitle.style.color = 'var(--gold)';
-      }
-
-      goStats.innerHTML = `
-        <div class="stat-row"><span class="stat-label">Score</span><span class="stat-val">${score}</span></div>
-        <div class="stat-row"><span class="stat-label">Deported</span><span class="stat-val">${totalDeported}</span></div>
-        <div class="stat-row"><span class="stat-label">Escaped</span><span class="stat-val">${escaped}</span></div>
-        <div class="stat-row"><span class="stat-label">Max Level</span><span class="stat-val">${level}</span></div>
-        <div class="stat-row"><span class="stat-label">Best Combo</span><span class="stat-val">x${maxCombo}</span></div>
-      `;
-
-      gameOverScreen.classList.remove('hidden');
-    }
-
-    function getShareText() {
-      return `🚨 DEPORT — UFCR Games\n\n🏆 Score: ${score}\n👮 Deported: ${totalDeported}\n🏃 Escaped: ${missed}\n⚡ Level: ${level} | Combo: x${maxCombo}\n\nCan you beat my score?\n🎮 ufcr.online/deport/`;
-    }
-
-    // Start
-    document.getElementById('startBtn').addEventListener('click', startGame);
-    document.getElementById('restartBtn').addEventListener('click', startGame);
-    document.getElementById('shareBtn').addEventListener('click', () => {
-      const text = getShareText();
-      const url = 'https://x.com/intent/tweet?text=' + encodeURIComponent(text);
-      window.open(url, '_blank');
     });
-    document.getElementById('copyBtn').addEventListener('click', () => {
-      navigator.clipboard.writeText(getShareText()).then(() => {
-        document.getElementById('copyBtn').innerHTML = '<i class="fas fa-check"></i> Copied!';
-        setTimeout(() => {
-          document.getElementById('copyBtn').innerHTML = '<i class="fas fa-copy"></i> Copy';
-        }, 2000);
-      });
-    });
-  </script>
+
+    // Clean dead runners
+    runners = runners.filter(r => r.alive || r.deported);
+
+    // Update effects
+    effects.forEach(e => e.life -= dt * 1.5);
+    effects = effects.filter(e => e.life > 0);
+    dispatches.forEach(d => d.life -= dt * 2);
+    dispatches = dispatches.filter(d => d.life > 0);
+  }
+
+  // DRAW
+  ctx.clearRect(0, 0, W, H);
+  drawGround();
+  runners.forEach(r => drawRunner(r));
+  drawEffects();
+  if (gameRunning) drawHelicopter();
+
+  requestAnimationFrame(gameLoop);
+}
+
+function startGame() {
+  score = 0; missed = 0; level = 1; timeLeft = GAME_TIME;
+  combo = 0; maxCombo = 0; totalDeported = 0;
+  runners = []; effects = []; dispatches = [];
+  spawnAccum = 0;
+
+  // Set fence and scroll position
+  fenceY = 0;
+  scrollY = fenceY + H * 0.5;
+
+  gameRunning = true;
+  document.getElementById('hud').style.display = 'flex';
+  document.getElementById('startScreen').classList.add('hidden');
+  document.getElementById('gameOverScreen').classList.add('hidden');
+  updateHUD();
+
+  clearInterval(gameTimer);
+  gameTimer = setInterval(() => {
+    timeLeft--;
+    updateHUD();
+    if (timeLeft <= 0) endGame();
+  }, 1000);
+}
+
+function endGame() {
+  gameRunning = false;
+  clearInterval(gameTimer);
+
+  const goTitle = document.getElementById('goTitle');
+  if (missed >= MAX_MISSED) {
+    goTitle.textContent = 'Border Breached!';
+    goTitle.style.color = var_red;
+  } else {
+    goTitle.textContent = 'Patrol Complete';
+    goTitle.style.color = var_gold;
+  }
+
+  document.getElementById('goStats').innerHTML = `
+    <div class="stat-row"><span class="stat-label">Score</span><span class="stat-val">${score}</span></div>
+    <div class="stat-row"><span class="stat-label">Deported</span><span class="stat-val">${totalDeported}</span></div>
+    <div class="stat-row"><span class="stat-label">Escaped</span><span class="stat-val">${missed}</span></div>
+    <div class="stat-row"><span class="stat-label">Max Level</span><span class="stat-val">${level}</span></div>
+    <div class="stat-row"><span class="stat-label">Best Combo</span><span class="stat-val">x${maxCombo}</span></div>
+  `;
+  document.getElementById('gameOverScreen').classList.remove('hidden');
+}
+
+function getShareText() {
+  return `🚁 DEPORT — ICE Patrol\n\n🏆 Score: ${score}\n👮 Deported: ${totalDeported}\n🏃 Escaped: ${missed}\n⚡ Level ${level} | x${maxCombo} combo\n\nPatrol the border 🎮 ufcr.online/deport/`;
+}
+
+document.getElementById('startBtn').addEventListener('click', startGame);
+document.getElementById('restartBtn').addEventListener('click', startGame);
+document.getElementById('shareBtn').addEventListener('click', () => {
+  window.open('https://x.com/intent/tweet?text=' + encodeURIComponent(getShareText()), '_blank');
+});
+document.getElementById('copyBtn').addEventListener('click', () => {
+  navigator.clipboard.writeText(getShareText()).then(() => {
+    document.getElementById('copyBtn').innerHTML = '<i class="fas fa-check"></i> Copied!';
+    setTimeout(() => { document.getElementById('copyBtn').innerHTML = '<i class="fas fa-copy"></i> Copy'; }, 2000);
+  });
+});
+
+requestAnimationFrame(gameLoop);
+</script>
 </body>
 </html>
