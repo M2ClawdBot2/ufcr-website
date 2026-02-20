@@ -171,8 +171,8 @@ function mkRunner(b) {
   return {
     x: laneX(Math.floor(Math.random() * LANE_COUNT)),
     y: H * 0.3,
-    baseSpeed: 185 + (b || 0) * 12,
-    speed: 185 + (b || 0) * 12,
+    baseSpeed: 200 + (b || 0) * 10,
+    speed: 200 + (b || 0) * 10,
     swerveTimer: 0,
     targetX: W / 2,
     targetLane: Math.floor(LANE_COUNT / 2),
@@ -277,7 +277,17 @@ function drawCar(x, y, w, h, tilt, col, ice, suspect) {
 
 // ─── COLOR PALETTES ───
 const ICE_COL = { body:'#2862b5', hood:'#3575d0', roof:'#1e4a8a', glass:'rgba(140,200,255,0.35)', tail:'#f44' };
-const RUNNER_COL = { body:'#cc2828', hood:'#e03535', roof:'#9a1e1e', glass:'rgba(40,40,50,0.45)', tail:'#f66' };
+const RUNNER_PALS = [
+  { body:'#cc2828', hood:'#e03535', roof:'#9a1e1e', glass:'rgba(40,40,50,0.45)', tail:'#f66' },
+  { body:'#222222', hood:'#333333', roof:'#1a1a1a', glass:'rgba(30,30,40,0.5)', tail:'#f44' },
+  { body:'#cc8800', hood:'#dd9922', roof:'#aa7000', glass:'rgba(40,40,50,0.45)', tail:'#f66' },
+  { body:'#3b8a3b', hood:'#4ca04c', roof:'#2a6e2a', glass:'rgba(30,40,30,0.45)', tail:'#f44' },
+  { body:'#7733aa', hood:'#8844bb', roof:'#5a2288', glass:'rgba(35,30,45,0.45)', tail:'#f44' },
+  { body:'#2288aa', hood:'#33aacc', roof:'#1a6688', glass:'rgba(30,40,50,0.45)', tail:'#f44' },
+  { body:'#cc3388', hood:'#dd44aa', roof:'#aa2266', glass:'rgba(40,30,40,0.45)', tail:'#f66' },
+  { body:'#666666', hood:'#777777', roof:'#555555', glass:'rgba(35,35,40,0.5)', tail:'#f44' },
+];
+let runnerCol = RUNNER_PALS[0];
 const CIV_COLS = [
   { body:'#e8e0cc', hood:'#f0e8d4', roof:'#d8d0bc', glass:'rgba(140,190,220,0.25)', tail:'#e55' },
   { body:'#5599cc', hood:'#66aadd', roof:'#4488bb', glass:'rgba(140,190,220,0.25)', tail:'#e55' },
@@ -540,8 +550,8 @@ function update(dt) {
     setTimeout(() => {
       if (!gameRunning) return;
       runner = mkRunner(busts);
-      // Spawn new runner from top of screen
       runner.y = TOP + 10;
+      runnerCol = RUNNER_PALS[busts % RUNNER_PALS.length];
       effects.push({ x: W / 2, y: runner.y, text: 'NEW SUSPECT', color: '#ff5555', life: 2, size: 15 });
     }, 700);
   }
@@ -620,7 +630,7 @@ function draw() {
 
   // Runner
   if (runner) {
-    drawCar(runner.x, runner.y, CAR_W, CAR_H, runner.tilt, RUNNER_COL, false, true);
+    drawCar(runner.x, runner.y, CAR_W, CAR_H, runner.tilt, runnerCol, false, true);
     // Tail glow
     cx.fillStyle = 'rgba(255,50,50,0.06)';
     cx.beginPath(); cx.ellipse(runner.x, runner.y + CAR_H / 2 + 6, 12, 6, 0, 0, Math.PI * 2); cx.fill();
@@ -687,6 +697,7 @@ function startGame() {
   runner = mkRunner(0);
   civilians = []; tireMarks = []; effects = []; sparks = [];
   flashTimer = 0; ramCooldown = 0; shakeTimer = 0;
+  runnerCol = RUNNER_PALS[0];
   genTrees();
   gameRunning = true;
   document.getElementById('hud').style.display = 'flex';
