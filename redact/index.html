@@ -610,8 +610,8 @@
           const hasHint = gameState.attempts.some(a => a.matched === -1);
           const hintFor = getHintIndices();
           const display = hintFor.has(index)
-            ? word[0] + '·'.repeat(word.length - 1)
-            : '·'.repeat(word.length);
+            ? word.split(' ').map(w => w[0] + '·'.repeat(w.length - 1)).join(' ')
+            : word.split(' ').map(w => '·'.repeat(w.length)).join(' ');
           const cls = hintFor.has(index) ? 'redacted-bar hint' : 'redacted-bar';
           replacement = `<span class="redacted-word"><span class="redacted-index">${index + 1}</span><span class="${cls}" data-idx="${index}">${display}</span></span>`;
         }
