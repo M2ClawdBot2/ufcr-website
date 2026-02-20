@@ -138,7 +138,7 @@ let roadScroll = 0;
 let player = null, runner = null;
 let civilians = [], tireMarks = [], effects = [], sparks = [];
 let gapDist = 0;
-const MAX_GAP = 400;
+const MAX_GAP = 550;
 let flashTimer = 0, shakeTimer = 0, shakeX = 0, shakeY = 0;
 let ramCooldown = 0;
 
@@ -164,15 +164,15 @@ function laneX(i) {
 }
 
 function mkPlayer() {
-  return { x: W / 2, y: H * 0.7, speed: 180, steerVel: 0, tilt: 0 };
+  return { x: W / 2, y: H * 0.7, speed: 220, steerVel: 0, tilt: 0 };
 }
 
 function mkRunner(b) {
   return {
     x: laneX(Math.floor(Math.random() * LANE_COUNT)),
     y: H * 0.25,
-    baseSpeed: 200 + (b || 0) * 15,
-    speed: 200 + (b || 0) * 15,
+    baseSpeed: 160 + (b || 0) * 10,
+    speed: 160 + (b || 0) * 10,
     swerveTimer: 0,
     targetX: W / 2,
     targetLane: Math.floor(LANE_COUNT / 2),
@@ -436,7 +436,7 @@ function update(dt) {
   if (goU()) p.speed += 320 * dt;
   else if (goD()) p.speed -= 400 * dt;
   else p.speed -= 60 * dt;
-  p.speed = Math.max(60, Math.min(380, p.speed));
+  p.speed = Math.max(60, Math.min(420, p.speed));
 
   // Steer
   if (goL()) p.steerVel -= 380 * dt;
@@ -561,9 +561,10 @@ function update(dt) {
     // Player collision
     if (!c.hit && Math.abs(p.x - c.x) < CAR_W * 0.85 && Math.abs(p.y - c.y) < CAR_H * 0.8) {
       c.hit = true;
-      p.speed *= 0.35;
-      p.steerVel += (p.x - c.x) * 4;
-      effects.push({ x: c.x, y: c.y, text: 'CRASH', color: '#ff4444', life: 1, size: 14 });
+      p.speed *= 0.2;
+      p.steerVel += (p.x - c.x) * 6;
+      gapDist = Math.min(MAX_GAP, gapDist + 60);
+      effects.push({ x: c.x, y: c.y, text: 'CRASH', color: '#ff4444', life: 1, size: 16 });
       addSparks((p.x + c.x) / 2, (p.y + c.y) / 2, 8);
       shakeTimer = 0.12;
       c.x += (c.x - p.x) * 2;
