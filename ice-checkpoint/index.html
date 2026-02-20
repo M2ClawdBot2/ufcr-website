@@ -188,8 +188,19 @@ function resizeScene() {
 }
 
 // ─── DATA ───
-const FIRST_NAMES = ['Jose','Maria','Carlos','Sofia','Miguel','Elena','Diego','Ana','Luis','Carmen','Pedro','Rosa','Juan','Lucia','Roberto','Isabel','Alejandro','Valentina','Fernando','Gabriela','Marco','Patricia','Raul','Andrea','Oscar'];
-const LAST_NAMES = ['Garcia','Rodriguez','Martinez','Lopez','Hernandez','Gonzalez','Perez','Sanchez','Ramirez','Torres','Flores','Rivera','Gomez','Diaz','Cruz','Morales','Reyes','Gutierrez','Ortiz','Ramos','Mendoza','Castillo','Vargas','Romero','Alvarez'];
+// Names by demographic
+const NAMES_WHITE = {
+  first: ['Jake','Emily','Connor','Madison','Tyler','Hannah','Brett','Ashley','Cody','Sarah','Dylan','Lauren','Hunter','Megan','Kyle','Brittany','Travis','Kayla','Dustin','Amber','Chad','Tiffany','Brandon','Jessica','Ryan'],
+  last: ['Smith','Johnson','Williams','Brown','Davis','Miller','Wilson','Anderson','Thomas','Taylor','Moore','Jackson','Martin','Lee','Thompson','White','Harris','Clark','Lewis','Robinson','Walker','Young','King','Wright','Hill']
+};
+const NAMES_HISPANIC = {
+  first: ['Jose','Maria','Carlos','Sofia','Miguel','Elena','Diego','Ana','Luis','Carmen','Pedro','Rosa','Juan','Lucia','Roberto','Isabel','Alejandro','Valentina','Fernando','Gabriela','Marco','Patricia','Raul','Andrea','Oscar'],
+  last: ['Garcia','Rodriguez','Martinez','Lopez','Hernandez','Gonzalez','Perez','Sanchez','Ramirez','Torres','Flores','Rivera','Gomez','Diaz','Cruz','Morales','Reyes','Gutierrez','Ortiz','Ramos','Mendoza','Castillo','Vargas','Romero','Alvarez']
+};
+const NAMES_BLACK = {
+  first: ['Darius','Aaliyah','Jamal','Keisha','DeShawn','Tamika','Tyrone','Ebony','Marcus','Jasmine','Andre','Destiny','Terrell','Imani','Malik','Shaniqua','Dante','Latoya','Jerome','Aisha','Lamar','Monique','Cedric','Tiana','Khalil'],
+  last: ['Washington','Jefferson','Jackson','Robinson','Freeman','Banks','Coleman','Brooks','Reed','Hayes','Powell','Butler','Sanders','Price','Howard','Jenkins','Perry','Russell','Bell','Grant','Dixon','Simmons','Marshall','Owens','Wallace']
+};
 const STATES = ['Texas','California','Arizona','New Mexico','Florida','Nevada','Colorado','Georgia','North Carolina','Illinois'];
 const STATE_ABBR = {Texas:'TX',California:'CA',Arizona:'AZ','New Mexico':'NM',Florida:'FL',Nevada:'NV',Colorado:'CO',Georgia:'GA','North Carolina':'NC',Illinois:'IL'};
 const OFFICES = ['El Paso','San Diego','Tucson','Laredo','McAllen','Nogales','Brownsville','Del Rio','Eagle Pass','Yuma'];
@@ -198,7 +209,10 @@ const EMPLOYERS = ['Del Sol Farms','Rio Grande Logistics','Mesa Construction','V
 const FAKE_EMPLOYERS = ['Phantom LLC','Nowhere Corp','XYZ Holdings','ABC Services Inc'];
 const CAR_COLORS = ['#cc2828','#2255aa','#228833','#aa8822','#666','#884488','#cc6622','#2288aa'];
 const CAR_NAMES = ['Sedan','Pickup','SUV','Hatchback','Van','Coupe'];
-const SKIN_TONES = ['#8d5524','#c68642','#e0ac69','#f1c27d','#a0522d','#cd853f','#d2996c'];
+const SKIN_TONES_WHITE = ['#f1c27d','#e8b98a','#f5d0a9','#edd3b8','#dbb99b'];
+const SKIN_TONES_HISPANIC = ['#c68642','#d2996c','#cd853f','#b8763a','#d4a76a'];
+const SKIN_TONES_BLACK = ['#8d5524','#6b3a1f','#a0522d','#7a4420','#5c3317'];
+const DEMOGRAPHICS = ['white','white','white','hispanic','hispanic','hispanic','black','black']; // weighted distribution
 const HAIR_COLORS = ['#1a1a1a','#3b2314','#5a3825','#2c1608','#4a3000'];
 const HAIR_STYLES = ['short','bald','long','medium'];
 
@@ -330,14 +344,16 @@ function genPlate() {
 
 function genVIN() { return '' + randInt(100000, 999999); }
 
-function genFace() {
+function genFace(demo) {
+  const skinMap = { white: SKIN_TONES_WHITE, hispanic: SKIN_TONES_HISPANIC, black: SKIN_TONES_BLACK };
   return {
-    skin: randEl(SKIN_TONES),
+    skin: randEl(skinMap[demo] || SKIN_TONES_WHITE),
     hair: randEl(HAIR_COLORS),
     hairStyle: randEl(HAIR_STYLES),
     eyeY: randInt(-1, 1),
     mouthW: randInt(4, 8),
     noseH: randInt(2, 4),
+    demo,
   };
 }
 
@@ -345,14 +361,16 @@ function genPerson() {
   const cfg = getDayConfig();
   const isForgery = Math.random() < cfg.forgeChance;
   
-  const firstName = randEl(FIRST_NAMES);
-  const lastName = randEl(LAST_NAMES);
+  const demo = randEl(DEMOGRAPHICS);
+  const nameSet = demo === 'hispanic' ? NAMES_HISPANIC : demo === 'black' ? NAMES_BLACK : NAMES_WHITE;
+  const firstName = randEl(nameSet.first);
+  const lastName = randEl(nameSet.last);
   const name = firstName + ' ' + lastName;
   const state = randEl(STATES);
   const abbr = STATE_ABBR[state];
-  const isCitizen = Math.random() > 0.45;
+  const isCitizen = demo === 'hispanic' ? Math.random() > 0.55 : Math.random() > 0.3;
   const isWorker = !isCitizen && Math.random() > 0.4;
-  const face = genFace();
+  const face = genFace(demo);
   const carColor = randEl(CAR_COLORS);
   const carType = randEl(CAR_NAMES);
   const plate = genPlate();
@@ -445,8 +463,8 @@ function applyForgery(type, p) {
       break;
     }
     case 'wrong_photo': {
-      // Different face on license
-      p.docs.find(d => d.type === 'license').photo = genFace();
+      // Different face on license — same demographic so it's subtle
+      p.docs.find(d => d.type === 'license').photo = genFace(p.face?.demo || randEl(DEMOGRAPHICS));
       break;
     }
     case 'expired_visa': {
