@@ -141,6 +141,7 @@ let gapDist = 0;
 const MAX_GAP = 800; // pixel distance where runner goes off screen
 let flashTimer = 0, shakeTimer = 0, shakeX = 0, shakeY = 0;
 let ramCooldown = 0;
+let spinouts = []; // { x, y, vx, vy, spin, life, col }
 
 // Scenery objects (generated once)
 let trees = [];
@@ -542,18 +543,32 @@ function update(dt) {
     busts++;
     const pts = 100 + busts * 50;
     score += pts;
+    // Spinout animation — car flies off to the side
+    const spinDir = (p.x > r.x) ? -1 : 1; // spin away from player
+    spinouts.push({
+      x: r.x, y: r.y,
+      vx: spinDir * (120 + Math.random() * 80),
+      vy: -30 + Math.random() * 60,
+      spin: spinDir * (8 + Math.random() * 4),
+      angle: 0,
+      life: 1.5,
+      col: { ...runnerCol },
+    });
     effects.push({ x: r.x, y: r.y, text: 'BUSTED +' + pts, color: '#F0A830', life: 2, size: 20 });
     addSparks(r.x, r.y, 14);
     flashTimer = 0.1;
     shakeTimer = 0.2;
     p.speed *= 0.5;
+
+    // Hide runner until new one spawns
+    runner = null;
     setTimeout(() => {
       if (!gameRunning) return;
       runner = mkRunner(busts);
       runner.y = TOP + 10;
       runnerCol = RUNNER_PALS[busts % RUNNER_PALS.length];
       effects.push({ x: W / 2, y: runner.y, text: 'NEW SUSPECT', color: '#ff5555', life: 2, size: 15 });
-    }, 700);
+    }, 1200);
   }
 
   // Civilians
@@ -605,6 +620,16 @@ function update(dt) {
   tireMarks = tireMarks.filter(tm => tm.life > 0 && tm.y < H + 20);
   sparks.forEach(s => { s.x += s.vx * dt; s.y += s.vy * dt; s.life -= dt; });
   sparks = sparks.filter(s => s.life > 0);
+  // Spinouts
+  spinouts.forEach(sp => {
+    sp.x += sp.vx * dt;
+    sp.y += sp.vy * dt + (player ? player.speed * 0.3 * dt : 0); // scroll with road
+    sp.angle += sp.spin * dt;
+    sp.vx *= (1 - 1.5 * dt); // friction
+    sp.spin *= (1 - 1.0 * dt);
+    sp.life -= dt;
+  });
+  spinouts = spinouts.filter(sp => sp.life > 0);
   effects.forEach(e => e.life -= dt * 0.6);
   effects = effects.filter(e => e.life > 0);
   if (shakeTimer > 0) { shakeX = (Math.random() - 0.5) * 5; shakeY = (Math.random() - 0.5) * 5; shakeTimer -= dt; }
@@ -627,6 +652,32 @@ function draw() {
 
   // Civilians
   civilians.forEach(c => drawCar(c.x, c.y, CAR_W * 0.88, CAR_H * 0.85, c.tilt, c.col, false, false));
+
+  // Spinouts (behind runner)
+  spinouts.forEach(sp => {
+    cx.save();
+    cx.translate(sp.x, sp.y);
+    cx.rotate(sp.angle);
+    cx.globalAlpha = Math.min(1, sp.life * 1.5);
+    // Draw the car body inline (simplified)
+    const hw = CAR_W / 2, hh = CAR_H / 2;
+    cx.fillStyle = sp.col.body;
+    cx.beginPath();
+    cx.moveTo(-hw + 3, -hh); cx.lineTo(hw - 3, -hh);
+    cx.lineTo(hw, -hh + 5); cx.lineTo(hw, hh - 3);
+    cx.lineTo(hw - 2, hh); cx.lineTo(-hw + 2, hh);
+    cx.lineTo(-hw, hh - 3); cx.lineTo(-hw, -hh + 5);
+    cx.closePath(); cx.fill();
+    cx.fillStyle = sp.col.roof;
+    cx.fillRect(-hw + 4, -hh + 16, CAR_W - 8, CAR_H - 30);
+    cx.fillStyle = sp.col.glass;
+    cx.fillRect(-hw + 4, -hh + 9, CAR_W - 8, 7);
+    // Tire marks from spinout
+    cx.fillStyle = 'rgba(30,30,30,0.15)';
+    cx.beginPath(); cx.arc(0, 0, CAR_H * 0.6, 0, Math.PI * 2); cx.fill();
+    cx.globalAlpha = 1;
+    cx.restore();
+  });
 
   // Runner
   if (runner) {
@@ -695,7 +746,7 @@ function startGame() {
   score = 0; busts = 0; gapDist = 0; roadScroll = 0;
   player = mkPlayer();
   runner = mkRunner(0);
-  civilians = []; tireMarks = []; effects = []; sparks = [];
+  civilians = []; tireMarks = []; effects = []; sparks = []; spinouts = [];
   flashTimer = 0; ramCooldown = 0; shakeTimer = 0;
   runnerCol = RUNNER_PALS[0];
   genTrees();
