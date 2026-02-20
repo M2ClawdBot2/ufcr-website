@@ -19,6 +19,17 @@ navToggle.addEventListener('click', () => {
   navLinks.classList.toggle('open');
 });
 
+// Games dropdown toggle for mobile
+const gamesToggle = document.querySelector('.nav-games-toggle');
+if (gamesToggle) {
+  gamesToggle.addEventListener('click', (e) => {
+    if (window.innerWidth <= 768) {
+      e.preventDefault();
+      gamesToggle.closest('.nav-dropdown').classList.toggle('open');
+    }
+  });
+}
+
 // Close mobile nav on link click
 navLinks.querySelectorAll('a').forEach(link => {
   link.addEventListener('click', () => {
