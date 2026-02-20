@@ -396,45 +396,58 @@ function drawTruck(t) {
     }
   }
 
+  // Determine facing direction: +1 = facing right, -1 = facing left
+  const dir = t.returning ? -1 : 1;
+
+  cx.save();
+  cx.translate(t.x, t.y);
+  cx.scale(dir, 1);
+  // Now draw truck centered at (0, 0), always facing right in local space
+
   // Shadow
   cx.fillStyle = 'rgba(0,0,0,0.2)';
-  cx.fillRect(t.x - s * 1.2 + 2, t.y + s * 0.4 + 2, s * 2.4, s * 0.3);
+  cx.fillRect(-s * 1.2 + 2, s * 0.4 + 2, s * 2.4, s * 0.3);
 
   // Truck body
   cx.fillStyle = '#e8e8e8';
   cx.beginPath();
-  cx.roundRect(t.x - s * 1.2, t.y - s * 0.6, s * 2.4, s * 1, 2);
+  cx.roundRect(-s * 1.2, -s * 0.6, s * 2.4, s * 1, 2);
   cx.fill();
 
-  // Cab
+  // Cab (front of truck = right side)
   cx.fillStyle = COL.truckBlue;
   cx.beginPath();
-  cx.roundRect(t.x + s * 0.5, t.y - s * 0.8, s * 0.8, s * 1.2, [2, 2, 0, 0]);
+  cx.roundRect(s * 0.5, -s * 0.8, s * 0.8, s * 1.2, [2, 2, 0, 0]);
   cx.fill();
 
   // Windshield
   cx.fillStyle = 'rgba(150,200,255,0.4)';
-  cx.fillRect(t.x + s * 0.6, t.y - s * 0.6, s * 0.55, s * 0.4);
+  cx.fillRect(s * 0.6, -s * 0.6, s * 0.55, s * 0.4);
 
-  // ICE text on side
+  // ICE text on side (flip text back so it reads correctly)
+  cx.save();
+  cx.scale(dir, 1); // undo the parent flip for text
   cx.fillStyle = COL.truckBlue;
   cx.font = `700 ${s * 0.55}px Oswald, sans-serif`;
   cx.textAlign = 'center';
-  cx.fillText('ICE', t.x - s * 0.2, t.y + s * 0.15);
+  cx.fillText('ICE', -s * 0.2 * dir, s * 0.15);
+  cx.restore();
 
   // Wheels
   cx.fillStyle = '#222';
-  cx.beginPath(); cx.arc(t.x - s * 0.7, t.y + s * 0.45, s * 0.22, 0, Math.PI * 2); cx.fill();
-  cx.beginPath(); cx.arc(t.x + s * 0.8, t.y + s * 0.45, s * 0.22, 0, Math.PI * 2); cx.fill();
+  cx.beginPath(); cx.arc(-s * 0.7, s * 0.45, s * 0.22, 0, Math.PI * 2); cx.fill();
+  cx.beginPath(); cx.arc(s * 0.8, s * 0.45, s * 0.22, 0, Math.PI * 2); cx.fill();
 
-  // Flashing light
+  // Flashing lights
   if (Math.sin(Date.now() * 0.01) > 0) {
     cx.fillStyle = 'rgba(255,50,50,0.6)';
-    cx.beginPath(); cx.arc(t.x + s * 0.7, t.y - s * 0.8, 3, 0, Math.PI * 2); cx.fill();
+    cx.beginPath(); cx.arc(s * 0.7, -s * 0.8, 3, 0, Math.PI * 2); cx.fill();
   } else {
     cx.fillStyle = 'rgba(50,100,255,0.6)';
-    cx.beginPath(); cx.arc(t.x + s * 0.9, t.y - s * 0.8, 3, 0, Math.PI * 2); cx.fill();
+    cx.beginPath(); cx.arc(s * 0.9, -s * 0.8, 3, 0, Math.PI * 2); cx.fill();
   }
+
+  cx.restore();
 }
 
 function drawWall() {
