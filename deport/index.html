@@ -180,14 +180,19 @@ function spawnIllegal() {
 function dispatchTruck(target) {
   // Already has a truck?
   if (trucks.some(t => t.targetId === target.id && t.active)) return;
+  const startX = -40;
+  const dist = Math.abs(target.x - startX) + 20; // distance to cover
+  const timeRemaining = target.truckArriveTime - target.spotTime; // seconds left on ring
+  const speed = dist / Math.max(0.1, timeRemaining); // arrive exactly when ring closes
   trucks.push({
-    x: -40,
+    x: startX,
     y: target.y + 10,
     targetId: target.id,
     targetX: target.x,
-    speed: getWaveConfig(wave).truckSpeed,
+    speed: speed,
     active: true,
     returning: false,
+    arrived: false,
     loadAnim: 0,
     hasPassenger: false,
   });
@@ -754,12 +759,21 @@ function update(dt) {
     }
     const prevX = t.x;
     if (t.returning) {
-      t.x -= t.speed * dt * 2;
+      t.x -= 400 * dt;
       if (t.x < -50) t.active = false;
     } else {
+      // Dynamically recalc speed so truck arrives exactly when ring closes
+      if (target) {
+        const distLeft = Math.abs(t.targetX - 20 - t.x);
+        const timeLeft = target.truckArriveTime - target.spotTime;
+        if (timeLeft > 0.05 && distLeft > 1) {
+          t.speed = distLeft / timeLeft;
+        }
+        t.targetX = target.x; // track target position
+        t.y = (target.drawY || target.y) + 10; // track target Y
+      }
       if (t.x < t.targetX - 20) t.x += t.speed * dt;
       else {
-        // Brake skid when arriving
         if (!t.arrived) { t.arrived = true; tireTracks.push({ x: t.x - 15, y: t.y + 8, w: 25, life: 4 }); }
       }
     }
