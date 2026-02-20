@@ -58,8 +58,9 @@
     .unit-btn .unit-cost { font-size: 0.6rem; color: var(--gold); font-weight: 700; }
 
     /* MENU OVERLAYS */
-    .overlay { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(10,14,26,0.95); z-index: 100; }
+    .overlay { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; background: rgba(10,14,26,0.95); z-index: 100; overflow-y: auto; }
     .overlay.hidden { display: none; }
+    .overlay.overlay-center { justify-content: center; }
     .menu-title { font-family: var(--font-heading); font-size: 4rem; font-weight: 700; letter-spacing: 6px; color: var(--orange); text-transform: uppercase; line-height: 1; }
     .menu-subtitle { font-family: var(--font-heading); font-size: 1.2rem; letter-spacing: 4px; color: var(--gold); text-transform: uppercase; margin-top: 8px; }
     .menu-btn { font-family: var(--font-heading); font-size: 1rem; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; padding: 14px 40px; border: 2px solid var(--orange); background: transparent; color: var(--white); cursor: pointer; margin-top: 16px; transition: all 0.2s; }
@@ -67,24 +68,41 @@
     .menu-btn.primary { background: var(--orange); color: var(--white); }
     .menu-btn.primary:hover { background: #ff5a2e; }
     .menu-btn i { margin-right: 8px; }
-    .menu-section { margin-top: 24px; text-align: center; }
-    .menu-section h3 { font-family: var(--font-heading); font-size: 1rem; letter-spacing: 2px; color: var(--gold); margin-bottom: 10px; text-transform: uppercase; }
-    .menu-section p { font-size: 0.8rem; color: rgba(255,255,255,0.7); line-height: 1.6; max-width: 400px; }
-    .score-list { list-style: none; }
-    .score-list li { font-family: var(--font-heading); font-size: 0.85rem; letter-spacing: 1px; padding: 4px 0; color: rgba(255,255,255,0.8); }
-    .score-list li:first-child { color: var(--gold); }
 
-    /* WAVE BANNER */
-    #wave-banner { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-family: var(--font-heading); font-size: 2rem; letter-spacing: 4px; color: var(--gold); text-transform: uppercase; pointer-events: none; opacity: 0; z-index: 50; text-shadow: 0 2px 20px rgba(0,0,0,0.8); }
-
-    /* GAME OVER */
-    #gameover-overlay .stat-row { font-family: var(--font-heading); font-size: 1rem; letter-spacing: 1px; margin: 6px 0; }
-    #gameover-overlay .stat-val { color: var(--orange); font-weight: 700; }
+    /* LEVEL SELECT */
+    #levelselect-overlay { padding: 20px 16px 40px; }
+    .ls-header { text-align: center; margin-bottom: 24px; flex-shrink: 0; }
+    .level-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; max-width: 560px; width: 100%; }
+    .level-card { background: rgba(255,255,255,0.04); border: 2px solid rgba(255,255,255,0.1); padding: 16px; cursor: pointer; transition: all 0.2s; position: relative; }
+    .level-card:hover:not(.locked) { border-color: var(--orange); background: rgba(250,70,22,0.08); }
+    .level-card.locked { opacity: 0.4; cursor: not-allowed; }
+    .level-card .lc-num { font-family: var(--font-heading); font-size: 0.7rem; letter-spacing: 2px; color: var(--gold); text-transform: uppercase; margin-bottom: 4px; }
+    .level-card .lc-name { font-family: var(--font-heading); font-size: 1.1rem; font-weight: 700; letter-spacing: 1px; color: var(--white); margin-bottom: 6px; }
+    .level-card .lc-info { font-size: 0.7rem; color: rgba(255,255,255,0.5); margin-bottom: 8px; }
+    .level-card .lc-stars { display: flex; gap: 4px; }
+    .level-card .lc-stars i { font-size: 0.85rem; color: rgba(255,255,255,0.15); }
+    .level-card .lc-stars i.earned { color: var(--gold); }
+    .level-card .lc-lock { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 1.5rem; color: rgba(255,255,255,0.3); }
+    .level-card .lc-highscore { font-size: 0.65rem; color: rgba(255,255,255,0.35); margin-top: 4px; font-family: var(--font-heading); letter-spacing: 1px; }
+    .ls-footer { margin-top: 20px; text-align: center; flex-shrink: 0; }
+    .ls-total-stars { font-family: var(--font-heading); font-size: 0.85rem; color: var(--gold); letter-spacing: 1px; margin-bottom: 12px; }
 
     /* HOW TO PLAY */
     .howto-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; max-width: 420px; margin-top: 16px; }
     .howto-item { display: flex; align-items: flex-start; gap: 8px; font-size: 0.75rem; color: rgba(255,255,255,0.8); line-height: 1.4; }
     .howto-item i { color: var(--orange); margin-top: 2px; min-width: 16px; }
+
+    /* WAVE BANNER */
+    #wave-banner { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-family: var(--font-heading); font-size: 2rem; letter-spacing: 4px; color: var(--gold); text-transform: uppercase; pointer-events: none; opacity: 0; z-index: 50; text-shadow: 0 2px 20px rgba(0,0,0,0.8); }
+
+    /* GAME OVER / LEVEL COMPLETE */
+    .stat-row { font-family: var(--font-heading); font-size: 1rem; letter-spacing: 1px; margin: 6px 0; }
+    .stat-val { color: var(--orange); font-weight: 700; }
+    .stars-display { display: flex; gap: 8px; margin: 16px 0; }
+    .stars-display i { font-size: 2rem; color: rgba(255,255,255,0.15); transition: color 0.3s, transform 0.3s; }
+    .stars-display i.earned { color: var(--gold); transform: scale(1.2); }
+    .btn-row { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 16px; }
+    .btn-row .menu-btn { margin-top: 0; padding: 12px 24px; font-size: 0.85rem; }
 
     @media (max-width: 600px) {
       .menu-title { font-size: 2.5rem; letter-spacing: 3px; }
@@ -92,6 +110,9 @@
       #hud-top { gap: 12px; font-size: 0.75rem; }
       .unit-btn { width: 60px; height: 52px; }
       .howto-grid { grid-template-columns: 1fr; }
+      .level-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+      .level-card { padding: 12px; }
+      .level-card .lc-name { font-size: 0.95rem; }
     }
   </style>
 </head>
@@ -109,7 +130,7 @@
   <div id="game-wrapper">
     <!-- TOP HUD -->
     <div id="hud-top" style="display:none;">
-      <div class="hud-item"><i class="fas fa-flag"></i> <span>WAVE</span> <span class="hud-val" id="hud-wave">1</span></div>
+      <div class="hud-item"><i class="fas fa-flag"></i> <span>WAVE</span> <span class="hud-val" id="hud-wave">1/3</span></div>
       <div class="hud-item"><i class="fas fa-dollar-sign"></i> <span class="hud-val" id="hud-money">500</span></div>
       <div class="hud-item"><i class="fas fa-heart"></i> <span>LIVES</span> <span class="hud-val" id="hud-lives">10</span></div>
       <div class="hud-item"><i class="fas fa-star"></i> <span>SCORE</span> <span class="hud-val" id="hud-score">0</span></div>
@@ -150,17 +171,21 @@
     <!-- WAVE BANNER -->
     <div id="wave-banner"></div>
 
-    <!-- TITLE SCREEN -->
-    <div class="overlay" id="title-overlay">
-      <div class="menu-title" id="title-text">DEPORT</div>
-      <div class="menu-subtitle" id="title-sub">Defend the Border</div>
-      <button class="menu-btn primary" id="btn-play" style="margin-top:30px;"><i class="fas fa-play"></i> Play</button>
-      <button class="menu-btn" id="btn-howto"><i class="fas fa-question-circle"></i> How to Play</button>
-      <button class="menu-btn" id="btn-scores"><i class="fas fa-trophy"></i> High Scores</button>
+    <!-- LEVEL SELECT -->
+    <div class="overlay" id="levelselect-overlay">
+      <div class="ls-header">
+        <div class="menu-title" id="ls-title">DEPORT</div>
+        <div class="menu-subtitle">Defend the Border</div>
+      </div>
+      <div class="level-grid" id="level-grid"></div>
+      <div class="ls-footer">
+        <div class="ls-total-stars" id="ls-total-stars"></div>
+        <button class="menu-btn" id="btn-howto"><i class="fas fa-question-circle"></i> How to Play</button>
+      </div>
     </div>
 
     <!-- HOW TO PLAY -->
-    <div class="overlay hidden" id="howto-overlay">
+    <div class="overlay overlay-center hidden" id="howto-overlay">
       <div class="menu-title" style="font-size:2rem;">How to Play</div>
       <div class="howto-grid">
         <div class="howto-item"><i class="fas fa-mouse-pointer"></i> Select a defense unit from the bottom bar, then click on the map to place it.</div>
@@ -173,24 +198,38 @@
       <button class="menu-btn" id="btn-howto-back" style="margin-top:24px;"><i class="fas fa-arrow-left"></i> Back</button>
     </div>
 
-    <!-- HIGH SCORES -->
-    <div class="overlay hidden" id="scores-overlay">
-      <div class="menu-title" style="font-size:2rem;">High Scores</div>
-      <ul class="score-list" id="score-list"></ul>
-      <button class="menu-btn" id="btn-scores-back" style="margin-top:24px;"><i class="fas fa-arrow-left"></i> Back</button>
+    <!-- LEVEL COMPLETE -->
+    <div class="overlay overlay-center hidden" id="complete-overlay">
+      <div class="menu-title" style="font-size:2.5rem;" id="complete-title">Level Complete</div>
+      <div class="stars-display" id="complete-stars">
+        <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
+      </div>
+      <div style="text-align:center;">
+        <div class="stat-row"><i class="fas fa-star" style="color:var(--gold);margin-right:8px;"></i> Score: <span class="stat-val" id="lc-score">0</span></div>
+        <div class="stat-row"><i class="fas fa-handcuffs" style="color:var(--gold);margin-right:8px;"></i> Deportations: <span class="stat-val" id="lc-deports">0</span></div>
+        <div class="stat-row"><i class="fas fa-heart" style="color:var(--gold);margin-right:8px;"></i> Lives Remaining: <span class="stat-val" id="lc-lives">0</span></div>
+      </div>
+      <div class="btn-row">
+        <button class="menu-btn primary" id="btn-nextlevel"><i class="fas fa-forward"></i> Next Level</button>
+        <button class="menu-btn" id="btn-replay-win"><i class="fas fa-redo"></i> Replay</button>
+        <button class="menu-btn" id="btn-levelselect-win"><i class="fas fa-th"></i> Level Select</button>
+        <button class="menu-btn" id="btn-share-win"><i class="fas fa-share-alt"></i> Share</button>
+      </div>
     </div>
 
     <!-- GAME OVER -->
-    <div class="overlay hidden" id="gameover-overlay">
+    <div class="overlay overlay-center hidden" id="gameover-overlay">
       <div class="menu-title" style="font-size:2.5rem;">Game Over</div>
-      <div style="margin-top:20px;">
+      <div style="margin-top:20px; text-align:center;">
         <div class="stat-row"><i class="fas fa-star" style="color:var(--gold);margin-right:8px;"></i> Score: <span class="stat-val" id="go-score">0</span></div>
-        <div class="stat-row"><i class="fas fa-flag" style="color:var(--gold);margin-right:8px;"></i> Waves: <span class="stat-val" id="go-waves">0</span></div>
+        <div class="stat-row"><i class="fas fa-flag" style="color:var(--gold);margin-right:8px;"></i> Waves Survived: <span class="stat-val" id="go-waves">0</span></div>
         <div class="stat-row"><i class="fas fa-handcuffs" style="color:var(--gold);margin-right:8px;"></i> Deportations: <span class="stat-val" id="go-deports">0</span></div>
       </div>
-      <button class="menu-btn primary" id="btn-restart" style="margin-top:24px;"><i class="fas fa-redo"></i> Play Again</button>
-      <button class="menu-btn" id="btn-share" style="margin-top:8px;"><i class="fas fa-share-alt"></i> Share Score</button>
-      <button class="menu-btn" id="btn-menu" style="margin-top:8px;"><i class="fas fa-home"></i> Menu</button>
+      <div class="btn-row">
+        <button class="menu-btn primary" id="btn-retry"><i class="fas fa-redo"></i> Retry Level</button>
+        <button class="menu-btn" id="btn-levelselect-lose"><i class="fas fa-th"></i> Level Select</button>
+        <button class="menu-btn" id="btn-share-lose"><i class="fas fa-share-alt"></i> Share</button>
+      </div>
     </div>
   </div>
 
@@ -216,21 +255,181 @@
     tower: { cost: 150, range: 160, rate: 120, color: '#F0A830', icon: 'tower',  shape: 'diamond', dmg: 0.5, boost: true, reveals: true }
   };
 
+  // === LEVEL DEFINITIONS ===
+  const LEVELS = [
+    {
+      id: 1, name: 'Welcome to the Border', waves: 3, money: 800,
+      desc: 'Tutorial — Learn the basics',
+      waveGen: (w) => ({
+        count: 4 + w * 2,
+        spawnInterval: 55,
+        enemyHp: 1.5 + w * 0.3,
+        enemySpeed: 0.7 + w * 0.05,
+        coyoteChance: 0,
+        tunnelChance: 0
+      })
+    },
+    {
+      id: 2, name: 'Night Shift', waves: 4, money: 600,
+      desc: 'Faster enemies approaching',
+      waveGen: (w) => ({
+        count: 5 + w * 2,
+        spawnInterval: 48,
+        enemyHp: 2 + w * 0.4,
+        enemySpeed: 0.9 + w * 0.08,
+        coyoteChance: 0,
+        tunnelChance: 0
+      })
+    },
+    {
+      id: 3, name: 'Tunnel Rats', waves: 4, money: 600,
+      desc: 'Tunnel enemies — watchtowers reveal them',
+      waveGen: (w) => ({
+        count: 5 + w * 2,
+        spawnInterval: 50,
+        enemyHp: 2.2 + w * 0.4,
+        enemySpeed: 0.85 + w * 0.06,
+        coyoteChance: 0,
+        tunnelChance: 0.3 + w * 0.1
+      })
+    },
+    {
+      id: 4, name: 'Caravan Incoming', waves: 5, money: 700,
+      desc: 'Large groups per wave',
+      waveGen: (w) => ({
+        count: 10 + w * 4,
+        spawnInterval: 35,
+        enemyHp: 2 + w * 0.35,
+        enemySpeed: 0.8 + w * 0.05,
+        coyoteChance: 0.05,
+        tunnelChance: 0
+      })
+    },
+    {
+      id: 5, name: 'Coyote Country', waves: 5, money: 650,
+      desc: 'Tough coyote leaders',
+      waveGen: (w) => ({
+        count: 6 + w * 2,
+        spawnInterval: 45,
+        enemyHp: 2.5 + w * 0.5,
+        enemySpeed: 0.8 + w * 0.06,
+        coyoteChance: 0.25 + w * 0.05,
+        tunnelChance: 0
+      })
+    },
+    {
+      id: 6, name: 'Rush Hour', waves: 5, money: 700,
+      desc: 'Very fast enemies, short intervals',
+      waveGen: (w) => ({
+        count: 8 + w * 3,
+        spawnInterval: 22,
+        enemyHp: 1.8 + w * 0.3,
+        enemySpeed: 1.3 + w * 0.12,
+        coyoteChance: 0.08,
+        tunnelChance: 0.05
+      })
+    },
+    {
+      id: 7, name: 'The Surge', waves: 6, money: 750,
+      desc: 'Massive numbers',
+      waveGen: (w) => ({
+        count: 12 + w * 5,
+        spawnInterval: 28,
+        enemyHp: 2.5 + w * 0.4,
+        enemySpeed: 0.9 + w * 0.07,
+        coyoteChance: 0.1 + w * 0.02,
+        tunnelChance: 0.05
+      })
+    },
+    {
+      id: 8, name: 'Tunnel Network', waves: 6, money: 700,
+      desc: 'Heavy tunnel usage — watchtowers essential',
+      waveGen: (w) => ({
+        count: 8 + w * 3,
+        spawnInterval: 38,
+        enemyHp: 2.8 + w * 0.5,
+        enemySpeed: 0.85 + w * 0.07,
+        coyoteChance: 0.1,
+        tunnelChance: 0.5 + w * 0.05
+      })
+    },
+    {
+      id: 9, name: 'All Hands on Deck', waves: 7, money: 800,
+      desc: 'Everything at once',
+      waveGen: (w) => ({
+        count: 10 + w * 4,
+        spawnInterval: 26,
+        enemyHp: 3 + w * 0.5,
+        enemySpeed: 1.0 + w * 0.1,
+        coyoteChance: 0.2 + w * 0.03,
+        tunnelChance: 0.25 + w * 0.05
+      })
+    },
+    {
+      id: 10, name: 'Operation Secure', waves: 8, money: 900,
+      desc: 'Maximum difficulty — Boss coyote in final wave',
+      waveGen: (w, totalWaves) => ({
+        count: 12 + w * 5,
+        spawnInterval: 22,
+        enemyHp: 3.5 + w * 0.6,
+        enemySpeed: 1.1 + w * 0.1,
+        coyoteChance: 0.2 + w * 0.04,
+        tunnelChance: 0.2 + w * 0.05,
+        boss: w === totalWaves
+      })
+    }
+  ];
+
+  // === PERSISTENCE ===
+  function loadProgress() {
+    try {
+      const data = JSON.parse(localStorage.getItem('deport_progress'));
+      if (data && data.levels) return data;
+    } catch {}
+    return { levels: { 1: { unlocked: true, stars: 0, highScore: 0 } } };
+  }
+
+  function saveProgress() {
+    localStorage.setItem('deport_progress', JSON.stringify(progress));
+  }
+
+  let progress = loadProgress();
+
+  function getLevelProgress(id) {
+    return progress.levels[id] || { unlocked: false, stars: 0, highScore: 0 };
+  }
+
+  function completeLevel(id, stars, sc) {
+    if (!progress.levels[id]) progress.levels[id] = { unlocked: true, stars: 0, highScore: 0 };
+    const lp = progress.levels[id];
+    if (stars > lp.stars) lp.stars = stars;
+    if (sc > lp.highScore) lp.highScore = sc;
+    // Unlock next
+    if (id < 10) {
+      if (!progress.levels[id + 1]) progress.levels[id + 1] = { unlocked: true, stars: 0, highScore: 0 };
+      else progress.levels[id + 1].unlocked = true;
+    }
+    saveProgress();
+  }
+
   // === STATE ===
   const canvas = document.getElementById('game-canvas');
   const ctx = canvas.getContext('2d');
   let W, H, cols, rows;
-  let gameState = 'menu'; // menu, playing, wavepause, gameover
-  let money, lives, score, wave, deportations;
+  let gameState = 'menu'; // menu, playing, wavepause, gameover, complete
+  let money, lives, score, deportations;
+  let currentLevel = null; // LEVELS[index]
+  let currentWave = 0; // 1-indexed current wave within level
   let enemies = [], towers = [], projectiles = [], particles = [];
   let selectedUnit = null;
-  let path = []; // array of {x,y} grid coords
+  let path = [];
   let pathSet = new Set();
-  let towerGrid = {}; // "col,row" -> tower
-  let waveTimer = 0, waveEnemiesLeft = 0, waveSpawnTimer = 0;
+  let towerGrid = {};
+  let waveEnemiesLeft = 0, waveSpawnTimer = 0;
   let wavePauseTimer = 0;
   let mouseGX = -1, mouseGY = -1;
   let animFrame = 0;
+  let waveConfig = null;
 
   // === RESIZE ===
   function resize() {
@@ -249,45 +448,31 @@
   }
 
   // === PATH BUILDING ===
-  function buildPath() {
+  function buildPath(seed) {
     path = [];
     pathSet = new Set();
     if (rows < 3 || cols < 5) return;
 
-    // Winding path from left to right
     let y = Math.floor(rows / 2);
-    let segments = [];
-    let x = 0;
+    const s0 = seed || (cols * 7 + rows * 13);
     const segCount = Math.max(3, Math.floor(cols / 6));
     const segWidth = Math.floor(cols / segCount);
 
     for (let s = 0; s < segCount; s++) {
       const startX = s * segWidth;
       const endX = s === segCount - 1 ? cols - 1 : (s + 1) * segWidth;
-      const targetY = s % 2 === 0 ? Math.max(1, Math.floor(rows * 0.25)) : Math.min(rows - 2, Math.floor(rows * 0.75));
-
-      // Horizontal to midpoint
+      const offsetY = ((s0 * (s + 1) * 37) % 5) - 2;
+      const baseTarget = s % 2 === 0 ? Math.floor(rows * 0.25) : Math.floor(rows * 0.75);
+      const targetY = Math.max(1, Math.min(rows - 2, baseTarget + offsetY));
       const midX = Math.floor((startX + endX) / 2);
-      for (let px = startX; px <= midX; px++) {
-        path.push({ x: px, y: y });
-      }
-      // Vertical
+      for (let px = startX; px <= midX; px++) path.push({ x: px, y });
       const dir = targetY > y ? 1 : -1;
-      for (let py = y + dir; py !== targetY + dir; py += dir) {
-        path.push({ x: midX, y: py });
-      }
+      for (let py = y + dir; py !== targetY + dir; py += dir) path.push({ x: midX, y: py });
       y = targetY;
-      // Horizontal rest
-      for (let px = midX + 1; px <= endX; px++) {
-        path.push({ x: px, y: y });
-      }
+      for (let px = midX + 1; px <= endX; px++) path.push({ x: px, y });
     }
-    // Extend to right edge
-    for (let px = path[path.length - 1].x + 1; px < cols; px++) {
-      path.push({ x: px, y: y });
-    }
+    for (let px = path[path.length - 1].x + 1; px < cols; px++) path.push({ x: px, y });
 
-    // Dedupe
     const seen = new Set();
     path = path.filter(p => {
       const k = p.x + ',' + p.y;
@@ -295,13 +480,11 @@
       seen.add(k);
       return true;
     });
-
     pathSet = new Set(path.map(p => p.x + ',' + p.y));
   }
 
   // === DRAWING ===
   function drawBackground() {
-    // Desert gradient
     const grd = ctx.createLinearGradient(0, 0, W, 0);
     grd.addColorStop(0, COLORS.sand1);
     grd.addColorStop(0.45, COLORS.sand2);
@@ -310,21 +493,14 @@
     ctx.fillStyle = grd;
     ctx.fillRect(0, 0, W, H);
 
-    // US side tint (right half)
     ctx.fillStyle = COLORS.usSide;
     ctx.fillRect(W * 0.5, 0, W * 0.5, H);
 
-    // Grid
     ctx.strokeStyle = COLORS.grid;
     ctx.lineWidth = 0.5;
-    for (let x = 0; x < W; x += GRID) {
-      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
-    }
-    for (let y = 0; y < H; y += GRID) {
-      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
-    }
+    for (let x = 0; x < W; x += GRID) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
+    for (let y = 0; y < H; y += GRID) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
 
-    // Border dashed line (middle)
     ctx.save();
     ctx.setLineDash([12, 8]);
     ctx.strokeStyle = COLORS.border;
@@ -336,13 +512,11 @@
     ctx.stroke();
     ctx.restore();
 
-    // Cacti decorations
     drawCacti();
   }
 
   function drawCacti() {
     ctx.fillStyle = '#5a7a3a';
-    // Deterministic cacti based on grid size
     const seed = cols * 7 + rows * 13;
     for (let i = 0; i < 8; i++) {
       const cx = ((seed * (i + 1) * 37) % (cols - 2) + 1) * GRID + GRID / 2;
@@ -350,7 +524,6 @@
       const gk = Math.floor(cx / GRID) + ',' + Math.floor(cy / GRID);
       if (pathSet.has(gk)) continue;
       ctx.globalAlpha = 0.4;
-      // Simple cactus
       ctx.fillRect(cx - 2, cy - 12, 4, 16);
       ctx.fillRect(cx - 8, cy - 8, 6, 3);
       ctx.fillRect(cx + 2, cy - 5, 6, 3);
@@ -360,17 +533,13 @@
 
   function drawPath() {
     ctx.fillStyle = COLORS.path;
-    for (const p of path) {
-      ctx.fillRect(p.x * GRID, p.y * GRID, GRID, GRID);
-    }
-    // Path outline
+    for (const p of path) ctx.fillRect(p.x * GRID, p.y * GRID, GRID, GRID);
     ctx.strokeStyle = COLORS.pathDark;
     ctx.lineWidth = 1;
     for (const p of path) {
       const x = p.x * GRID, y = p.y * GRID;
-      // Only draw edges that aren't adjacent to another path tile
-      if (!pathSet.has((p.x) + ',' + (p.y - 1))) { ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + GRID, y); ctx.stroke(); }
-      if (!pathSet.has((p.x) + ',' + (p.y + 1))) { ctx.beginPath(); ctx.moveTo(x, y + GRID); ctx.lineTo(x + GRID, y + GRID); ctx.stroke(); }
+      if (!pathSet.has(p.x + ',' + (p.y - 1))) { ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + GRID, y); ctx.stroke(); }
+      if (!pathSet.has(p.x + ',' + (p.y + 1))) { ctx.beginPath(); ctx.moveTo(x, y + GRID); ctx.lineTo(x + GRID, y + GRID); ctx.stroke(); }
     }
   }
 
@@ -409,29 +578,24 @@
     switch (def.shape) {
       case 'circle':
         ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-        // Badge lines
-        ctx.strokeStyle = '#fff';
-        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#fff'; ctx.lineWidth = 2;
         ctx.beginPath(); ctx.moveTo(cx - 4, cy - 2); ctx.lineTo(cx, cy - 7); ctx.lineTo(cx + 4, cy - 2); ctx.stroke();
         ctx.beginPath(); ctx.moveTo(cx - 5, cy + 1); ctx.lineTo(cx + 5, cy + 1); ctx.stroke();
         break;
       case 'tri':
         ctx.beginPath(); ctx.moveTo(cx, cy - r); ctx.lineTo(cx - r, cy + r * 0.7); ctx.lineTo(cx + r, cy + r * 0.7); ctx.closePath(); ctx.fill(); ctx.stroke();
-        // Propeller lines
         ctx.strokeStyle = '#ddd'; ctx.lineWidth = 1;
         ctx.beginPath(); ctx.moveTo(cx - 6, cy - 2); ctx.lineTo(cx + 6, cy - 2); ctx.stroke();
         break;
       case 'rect':
         ctx.fillRect(t.gx * GRID + 2, t.gy * GRID + 2, GRID - 4, GRID - 4);
         ctx.strokeRect(t.gx * GRID + 2, t.gy * GRID + 2, GRID - 4, GRID - 4);
-        // HP bar
         if (def.hp) {
           const hpPct = t.hp / def.hp;
           ctx.fillStyle = '#333'; ctx.fillRect(t.gx * GRID + 4, t.gy * GRID + GRID - 8, GRID - 8, 4);
           ctx.fillStyle = hpPct > 0.5 ? '#4caf50' : hpPct > 0.25 ? '#ff9800' : '#f44336';
           ctx.fillRect(t.gx * GRID + 4, t.gy * GRID + GRID - 8, (GRID - 8) * hpPct, 4);
         }
-        // Cross pattern
         ctx.strokeStyle = 'rgba(0,0,0,0.2)'; ctx.lineWidth = 1;
         ctx.beginPath(); ctx.moveTo(t.gx * GRID + 4, t.gy * GRID + GRID / 2); ctx.lineTo(t.gx * GRID + GRID - 4, t.gy * GRID + GRID / 2); ctx.stroke();
         break;
@@ -439,12 +603,10 @@
         const bx = t.gx * GRID + 3, by = t.gy * GRID + 6;
         ctx.fillRect(bx, by, GRID - 6, GRID - 12);
         ctx.strokeRect(bx, by, GRID - 6, GRID - 12);
-        // Windows
         ctx.fillStyle = '#fff'; ctx.globalAlpha = 0.5;
         ctx.fillRect(bx + 4, by + 3, 6, 5);
         ctx.fillRect(bx + GRID - 16, by + 3, 6, 5);
         ctx.globalAlpha = 1;
-        // Cooldown indicator
         if (t.cooldown > 0) {
           const pct = t.cooldown / def.rate;
           ctx.fillStyle = 'rgba(0,0,0,0.5)';
@@ -455,11 +617,9 @@
         ctx.beginPath();
         ctx.moveTo(cx, cy - r); ctx.lineTo(cx + r, cy); ctx.lineTo(cx, cy + r); ctx.lineTo(cx - r, cy);
         ctx.closePath(); ctx.fill(); ctx.stroke();
-        // Eye symbol
         ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5;
         ctx.beginPath(); ctx.arc(cx, cy, 4, 0, Math.PI * 2); ctx.stroke();
         ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(cx, cy, 1.5, 0, Math.PI * 2); ctx.fill();
-        // Reveal aura
         if (def.reveals) {
           ctx.strokeStyle = 'rgba(240,168,48,0.15)'; ctx.lineWidth = 1;
           ctx.beginPath(); ctx.arc(cx, cy, def.range, 0, Math.PI * 2); ctx.stroke();
@@ -467,7 +627,6 @@
         break;
     }
 
-    // Firing flash
     if (t.firing > 0) {
       ctx.fillStyle = 'rgba(255,200,50,' + (t.firing / 8) + ')';
       ctx.beginPath(); ctx.arc(cx, cy, r + 4, 0, Math.PI * 2); ctx.fill();
@@ -477,47 +636,46 @@
 
   function drawEnemy(e) {
     const x = e.x, y = e.y;
-    const sz = e.isCoyote ? 10 : 7;
+    const sz = e.isBoss ? 14 : e.isCoyote ? 10 : 7;
 
-    // Shadow
     ctx.fillStyle = 'rgba(0,0,0,0.2)';
     ctx.beginPath(); ctx.ellipse(x, y + sz + 2, sz * 0.7, 3, 0, 0, Math.PI * 2); ctx.fill();
 
-    // Body
-    ctx.fillStyle = e.isCoyote ? '#8B0000' : '#4a2020';
+    ctx.fillStyle = e.isBoss ? '#5C0000' : e.isCoyote ? '#8B0000' : '#4a2020';
     ctx.beginPath(); ctx.arc(x, y, sz, 0, Math.PI * 2); ctx.fill();
 
-    // Head
-    ctx.fillStyle = e.isCoyote ? '#a03030' : '#6a3a3a';
+    ctx.fillStyle = e.isBoss ? '#800000' : e.isCoyote ? '#a03030' : '#6a3a3a';
     ctx.beginPath(); ctx.arc(x, y - sz - 3, sz * 0.5, 0, Math.PI * 2); ctx.fill();
 
-    // Tunnel indicator
-    if (e.inTunnel) {
-      ctx.globalAlpha = 0.3 + Math.sin(animFrame * 0.1) * 0.2;
-      ctx.strokeStyle = '#fff';
-      ctx.lineWidth = 1;
-      ctx.setLineDash([3, 3]);
-      ctx.beginPath(); ctx.arc(x, y, sz + 4, 0, Math.PI * 2); ctx.stroke();
-      ctx.setLineDash([]);
-      ctx.globalAlpha = 1;
+    if (e.isBoss) {
+      // Boss crown indicator
+      ctx.fillStyle = '#F0A830';
+      ctx.beginPath();
+      ctx.moveTo(x - 6, y - sz - 6); ctx.lineTo(x - 4, y - sz - 10);
+      ctx.lineTo(x, y - sz - 7); ctx.lineTo(x + 4, y - sz - 10);
+      ctx.lineTo(x + 6, y - sz - 6); ctx.closePath(); ctx.fill();
     }
 
-    // Slow effect
+    if (e.inTunnel) {
+      ctx.globalAlpha = 0.3 + Math.sin(animFrame * 0.1) * 0.2;
+      ctx.strokeStyle = '#fff'; ctx.lineWidth = 1; ctx.setLineDash([3, 3]);
+      ctx.beginPath(); ctx.arc(x, y, sz + 4, 0, Math.PI * 2); ctx.stroke();
+      ctx.setLineDash([]); ctx.globalAlpha = 1;
+    }
+
     if (e.slowTimer > 0) {
-      ctx.strokeStyle = 'rgba(100,150,255,0.6)';
-      ctx.lineWidth = 2;
+      ctx.strokeStyle = 'rgba(100,150,255,0.6)'; ctx.lineWidth = 2;
       ctx.beginPath(); ctx.arc(x, y, sz + 3, 0, Math.PI * 2); ctx.stroke();
     }
 
-    // HP bar
     if (e.hp < e.maxHp) {
       const bw = sz * 2.5;
-      ctx.fillStyle = '#333';
-      ctx.fillRect(x - bw / 2, y - sz - 10, bw, 3);
-      ctx.fillStyle = '#f44336';
-      ctx.fillRect(x - bw / 2, y - sz - 10, bw * (e.hp / e.maxHp), 3);
+      ctx.fillStyle = '#333'; ctx.fillRect(x - bw / 2, y - sz - 10, bw, 3);
+      ctx.fillStyle = '#f44336'; ctx.fillRect(x - bw / 2, y - sz - 10, bw * (e.hp / e.maxHp), 3);
     }
   }
+
+  const var_gold = '#F0A830';
 
   function drawProjectiles() {
     for (const p of projectiles) {
@@ -536,21 +694,21 @@
   }
 
   // === ENEMIES ===
-  function spawnEnemy(isCoyote, usesTunnel) {
+  function spawnEnemy(hp, speed, isCoyote, usesTunnel, isBoss) {
     const start = path[0];
-    const baseHp = 2 + wave * 0.5;
     enemies.push({
       x: start.x * GRID + GRID / 2,
       y: start.y * GRID + GRID / 2,
       pathIdx: 0,
-      speed: (0.8 + wave * 0.05 + Math.random() * 0.3) * (isCoyote ? 0.7 : 1),
-      hp: isCoyote ? baseHp * 3 : baseHp,
-      maxHp: isCoyote ? baseHp * 3 : baseHp,
-      isCoyote: isCoyote,
+      speed: speed * (isCoyote ? 0.7 : 1) * (isBoss ? 0.5 : 1),
+      hp: isBoss ? hp * 8 : isCoyote ? hp * 3 : hp,
+      maxHp: isBoss ? hp * 8 : isCoyote ? hp * 3 : hp,
+      isCoyote: isCoyote || isBoss,
+      isBoss: !!isBoss,
       inTunnel: usesTunnel,
       tunnelRevealed: false,
       slowTimer: 0,
-      reward: isCoyote ? 30 : 10,
+      reward: isBoss ? 100 : isCoyote ? 30 : 10,
       alive: true
     });
   }
@@ -559,13 +717,11 @@
     for (const e of enemies) {
       if (!e.alive) continue;
 
-      // Move along path
       let spd = e.speed;
       if (e.slowTimer > 0) { spd *= 0.4; e.slowTimer--; }
 
       const target = path[e.pathIdx + 1];
       if (!target) {
-        // Reached the end
         e.alive = false;
         lives--;
         updateHUD();
@@ -587,13 +743,12 @@
         e.y += (dy / dist) * spd;
       }
 
-      // Wall collision
       const gx = Math.floor(e.x / GRID), gy = Math.floor(e.y / GRID);
       const wallKey = gx + ',' + gy;
       const wall = towerGrid[wallKey];
       if (wall && wall.type === 'wall' && wall.alive) {
         wall.hp -= 0.02;
-        e.speed *= 0.3; // very slow near wall
+        e.speed *= 0.3;
         if (wall.hp <= 0) {
           wall.alive = false;
           delete towerGrid[wallKey];
@@ -610,7 +765,7 @@
       const t = towerGrid[key];
       if (!t.alive) continue;
       const def = UNIT_DEFS[t.type];
-      if (def.range === 0) continue; // walls don't shoot
+      if (def.range === 0) continue;
 
       t.cooldown = Math.max(0, t.cooldown - 1);
       if (t.cooldown > 0) continue;
@@ -619,7 +774,6 @@
       const cy = t.gy * GRID + GRID / 2;
       let range = def.range;
 
-      // Tower boost
       if (def.boost) {
         for (const k2 in towerGrid) {
           const t2 = towerGrid[k2];
@@ -630,12 +784,10 @@
         }
       }
 
-      // Find target
       let targets = [];
       for (const e of enemies) {
         if (!e.alive) continue;
         if (e.inTunnel && !e.tunnelRevealed) {
-          // Only towers can reveal
           if (def.reveals) {
             const d = Math.sqrt((cx - e.x) ** 2 + (cy - e.y) ** 2);
             if (d < range) { e.tunnelRevealed = true; e.inTunnel = false; }
@@ -656,7 +808,6 @@
       t.firing = 8;
 
       if (def.aoe) {
-        // Hit multiple
         const count = Math.min(targets.length, def.type === 'bus' ? 5 : 3);
         for (let i = 0; i < count; i++) {
           const e = targets[i].e;
@@ -723,50 +874,58 @@
 
   // === WAVES ===
   function startWave() {
-    wave++;
-    waveEnemiesLeft = 5 + wave * 3;
+    currentWave++;
+    const lvl = currentLevel;
+    waveConfig = lvl.waveGen(currentWave, lvl.waves);
+    waveEnemiesLeft = waveConfig.count;
     waveSpawnTimer = 0;
     gameState = 'playing';
     updateHUD();
-    showBanner('Wave ' + wave);
+    showBanner('Wave ' + currentWave + ' / ' + lvl.waves);
   }
 
   function updateWaveSpawning() {
     if (waveEnemiesLeft <= 0) {
       if (enemies.length === 0) {
         // Wave complete
-        money += 25 + wave * 5;
-        score += 50 * wave;
+        money += 25 + currentWave * 5;
+        score += 50 * currentWave;
         updateHUD();
+
+        if (currentWave >= currentLevel.waves) {
+          // Level complete!
+          levelComplete();
+          return;
+        }
+
         gameState = 'wavepause';
         wavePauseTimer = 120;
-        showBanner('Wave ' + wave + ' Complete');
+        showBanner('Wave ' + currentWave + ' Complete');
       }
       return;
     }
     waveSpawnTimer--;
     if (waveSpawnTimer <= 0) {
-      const isCoyote = wave >= 3 && Math.random() < 0.1 + wave * 0.02;
-      const usesTunnel = wave >= 5 && Math.random() < 0.08 + wave * 0.01;
-      spawnEnemy(isCoyote, usesTunnel);
+      const cfg = waveConfig;
+      const isCoyote = Math.random() < cfg.coyoteChance;
+      const usesTunnel = Math.random() < cfg.tunnelChance;
+      const isBoss = cfg.boss && waveEnemiesLeft === 1;
+      spawnEnemy(cfg.enemyHp, cfg.enemySpeed + (Math.random() * 0.3), isCoyote, usesTunnel, isBoss);
       waveEnemiesLeft--;
-      waveSpawnTimer = Math.max(15, 50 - wave * 2);
+      waveSpawnTimer = cfg.spawnInterval;
     }
   }
 
   // === HUD ===
   function updateHUD() {
-    document.getElementById('hud-wave').textContent = wave;
+    document.getElementById('hud-wave').textContent = currentWave + '/' + (currentLevel ? currentLevel.waves : '?');
     document.getElementById('hud-money').textContent = '$' + money;
     document.getElementById('hud-lives').textContent = lives;
     document.getElementById('hud-score').textContent = score;
 
-    // Update unit button states
     document.querySelectorAll('.unit-btn').forEach(btn => {
       const type = btn.dataset.unit;
-      if (UNIT_DEFS[type]) {
-        btn.classList.toggle('disabled', money < UNIT_DEFS[type].cost);
-      }
+      if (UNIT_DEFS[type]) btn.classList.toggle('disabled', money < UNIT_DEFS[type].cost);
     });
   }
 
@@ -792,7 +951,6 @@
       if (wavePauseTimer <= 0) startWave();
     }
 
-    // Draw
     drawBackground();
     drawPath();
     if (gameState === 'playing' || gameState === 'wavepause') {
@@ -809,8 +967,13 @@
   }
 
   // === GAME MANAGEMENT ===
-  function startGame() {
-    money = 500; lives = 10; score = 0; wave = 0; deportations = 0;
+  function startLevel(levelId) {
+    currentLevel = LEVELS[levelId - 1];
+    currentWave = 0;
+    money = currentLevel.money;
+    lives = 10;
+    score = 0;
+    deportations = 0;
     enemies = []; towers = []; projectiles = []; particles = [];
     towerGrid = {};
     selectedUnit = null;
@@ -818,58 +981,116 @@
     document.getElementById('hud-top').style.display = 'flex';
     document.getElementById('hud-bottom').style.display = 'flex';
     resize();
+    buildPath(levelId * 17 + 3);
     updateHUD();
     hideAllOverlays();
     gameState = 'wavepause';
     wavePauseTimer = 90;
-    showBanner('Get Ready!');
+    showBanner(currentLevel.name);
+  }
+
+  function calcStars(livesLeft) {
+    if (livesLeft >= 8) return 3;
+    if (livesLeft >= 4) return 2;
+    if (livesLeft >= 1) return 1;
+    return 0;
+  }
+
+  function levelComplete() {
+    gameState = 'complete';
+    const stars = calcStars(lives);
+    completeLevel(currentLevel.id, stars, score);
+
+    document.getElementById('lc-score').textContent = score;
+    document.getElementById('lc-deports').textContent = deportations;
+    document.getElementById('lc-lives').textContent = lives;
+
+    // Show/hide next level button
+    document.getElementById('btn-nextlevel').style.display = currentLevel.id < 10 ? '' : 'none';
+
+    const starsEl = document.getElementById('complete-stars');
+    const starIcons = starsEl.querySelectorAll('i');
+    starIcons.forEach(s => s.classList.remove('earned'));
+
+    document.getElementById('complete-overlay').classList.remove('hidden');
+    gsap.fromTo('#complete-overlay', { opacity: 0 }, { opacity: 1, duration: 0.4 });
+
+    // Animate stars
+    for (let i = 0; i < stars; i++) {
+      gsap.fromTo(starIcons[i], { scale: 0 }, {
+        scale: 1, duration: 0.4, delay: 0.5 + i * 0.3, ease: 'back.out',
+        onStart: () => starIcons[i].classList.add('earned')
+      });
+    }
   }
 
   function endGame() {
     gameState = 'gameover';
-    saveScore(score, wave, deportations);
     document.getElementById('go-score').textContent = score;
-    document.getElementById('go-waves').textContent = wave;
+    document.getElementById('go-waves').textContent = currentWave;
     document.getElementById('go-deports').textContent = deportations;
     document.getElementById('gameover-overlay').classList.remove('hidden');
     gsap.fromTo('#gameover-overlay', { opacity: 0 }, { opacity: 1, duration: 0.5 });
   }
 
-  function showMenu() {
+  function showLevelSelect() {
     gameState = 'menu';
     document.getElementById('hud-top').style.display = 'none';
     document.getElementById('hud-bottom').style.display = 'none';
     resize();
     hideAllOverlays();
-    document.getElementById('title-overlay').classList.remove('hidden');
-    gsap.fromTo('#title-text', { opacity: 0, y: -30 }, { opacity: 1, y: 0, duration: 0.6, ease: 'power3.out' });
-    gsap.fromTo('#title-sub', { opacity: 0 }, { opacity: 1, duration: 0.6, delay: 0.2 });
+    renderLevelGrid();
+    document.getElementById('levelselect-overlay').classList.remove('hidden');
+    gsap.fromTo('#ls-title', { opacity: 0, y: -20 }, { opacity: 1, y: 0, duration: 0.5, ease: 'power3.out' });
+  }
+
+  function renderLevelGrid() {
+    progress = loadProgress();
+    const grid = document.getElementById('level-grid');
+    let totalStars = 0, maxStars = 30;
+    let html = '';
+    for (const lvl of LEVELS) {
+      const lp = getLevelProgress(lvl.id);
+      const locked = !lp.unlocked;
+      totalStars += lp.stars || 0;
+      let starsHtml = '';
+      for (let s = 1; s <= 3; s++) {
+        starsHtml += '<i class="fas fa-star' + (s <= (lp.stars || 0) ? ' earned' : '') + '"></i>';
+      }
+      html += '<div class="level-card' + (locked ? ' locked' : '') + '" data-level="' + lvl.id + '">' +
+        (locked ? '<div class="lc-lock"><i class="fas fa-lock"></i></div>' : '') +
+        '<div class="lc-num">Level ' + lvl.id + '</div>' +
+        '<div class="lc-name">' + lvl.name + '</div>' +
+        '<div class="lc-info">' + lvl.waves + ' waves — ' + lvl.desc + '</div>' +
+        (locked ? '' : '<div class="lc-stars">' + starsHtml + '</div>') +
+        (lp.highScore > 0 ? '<div class="lc-highscore">Best: ' + lp.highScore + ' pts</div>' : '') +
+        '</div>';
+    }
+    grid.innerHTML = html;
+    document.getElementById('ls-total-stars').innerHTML =
+      '<i class="fas fa-star" style="color:var(--gold);margin-right:4px;"></i> ' + totalStars + ' / ' + maxStars + ' Stars';
+
+    grid.querySelectorAll('.level-card:not(.locked)').forEach(card => {
+      card.addEventListener('click', () => {
+        startLevel(parseInt(card.dataset.level));
+      });
+    });
   }
 
   function hideAllOverlays() {
     document.querySelectorAll('.overlay').forEach(o => o.classList.add('hidden'));
   }
 
-  // === SCORES ===
-  function getScores() {
-    try { return JSON.parse(localStorage.getItem('deport_scores') || '[]'); } catch { return []; }
-  }
-
-  function saveScore(s, w, d) {
-    const scores = getScores();
-    scores.push({ score: s, waves: w, deportations: d, date: Date.now() });
-    scores.sort((a, b) => b.score - a.score);
-    localStorage.setItem('deport_scores', JSON.stringify(scores.slice(0, 10)));
-  }
-
-  function showScores() {
-    hideAllOverlays();
-    const list = document.getElementById('score-list');
-    const scores = getScores();
-    list.innerHTML = scores.length === 0 ? '<li style="color:rgba(255,255,255,0.5)">No scores yet</li>' :
-      scores.map((s, i) => `<li>${i + 1}. ${s.score} pts — Wave ${s.waves} — ${s.deportations} deported</li>`).join('');
-    document.getElementById('scores-overlay').classList.remove('hidden');
-    gsap.fromTo('#scores-overlay', { opacity: 0 }, { opacity: 1, duration: 0.3 });
+  function shareScore(context) {
+    const lvlName = currentLevel ? currentLevel.name : 'DEPORT';
+    const text = context === 'win'
+      ? `I completed "${lvlName}" in DEPORT with ${calcStars(lives)} stars and ${score} points! ${deportations} deportations. Play at ${location.href}`
+      : `I scored ${score} points on "${lvlName}" in DEPORT! Survived ${currentWave} waves with ${deportations} deportations. Play at ${location.href}`;
+    if (navigator.share) {
+      navigator.share({ title: 'DEPORT — Tower Defense', text });
+    } else {
+      navigator.clipboard.writeText(text).then(() => showBanner('Copied to clipboard!'));
+    }
   }
 
   // === INPUT ===
@@ -908,8 +1129,8 @@
     const occupied = towerGrid[key];
 
     if (occupied) return;
-    if (def.blocks && !onPath) return; // walls go ON path
-    if (!def.blocks && onPath) return; // others go OFF path
+    if (def.blocks && !onPath) return;
+    if (!def.blocks && onPath) return;
     if (money < def.cost) return;
 
     money -= def.cost;
@@ -951,32 +1172,28 @@
   });
 
   // Menu buttons
-  document.getElementById('btn-play').addEventListener('click', startGame);
   document.getElementById('btn-howto').addEventListener('click', () => {
     hideAllOverlays();
     document.getElementById('howto-overlay').classList.remove('hidden');
     gsap.fromTo('#howto-overlay', { opacity: 0 }, { opacity: 1, duration: 0.3 });
   });
-  document.getElementById('btn-scores').addEventListener('click', showScores);
-  document.getElementById('btn-howto-back').addEventListener('click', showMenu);
-  document.getElementById('btn-scores-back').addEventListener('click', showMenu);
-  document.getElementById('btn-restart').addEventListener('click', startGame);
-  document.getElementById('btn-menu').addEventListener('click', showMenu);
-  document.getElementById('btn-share').addEventListener('click', () => {
-    const text = `I scored ${score} points in DEPORT! Survived ${wave} waves with ${deportations} deportations. Play at ${location.href}`;
-    if (navigator.share) {
-      navigator.share({ title: 'DEPORT — Tower Defense', text });
-    } else {
-      navigator.clipboard.writeText(text).then(() => {
-        showBanner('Copied to clipboard!');
-      });
-    }
-  });
+  document.getElementById('btn-howto-back').addEventListener('click', showLevelSelect);
+
+  // Game over buttons
+  document.getElementById('btn-retry').addEventListener('click', () => startLevel(currentLevel.id));
+  document.getElementById('btn-levelselect-lose').addEventListener('click', showLevelSelect);
+  document.getElementById('btn-share-lose').addEventListener('click', () => shareScore('lose'));
+
+  // Level complete buttons
+  document.getElementById('btn-nextlevel').addEventListener('click', () => startLevel(currentLevel.id + 1));
+  document.getElementById('btn-replay-win').addEventListener('click', () => startLevel(currentLevel.id));
+  document.getElementById('btn-levelselect-win').addEventListener('click', showLevelSelect);
+  document.getElementById('btn-share-win').addEventListener('click', () => shareScore('win'));
 
   // === INIT ===
   window.addEventListener('resize', resize);
   resize();
-  showMenu();
+  showLevelSelect();
   gameLoop();
 
 })();
