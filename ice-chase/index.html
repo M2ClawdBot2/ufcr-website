@@ -62,8 +62,8 @@
   <p class="screen-sub">High-speed pursuit through city streets. Chase down the suspect and ram them off the road before they escape.</p>
   <ul class="how-to">
     <li><strong>Desktop:</strong> Arrow keys or WASD to steer / gas / brake</li>
-    <li><strong>Mobile:</strong> Left side = steer (top=left, bottom=right)</li>
-    <li><strong>Mobile:</strong> Right side = gas (top) / brake (bottom)</li>
+    <li><strong>Mobile:</strong> Tilt phone left/right to steer</li>
+    <li><strong>Mobile:</strong> Hold screen = gas, double-tap = brake</li>
     <li>Ram the suspect car to bust them</li>
     <li>Dodge civilian cars — crashing costs speed</li>
     <li>Don't let the suspect get too far ahead</li>
@@ -112,72 +112,83 @@ const keys = {};
 window.addEventListener('keydown', e => { keys[e.key.toLowerCase()] = true; if(['arrowup','arrowdown','arrowleft','arrowright',' '].includes(e.key.toLowerCase())) e.preventDefault(); });
 window.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
 
-let tL = false, tR = false, tU = false, tD = false;
-const touchIds = {}; // track which finger does what
+// Tilt steering (mobile)
+let tiltAngle = 0; // -1 to 1 range, negative=left, positive=right
+let tiltAvailable = false;
+let tiltCalibration = null; // baseline gamma when game starts
 
-function classifyTouch(t) {
-  const x = t.clientX, y = t.clientY;
-  // Right side: top half = gas, bottom half = brake
-  if (x > W * 0.55) {
-    if (y < H * 0.55) return 'gas';
-    return 'brake';
+function initTilt() {
+  if (typeof DeviceOrientationEvent !== 'undefined' &&
+      typeof DeviceOrientationEvent.requestPermission === 'function') {
+    // iOS 13+ needs permission
+    DeviceOrientationEvent.requestPermission().then(state => {
+      if (state === 'granted') { enableTilt(); }
+    }).catch(() => {});
+  } else if ('DeviceOrientationEvent' in window) {
+    enableTilt();
   }
-  // Left side: steer
-  if (x < W * 0.45) {
-    if (y < H * 0.5) return 'left';
-    return 'right';
-  }
-  return 'gas'; // center = gas
 }
+
+function enableTilt() {
+  window.addEventListener('deviceorientation', e => {
+    if (e.gamma === null) return;
+    tiltAvailable = true;
+    // gamma: -90 to 90 (left/right tilt in portrait)
+    if (tiltCalibration === null) tiltCalibration = e.gamma;
+    const raw = e.gamma - tiltCalibration;
+    // Dead zone of 3 degrees, max tilt at 25 degrees
+    const deadZone = 3;
+    const maxTilt = 25;
+    if (Math.abs(raw) < deadZone) {
+      tiltAngle = 0;
+    } else {
+      const sign = raw > 0 ? 1 : -1;
+      tiltAngle = sign * Math.min(1, (Math.abs(raw) - deadZone) / (maxTilt - deadZone));
+    }
+  }, true);
+}
+
+// Touch: on mobile, tap anywhere = gas, no tap = coast. Double-tap = brake (optional)
+let touchGas = false;
+let touchBrake = false;
+let lastTapTime = 0;
 
 CV.addEventListener('touchstart', e => {
   e.preventDefault();
-  for (const t of e.changedTouches) {
-    const role = classifyTouch(t);
-    touchIds[t.identifier] = role;
-    if (role === 'left') tL = true;
-    if (role === 'right') tR = true;
-    if (role === 'gas') tU = true;
-    if (role === 'brake') tD = true;
+  touchGas = true;
+  // Double tap = brake
+  const now = Date.now();
+  if (now - lastTapTime < 300) {
+    touchBrake = true;
+    touchGas = false;
   }
+  lastTapTime = now;
 }, { passive: false });
 
-CV.addEventListener('touchmove', e => {
+CV.addEventListener('touchend', e => {
   e.preventDefault();
-  // Re-evaluate moving fingers on left side for steering
-  for (const t of e.changedTouches) {
-    const old = touchIds[t.identifier];
-    if (old === 'left' || old === 'right') {
-      // Update steer based on current Y
-      const newRole = t.clientY < H * 0.5 ? 'left' : 'right';
-      if (old !== newRole) {
-        if (old === 'left') tL = false;
-        if (old === 'right') tR = false;
-        touchIds[t.identifier] = newRole;
-        if (newRole === 'left') tL = true;
-        if (newRole === 'right') tR = true;
-      }
-    }
+  if (e.touches.length === 0) {
+    touchGas = false;
+    touchBrake = false;
   }
 }, { passive: false });
 
-function clearTouch(e) {
-  for (const t of e.changedTouches) {
-    const role = touchIds[t.identifier];
-    if (role === 'left') tL = false;
-    if (role === 'right') tR = false;
-    if (role === 'gas') tU = false;
-    if (role === 'brake') tD = false;
-    delete touchIds[t.identifier];
-  }
-}
-CV.addEventListener('touchend', clearTouch, { passive: false });
-CV.addEventListener('touchcancel', clearTouch, { passive: false });
+CV.addEventListener('touchcancel', e => {
+  touchGas = false;
+  touchBrake = false;
+}, { passive: false });
 
-function goL() { return keys['a'] || keys['arrowleft'] || tL; }
-function goR() { return keys['d'] || keys['arrowright'] || tR; }
-function goU() { return keys['w'] || keys['arrowup'] || tU; }
-function goD() { return keys['s'] || keys['arrowdown'] || tD; }
+// Input helpers — tilt on mobile, keys on desktop
+function steerAmount() {
+  // Keyboard
+  if (keys['a'] || keys['arrowleft']) return -1;
+  if (keys['d'] || keys['arrowright']) return 1;
+  // Tilt
+  if (tiltAvailable) return tiltAngle;
+  return 0;
+}
+function goU() { return keys['w'] || keys['arrowup'] || touchGas; }
+function goD() { return keys['s'] || keys['arrowdown'] || touchBrake; }
 
 // ─── STATE ───
 let gameRunning = false, lastTime = 0;
@@ -499,9 +510,12 @@ function update(dt) {
   p.speed = Math.max(60, Math.min(420, p.speed));
 
   // Steer
-  if (goL()) p.steerVel -= 380 * dt;
-  else if (goR()) p.steerVel += 380 * dt;
-  else p.steerVel *= (1 - 6 * dt);
+  const steer = steerAmount();
+  if (Math.abs(steer) > 0.01) {
+    p.steerVel += steer * 380 * dt;
+  } else {
+    p.steerVel *= (1 - 6 * dt);
+  }
   p.steerVel = Math.max(-260, Math.min(260, p.steerVel));
   p.x += p.steerVel * dt;
   p.tilt = p.steerVel / 200;
@@ -759,49 +773,18 @@ function draw() {
   drawGapBar();
   drawEffects();
 
-  // Mobile touch controls overlay
-  if ('ontouchstart' in window && gameRunning) {
-    // Left side — steer zone
-    // Top half = left
-    cx.fillStyle = tL ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.03)';
-    cx.fillRect(0, TOP, W * 0.45, (H - TOP) / 2);
-    // Bottom half = right
-    cx.fillStyle = tR ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.03)';
-    cx.fillRect(0, TOP + (H - TOP) / 2, W * 0.45, (H - TOP) / 2);
-    // Divider
-    cx.strokeStyle = 'rgba(255,255,255,0.06)';
-    cx.lineWidth = 1;
-    cx.beginPath(); cx.moveTo(0, TOP + (H - TOP) / 2); cx.lineTo(W * 0.45, TOP + (H - TOP) / 2); cx.stroke();
-    cx.beginPath(); cx.moveTo(W * 0.45, TOP); cx.lineTo(W * 0.45, H); cx.stroke();
-    cx.beginPath(); cx.moveTo(W * 0.55, TOP); cx.lineTo(W * 0.55, H); cx.stroke();
-
-    // Right side — gas/brake zone
-    // Top half = gas
-    cx.fillStyle = tU ? 'rgba(100,255,100,0.08)' : 'rgba(255,255,255,0.03)';
-    cx.fillRect(W * 0.55, TOP, W * 0.45, (H - TOP) * 0.55);
-    // Bottom half = brake
-    cx.fillStyle = tD ? 'rgba(255,100,100,0.08)' : 'rgba(255,255,255,0.03)';
-    cx.fillRect(W * 0.55, TOP + (H - TOP) * 0.55, W * 0.45, (H - TOP) * 0.45);
-    // Divider
-    cx.beginPath(); cx.moveTo(W * 0.55, TOP + (H - TOP) * 0.55); cx.lineTo(W, TOP + (H - TOP) * 0.55); cx.stroke();
-
-    // Labels
-    cx.fillStyle = 'rgba(255,255,255,0.12)';
-    cx.font = '600 11px Oswald,sans-serif';
-    cx.textAlign = 'center';
-    // Left steer labels with arrows
-    cx.fillText('LEFT', W * 0.22, TOP + (H - TOP) * 0.22);
-    cx.fillText('RIGHT', W * 0.22, TOP + (H - TOP) * 0.72);
-    // Right gas/brake labels
-    cx.fillText('GAS', W * 0.77, TOP + (H - TOP) * 0.25);
-    cx.fillText('BRAKE', W * 0.77, TOP + (H - TOP) * 0.78);
-
-    // Arrow icons
-    cx.font = '16px sans-serif';
-    cx.fillText('\u25C0', W * 0.22, TOP + (H - TOP) * 0.28);
-    cx.fillText('\u25B6', W * 0.22, TOP + (H - TOP) * 0.78);
-    cx.fillText('\u25B2', W * 0.77, TOP + (H - TOP) * 0.31);
-    cx.fillText('\u25BC', W * 0.77, TOP + (H - TOP) * 0.84);
+  // Mobile tilt indicator
+  if (tiltAvailable && gameRunning) {
+    // Small tilt indicator at bottom center
+    const ix = W / 2, iy = H - 30;
+    cx.fillStyle = 'rgba(0,0,0,0.3)';
+    cx.beginPath(); cx.roundRect(ix - 40, iy - 8, 80, 16, 8); cx.fill();
+    cx.fillStyle = 'rgba(255,255,255,0.15)';
+    cx.beginPath(); cx.roundRect(ix - 38, iy - 6, 76, 12, 6); cx.fill();
+    // Dot showing tilt position
+    const dotX = ix + tiltAngle * 34;
+    cx.fillStyle = 'rgba(255,255,255,0.7)';
+    cx.beginPath(); cx.arc(dotX, iy, 5, 0, Math.PI * 2); cx.fill();
   }
 
   cx.restore();
@@ -831,6 +814,9 @@ function startGame() {
   flashTimer = 0; ramCooldown = 0; shakeTimer = 0;
   runnerCol = RUNNER_PALS[0];
   genTrees();
+  // Init tilt on first start (iOS needs user gesture for permission)
+  tiltCalibration = null;
+  if (!tiltAvailable) initTilt();
   gameRunning = true;
   document.getElementById('hud').style.display = 'flex';
   document.getElementById('startScreen').classList.add('hidden');
