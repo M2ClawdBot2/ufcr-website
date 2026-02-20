@@ -744,7 +744,7 @@
     function generateShareText() {
       const emojis = puzzle.redacted.map((_, i) => gameState.revealed[i] ? '🟩' : '🟥').join('');
       const usedAttempts = gameState.attempts.length;
-      return `REDACT #${puzzle.id} ${emojis} ${usedAttempts}/${MAX_ATTEMPTS}\nufcr.online/game/`;
+      return `REDACT #${puzzle.id} ${emojis} ${usedAttempts}/${MAX_ATTEMPTS}\nufcr.online/redact/`;
     }
 
     // === COUNTDOWN ===
