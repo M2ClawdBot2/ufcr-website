@@ -507,6 +507,11 @@ function update(dt) {
   if (goU()) p.speed += 320 * dt;
   else if (goD()) p.speed -= 400 * dt;
   else p.speed -= 60 * dt;
+  // Mobile auto-brake: slow down when ahead of runner (so you don't overshoot)
+  if (tiltAvailable && runner && p.y < runner.y && p.speed > runner.speed + 20) {
+    const overshoot = (runner.y - p.y); // negative = ahead
+    p.speed -= 180 * dt; // gentle auto-decel
+  }
   p.speed = Math.max(60, Math.min(420, p.speed));
 
   // Steer
