@@ -551,8 +551,13 @@ function update(dt) {
     });
   }
 
+  // Base scroll speed for civilians/scenery (doesn't change on crash)
+  const baseScroll = 180;
+
   civilians.forEach(c => {
-    c.y += c.dir * c.speed * dt + p.speed * 0.35 * dt;
+    c.y += c.dir * c.speed * dt + baseScroll * 0.35 * dt;
+
+    // Player collision
     if (!c.hit && Math.abs(p.x - c.x) < CAR_W * 0.85 && Math.abs(p.y - c.y) < CAR_H * 0.8) {
       c.hit = true;
       p.speed *= 0.35;
@@ -561,6 +566,18 @@ function update(dt) {
       addSparks((p.x + c.x) / 2, (p.y + c.y) / 2, 8);
       shakeTimer = 0.12;
       c.x += (c.x - p.x) * 2;
+    }
+
+    // Runner collision with civilians
+    if (!c.hit && Math.abs(r.x - c.x) < CAR_W * 0.85 && Math.abs(r.y - c.y) < CAR_H * 0.8) {
+      c.hit = true;
+      r.speed *= 0.4;
+      r.swerveTimer = 0; // force immediate lane change
+      effects.push({ x: c.x, y: c.y, text: 'CRASH', color: '#ff8844', life: 1, size: 14 });
+      addSparks((r.x + c.x) / 2, (r.y + c.y) / 2, 8);
+      c.x += (c.x - r.x) * 2;
+      // Runner slowing = player gains on them
+      gapDist = Math.max(0, gapDist - 40);
     }
   });
   civilians = civilians.filter(c => c.y > -120 && c.y < H + 120);
