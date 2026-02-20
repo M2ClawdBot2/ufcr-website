@@ -61,10 +61,10 @@
   <div class="screen-title" style="color:var(--orange)">ICE CHASE</div>
   <p class="screen-sub">High-speed pursuit through city streets. Chase down the suspect and ram them off the road before they escape.</p>
   <ul class="how-to">
-    <li><strong>Left / Right</strong> to steer (Arrow keys, A/D, or touch sides)</li>
-    <li><strong>Up / W</strong> to accelerate</li>
-    <li><strong>Down / S</strong> to brake</li>
-    <li>Ram the red suspect car to bust them</li>
+    <li><strong>Desktop:</strong> Arrow keys or WASD to steer / gas / brake</li>
+    <li><strong>Mobile:</strong> Left side = steer (top=left, bottom=right)</li>
+    <li><strong>Mobile:</strong> Right side = gas (top) / brake (bottom)</li>
+    <li>Ram the suspect car to bust them</li>
     <li>Dodge civilian cars — crashing costs speed</li>
     <li>Don't let the suspect get too far ahead</li>
   </ul>
@@ -112,24 +112,72 @@ const keys = {};
 window.addEventListener('keydown', e => { keys[e.key.toLowerCase()] = true; if(['arrowup','arrowdown','arrowleft','arrowright',' '].includes(e.key.toLowerCase())) e.preventDefault(); });
 window.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
 
-let tL = false, tR = false, tU = false;
+let tL = false, tR = false, tU = false, tD = false;
+const touchIds = {}; // track which finger does what
+
+function classifyTouch(t) {
+  const x = t.clientX, y = t.clientY;
+  // Right side: top half = gas, bottom half = brake
+  if (x > W * 0.55) {
+    if (y < H * 0.55) return 'gas';
+    return 'brake';
+  }
+  // Left side: steer
+  if (x < W * 0.45) {
+    if (y < H * 0.5) return 'left';
+    return 'right';
+  }
+  return 'gas'; // center = gas
+}
+
 CV.addEventListener('touchstart', e => {
   e.preventDefault();
   for (const t of e.changedTouches) {
-    if (t.clientX < W * 0.33) tL = true;
-    else if (t.clientX > W * 0.66) tR = true;
-    tU = true; // any touch = accelerate
+    const role = classifyTouch(t);
+    touchIds[t.identifier] = role;
+    if (role === 'left') tL = true;
+    if (role === 'right') tR = true;
+    if (role === 'gas') tU = true;
+    if (role === 'brake') tD = true;
   }
 }, { passive: false });
-CV.addEventListener('touchend', e => {
-  if (e.touches.length === 0) { tL = false; tR = false; tU = false; }
+
+CV.addEventListener('touchmove', e => {
+  e.preventDefault();
+  // Re-evaluate moving fingers on left side for steering
+  for (const t of e.changedTouches) {
+    const old = touchIds[t.identifier];
+    if (old === 'left' || old === 'right') {
+      // Update steer based on current Y
+      const newRole = t.clientY < H * 0.5 ? 'left' : 'right';
+      if (old !== newRole) {
+        if (old === 'left') tL = false;
+        if (old === 'right') tR = false;
+        touchIds[t.identifier] = newRole;
+        if (newRole === 'left') tL = true;
+        if (newRole === 'right') tR = true;
+      }
+    }
+  }
 }, { passive: false });
-CV.addEventListener('touchcancel', () => { tL = false; tR = false; tU = false; });
+
+function clearTouch(e) {
+  for (const t of e.changedTouches) {
+    const role = touchIds[t.identifier];
+    if (role === 'left') tL = false;
+    if (role === 'right') tR = false;
+    if (role === 'gas') tU = false;
+    if (role === 'brake') tD = false;
+    delete touchIds[t.identifier];
+  }
+}
+CV.addEventListener('touchend', clearTouch, { passive: false });
+CV.addEventListener('touchcancel', clearTouch, { passive: false });
 
 function goL() { return keys['a'] || keys['arrowleft'] || tL; }
 function goR() { return keys['d'] || keys['arrowright'] || tR; }
 function goU() { return keys['w'] || keys['arrowup'] || tU; }
-function goD() { return keys['s'] || keys['arrowdown']; }
+function goD() { return keys['s'] || keys['arrowdown'] || tD; }
 
 // ─── STATE ───
 let gameRunning = false, lastTime = 0;
@@ -711,16 +759,49 @@ function draw() {
   drawGapBar();
   drawEffects();
 
-  // Touch hints
+  // Mobile touch controls overlay
   if ('ontouchstart' in window && gameRunning) {
-    cx.fillStyle = 'rgba(255,255,255,0.04)';
-    cx.fillRect(0, H * 0.4, W * 0.28, H * 0.6);
-    cx.fillRect(W * 0.72, H * 0.4, W * 0.28, H * 0.6);
-    cx.fillStyle = 'rgba(255,255,255,0.08)';
-    cx.font = '600 10px Oswald,sans-serif';
+    // Left side — steer zone
+    // Top half = left
+    cx.fillStyle = tL ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.03)';
+    cx.fillRect(0, TOP, W * 0.45, (H - TOP) / 2);
+    // Bottom half = right
+    cx.fillStyle = tR ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.03)';
+    cx.fillRect(0, TOP + (H - TOP) / 2, W * 0.45, (H - TOP) / 2);
+    // Divider
+    cx.strokeStyle = 'rgba(255,255,255,0.06)';
+    cx.lineWidth = 1;
+    cx.beginPath(); cx.moveTo(0, TOP + (H - TOP) / 2); cx.lineTo(W * 0.45, TOP + (H - TOP) / 2); cx.stroke();
+    cx.beginPath(); cx.moveTo(W * 0.45, TOP); cx.lineTo(W * 0.45, H); cx.stroke();
+    cx.beginPath(); cx.moveTo(W * 0.55, TOP); cx.lineTo(W * 0.55, H); cx.stroke();
+
+    // Right side — gas/brake zone
+    // Top half = gas
+    cx.fillStyle = tU ? 'rgba(100,255,100,0.08)' : 'rgba(255,255,255,0.03)';
+    cx.fillRect(W * 0.55, TOP, W * 0.45, (H - TOP) * 0.55);
+    // Bottom half = brake
+    cx.fillStyle = tD ? 'rgba(255,100,100,0.08)' : 'rgba(255,255,255,0.03)';
+    cx.fillRect(W * 0.55, TOP + (H - TOP) * 0.55, W * 0.45, (H - TOP) * 0.45);
+    // Divider
+    cx.beginPath(); cx.moveTo(W * 0.55, TOP + (H - TOP) * 0.55); cx.lineTo(W, TOP + (H - TOP) * 0.55); cx.stroke();
+
+    // Labels
+    cx.fillStyle = 'rgba(255,255,255,0.12)';
+    cx.font = '600 11px Oswald,sans-serif';
     cx.textAlign = 'center';
-    cx.fillText('STEER', W * 0.14, H * 0.95);
-    cx.fillText('STEER', W * 0.86, H * 0.95);
+    // Left steer labels with arrows
+    cx.fillText('LEFT', W * 0.22, TOP + (H - TOP) * 0.22);
+    cx.fillText('RIGHT', W * 0.22, TOP + (H - TOP) * 0.72);
+    // Right gas/brake labels
+    cx.fillText('GAS', W * 0.77, TOP + (H - TOP) * 0.25);
+    cx.fillText('BRAKE', W * 0.77, TOP + (H - TOP) * 0.78);
+
+    // Arrow icons
+    cx.font = '16px sans-serif';
+    cx.fillText('\u25C0', W * 0.22, TOP + (H - TOP) * 0.28);
+    cx.fillText('\u25B6', W * 0.22, TOP + (H - TOP) * 0.78);
+    cx.fillText('\u25B2', W * 0.77, TOP + (H - TOP) * 0.31);
+    cx.fillText('\u25BC', W * 0.77, TOP + (H - TOP) * 0.84);
   }
 
   cx.restore();
