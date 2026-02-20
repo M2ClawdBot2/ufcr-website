@@ -748,7 +748,7 @@
       const wall = towerGrid[wallKey];
       if (wall && wall.type === 'wall' && wall.alive) {
         wall.hp -= 0.02;
-        e.speed *= 0.3;
+        spd = Math.max(spd * 0.3, 0.1);
         if (wall.hp <= 0) {
           wall.alive = false;
           delete towerGrid[wallKey];
