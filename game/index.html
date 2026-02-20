@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>REDACT — Daily Word Game | UFCR</title>
+  <meta name="description" content="Uncover the truth. One headline at a time. A daily word game by University of Florida College Republicans.">
+  <link rel="icon" href="../assets/images/shield-logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <style>
+    :root {
+      --blue: #0021A5;
+      --orange: #FA4616;
+      --gold: #F0A830;
+      --white: #FFFFFF;
+      --navy: #001845;
+      --dark: #0A0E1A;
+      --gray-100: #F5F5F7;
+      --gray-600: #86868B;
+      --font-body: 'Inter', -apple-system, sans-serif;
+      --font-heading: 'Oswald', 'Inter', sans-serif;
+    }
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html { -webkit-font-smoothing: antialiased; font-size: 16px; }
+    body {
+      font-family: var(--font-body);
+      background: var(--dark);
+      color: var(--white);
+      overflow-x: hidden;
+      min-height: 100vh;
+    }
+    a { text-decoration: none; color: inherit; }
+
+    /* NAV */
+    .nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      height: 80px;
+      background: rgba(0,24,69,0.95);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .nav-inner {
+      max-width: 1200px; margin: 0 auto; padding: 0 24px;
+      height: 100%; display: flex; align-items: center; justify-content: space-between;
+    }
+    .nav-logo { display: flex; align-items: center; gap: 12px; }
+    .nav-logo img { height: 44px; border-radius: 6px; background: white; padding: 2px; }
+    .nav-logo span {
+      font-family: var(--font-heading); font-size: 1.4rem;
+      font-weight: 700; letter-spacing: 0.08em;
+    }
+    .nav-back {
+      font-family: var(--font-heading); font-size: 0.8rem; font-weight: 600;
+      color: rgba(255,255,255,0.5); letter-spacing: 0.15em;
+      text-transform: uppercase; transition: color 0.3s;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .nav-back:hover { color: var(--white); }
+
+    /* HERO STRIPE */
+    .hero-stripe {
+      position: fixed; top: 80px; left: 0; right: 0; height: 4px; z-index: 99;
+      background: linear-gradient(90deg, var(--orange), var(--gold), var(--orange));
+    }
+
+    /* MAIN */
+    .game-container {
+      max-width: 720px; margin: 0 auto;
+      padding: 120px 24px 80px;
+    }
+
+    /* TITLE */
+    .game-header { text-align: center; margin-bottom: 40px; }
+    .game-label {
+      display: inline-block;
+      font-family: var(--font-heading); font-size: 0.7rem; font-weight: 700;
+      letter-spacing: 0.25em; text-transform: uppercase;
+      color: var(--dark); background: var(--gold);
+      padding: 4px 16px; margin-bottom: 12px;
+    }
+    .game-title {
+      font-family: var(--font-heading); font-size: 4rem; font-weight: 700;
+      letter-spacing: 0.15em; text-transform: uppercase;
+      line-height: 1; margin-bottom: 8px;
+      background: linear-gradient(180deg, var(--white) 40%, rgba(255,255,255,0.6));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .game-subtitle {
+      font-family: var(--font-body); font-size: 1rem;
+      color: rgba(255,255,255,0.5); font-weight: 400;
+    }
+
+    /* SOURCE */
+    .headline-source {
+      text-align: center; margin-bottom: 24px;
+      font-size: 0.8rem; color: var(--gray-600);
+      font-weight: 500; letter-spacing: 0.05em;
+    }
+    .headline-source span { color: var(--gold); }
+
+    /* HEADLINE */
+    .headline-display {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
+      padding: 32px 28px;
+      margin-bottom: 32px;
+      position: relative;
+    }
+    .headline-display::before {
+      content: 'CLASSIFIED';
+      position: absolute; top: -10px; left: 20px;
+      font-family: var(--font-heading); font-size: 0.6rem;
+      letter-spacing: 0.3em; color: var(--orange);
+      background: var(--dark); padding: 0 8px;
+    }
+    .headline-text {
+      font-family: var(--font-heading); font-size: 1.6rem;
+      font-weight: 600; line-height: 1.6;
+      letter-spacing: 0.02em;
+    }
+    .redacted-word {
+      display: inline-block; position: relative; cursor: default;
+      vertical-align: baseline;
+    }
+    .redacted-bar {
+      display: inline-block; position: relative;
+      background: #111; color: transparent;
+      padding: 2px 6px; margin: 0 2px;
+      border: 1px solid rgba(255,255,255,0.1);
+      font-family: var(--font-heading); font-size: 1.6rem;
+      font-weight: 600; line-height: 1.6;
+      letter-spacing: 0.12em;
+      user-select: none;
+      min-width: 60px;
+      text-align: center;
+      box-shadow: inset 0 0 8px rgba(0,0,0,0.8), 0 2px 6px rgba(0,0,0,0.4);
+    }
+    .redacted-bar::before {
+      content: '';
+      position: absolute; inset: -1px;
+      background: repeating-linear-gradient(
+        90deg, transparent, transparent 3px, rgba(0,0,0,0.15) 3px, rgba(0,0,0,0.15) 4px
+      );
+      pointer-events: none;
+    }
+    .redacted-bar.hint {
+      border-color: var(--orange);
+      color: rgba(250,70,22,0.6);
+      letter-spacing: 0.12em;
+    }
+    .redacted-bar.revealed {
+      background: transparent;
+      color: var(--gold);
+      border-color: var(--gold);
+      box-shadow: 0 0 20px rgba(240,168,48,0.2);
+      letter-spacing: 0.02em;
+    }
+    .redacted-bar.failed {
+      background: transparent;
+      color: var(--orange);
+      border-color: rgba(250,70,22,0.4);
+      box-shadow: none;
+      letter-spacing: 0.02em;
+    }
+    .redacted-index {
+      position: absolute; top: -8px; left: -4px;
+      font-family: var(--font-heading); font-size: 0.55rem;
+      font-weight: 700; color: var(--dark);
+      background: var(--orange); padding: 0 5px;
+      line-height: 1.4; z-index: 2;
+    }
+
+    /* INPUT */
+    .guess-area { margin-bottom: 24px; }
+    .guess-form {
+      display: flex; gap: 0;
+    }
+    .guess-input {
+      flex: 1; padding: 14px 18px;
+      font-family: var(--font-body); font-size: 1rem;
+      background: rgba(255,255,255,0.06);
+      border: 2px solid rgba(255,255,255,0.12);
+      color: var(--white); outline: none;
+      transition: border-color 0.3s;
+    }
+    .guess-input::placeholder { color: rgba(255,255,255,0.25); }
+    .guess-input:focus { border-color: var(--gold); }
+    .guess-btn {
+      padding: 14px 28px;
+      font-family: var(--font-heading); font-size: 0.9rem;
+      font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+      background: var(--orange); color: var(--white);
+      border: none; cursor: pointer;
+      transition: background 0.3s;
+    }
+    .guess-btn:hover { background: #e03d12; }
+    .guess-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* ATTEMPTS */
+    .attempts-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 24px; padding: 12px 0;
+      border-top: 1px solid rgba(255,255,255,0.06);
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .attempts-label {
+      font-size: 0.75rem; text-transform: uppercase;
+      letter-spacing: 0.15em; color: rgba(255,255,255,0.4);
+      font-weight: 600;
+    }
+    .attempts-dots { display: flex; gap: 8px; }
+    .attempt-dot {
+      width: 12px; height: 12px;
+      border: 2px solid rgba(255,255,255,0.2);
+    }
+    .attempt-dot.used-correct { background: var(--gold); border-color: var(--gold); }
+    .attempt-dot.used-wrong { background: var(--orange); border-color: var(--orange); }
+
+    /* FEEDBACK */
+    .feedback {
+      text-align: center; min-height: 40px;
+      margin-bottom: 16px; font-size: 0.9rem;
+      font-weight: 500;
+    }
+    .feedback.correct { color: var(--gold); }
+    .feedback.wrong { color: var(--orange); }
+
+    /* RESULTS */
+    .results-panel {
+      display: none;
+      text-align: center;
+      padding: 40px 0;
+    }
+    .results-panel.show { display: block; }
+    .results-status {
+      font-family: var(--font-heading); font-size: 1.8rem;
+      font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.1em; margin-bottom: 8px;
+    }
+    .results-status.win { color: var(--gold); }
+    .results-status.lose { color: var(--orange); }
+    .full-headline {
+      font-family: var(--font-heading); font-size: 1.3rem;
+      font-weight: 600; line-height: 1.5;
+      margin: 20px 0; padding: 20px;
+      background: rgba(255,255,255,0.04);
+      border-left: 4px solid var(--gold);
+    }
+    .context-text {
+      font-size: 0.9rem; color: rgba(255,255,255,0.5);
+      margin-bottom: 28px; line-height: 1.6;
+    }
+
+    /* SHARE */
+    .share-btn {
+      display: inline-flex; align-items: center; gap: 10px;
+      padding: 14px 32px;
+      font-family: var(--font-heading); font-size: 0.9rem;
+      font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+      background: var(--gold); color: var(--dark);
+      border: none; cursor: pointer;
+      transition: transform 0.2s, background 0.3s;
+    }
+    .share-btn:hover { transform: translateY(-2px); background: #e09a20; }
+
+    /* STREAK/STATS */
+    .stats-row {
+      display: flex; justify-content: center; gap: 32px;
+      margin: 28px 0;
+    }
+    .stat-item { text-align: center; }
+    .stat-num {
+      font-family: var(--font-heading); font-size: 2rem;
+      font-weight: 700; color: var(--white);
+    }
+    .stat-label {
+      font-size: 0.65rem; text-transform: uppercase;
+      letter-spacing: 0.15em; color: rgba(255,255,255,0.4);
+      font-weight: 600;
+    }
+
+    /* COUNTDOWN */
+    .countdown {
+      margin-top: 32px; padding-top: 24px;
+      border-top: 1px solid rgba(255,255,255,0.06);
+    }
+    .countdown-label {
+      font-size: 0.7rem; text-transform: uppercase;
+      letter-spacing: 0.2em; color: rgba(255,255,255,0.3);
+      margin-bottom: 8px;
+    }
+    .countdown-time {
+      font-family: var(--font-heading); font-size: 2rem;
+      font-weight: 700; letter-spacing: 0.15em; color: var(--white);
+    }
+
+    /* STATS MODAL */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.8); z-index: 200;
+      align-items: center; justify-content: center;
+    }
+    .modal-overlay.show { display: flex; }
+    .modal {
+      background: var(--navy); border: 1px solid rgba(255,255,255,0.1);
+      padding: 40px; max-width: 420px; width: 90%;
+      position: relative;
+    }
+    .modal-close {
+      position: absolute; top: 16px; right: 16px;
+      background: none; border: none; color: rgba(255,255,255,0.4);
+      font-size: 1.2rem; cursor: pointer;
+    }
+    .modal-close:hover { color: var(--white); }
+    .modal-title {
+      font-family: var(--font-heading); font-size: 1.4rem;
+      font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.1em; margin-bottom: 24px;
+      text-align: center;
+    }
+
+    /* STATS BTN */
+    .stats-trigger {
+      position: fixed; top: 90px; right: 20px; z-index: 50;
+      background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+      color: var(--white); width: 44px; height: 44px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; font-size: 1.1rem;
+      transition: background 0.3s;
+    }
+    .stats-trigger:hover { background: rgba(255,255,255,0.12); }
+
+    /* HOW TO PLAY BTN */
+    .help-trigger {
+      position: fixed; top: 90px; right: 74px; z-index: 50;
+      background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+      color: var(--white); width: 44px; height: 44px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; font-size: 1.1rem;
+      transition: background 0.3s;
+    }
+    .help-trigger:hover { background: rgba(255,255,255,0.12); }
+
+    .help-list {
+      font-size: 0.85rem; line-height: 1.8;
+      color: rgba(255,255,255,0.7);
+    }
+    .help-list li { margin-bottom: 8px; }
+
+    /* TOAST */
+    .toast {
+      position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%) translateY(100px);
+      background: var(--gold); color: var(--dark);
+      font-family: var(--font-heading); font-size: 0.8rem;
+      font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+      padding: 12px 28px; z-index: 300;
+      pointer-events: none; opacity: 0;
+    }
+
+    @media (max-width: 600px) {
+      .game-title { font-size: 2.8rem; }
+      .headline-text, .redacted-bar { font-size: 1.2rem; }
+      .full-headline { font-size: 1.1rem; }
+      .stats-row { gap: 20px; }
+      .stat-num { font-size: 1.5rem; }
+      .nav-logo span { font-size: 1.1rem; }
+      .stats-trigger { top: 90px; right: 12px; }
+      .help-trigger { top: 90px; right: 62px; }
+    }
+  </style>
+</head>
+<body>
+  <!-- NAV -->
+  <nav class="nav">
+    <div class="nav-inner">
+      <a href="../" class="nav-logo">
+        <img src="../assets/images/shield-logo.png" alt="UFCR">
+        <span>UFCR</span>
+      </a>
+      <a href="../" class="nav-back">
+        <i class="fa-solid fa-arrow-left"></i>
+        Back to Site
+      </a>
+    </div>
+  </nav>
+  <div class="hero-stripe"></div>
+
+  <!-- STATS BUTTON -->
+  <button class="stats-trigger" id="statsBtn" title="Statistics">
+    <i class="fa-solid fa-chart-bar"></i>
+  </button>
+  <button class="help-trigger" id="helpBtn" title="How to Play">
+    <i class="fa-solid fa-question"></i>
+  </button>
+
+  <!-- GAME -->
+  <div class="game-container">
+    <div class="game-header" id="gameHeader">
+      <div class="game-label">DAILY WORD GAME</div>
+      <h1 class="game-title">REDACT</h1>
+      <p class="game-subtitle">Uncover the truth. One headline at a time.</p>
+    </div>
+
+    <div class="headline-source" id="headlineSource"></div>
+
+    <div class="headline-display" id="headlineDisplay">
+      <div class="headline-text" id="headlineText"></div>
+    </div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="guess-area" id="guessArea">
+      <form class="guess-form" id="guessForm">
+        <input type="text" class="guess-input" id="guessInput" placeholder="Type your guess..." autocomplete="off" autofocus>
+        <button type="submit" class="guess-btn" id="guessBtn">GUESS</button>
+      </form>
+    </div>
+
+    <div class="attempts-bar" id="attemptsBar">
+      <span class="attempts-label">Attempts</span>
+      <div class="attempts-dots" id="attemptsDots"></div>
+    </div>
+
+    <div class="results-panel" id="resultsPanel">
+      <div class="results-status" id="resultsStatus"></div>
+      <div class="full-headline" id="fullHeadline"></div>
+      <div class="context-text" id="contextText"></div>
+      <div class="stats-row" id="resultsStats"></div>
+      <button class="share-btn" id="shareBtn">
+        <i class="fa-solid fa-share-nodes"></i> Share Results
+      </button>
+      <div class="countdown">
+        <div class="countdown-label">Next Puzzle In</div>
+        <div class="countdown-time" id="countdown">--:--:--</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STATS MODAL -->
+  <div class="modal-overlay" id="statsModal">
+    <div class="modal">
+      <button class="modal-close" id="statsClose"><i class="fa-solid fa-xmark"></i></button>
+      <div class="modal-title">Statistics</div>
+      <div class="stats-row" id="modalStats"></div>
+    </div>
+  </div>
+
+  <!-- HELP MODAL -->
+  <div class="modal-overlay" id="helpModal">
+    <div class="modal">
+      <button class="modal-close" id="helpClose"><i class="fa-solid fa-xmark"></i></button>
+      <div class="modal-title">How to Play</div>
+      <ul class="help-list">
+        <li>A real news headline is shown with <strong style="color:var(--gold)">2–3 key words redacted</strong> (blacked out).</li>
+        <li>Type a guess for any of the missing words and hit <strong>GUESS</strong>.</li>
+        <li>You have <strong style="color:var(--orange)">5 total attempts</strong> across all words.</li>
+        <li>Correct guesses are <strong style="color:var(--gold)">revealed in gold</strong>. Wrong guesses show a hint (first letter).</li>
+        <li>Solve all redacted words to win. A new puzzle drops every day at <strong>midnight EST</strong>.</li>
+        <li>Share your results — no spoilers!</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <div class="toast" id="toast"></div>
+
+  <script>
+  (function() {
+    'use strict';
+
+    // === STATE ===
+    const MAX_ATTEMPTS = 5;
+    const STORAGE_KEY = 'redact_stats';
+    const GAME_KEY = 'redact_game';
+    let puzzle = null;
+    let gameState = null; // { puzzleId, attempts: [], revealed: [], done, won }
+
+    // === DOM ===
+    const $ = id => document.getElementById(id);
+
+    // === DATE UTILS ===
+    function getESTDate() {
+      const now = new Date();
+      const est = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
+      const y = est.getFullYear();
+      const m = String(est.getMonth() + 1).padStart(2, '0');
+      const d = String(est.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
+
+    function getMidnightEST() {
+      const now = new Date();
+      const estStr = now.toLocaleString('en-US', { timeZone: 'America/New_York' });
+      const est = new Date(estStr);
+      est.setDate(est.getDate() + 1);
+      est.setHours(0, 0, 0, 0);
+      // Approximate offset
+      const offset = now.getTime() - new Date(estStr).getTime();
+      return new Date(est.getTime() + offset);
+    }
+
+    // === STATS ===
+    function getStats() {
+      try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; } catch { return {}; }
+    }
+    function saveStats(s) { localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); }
+    function initStats() {
+      const s = getStats();
+      if (!s.played) Object.assign(s, { played: 0, won: 0, streak: 0, maxStreak: 0 });
+      return s;
+    }
+
+    function renderStats(containerId) {
+      const s = initStats();
+      const winPct = s.played ? Math.round((s.won / s.played) * 100) : 0;
+      $(containerId).innerHTML = [
+        { n: s.played, l: 'Played' },
+        { n: winPct, l: 'Win %' },
+        { n: s.streak, l: 'Streak' },
+        { n: s.maxStreak, l: 'Max Streak' }
+      ].map(x => `<div class="stat-item"><div class="stat-num">${x.n}</div><div class="stat-label">${x.l}</div></div>`).join('');
+    }
+
+    // === GAME STATE ===
+    function loadGameState() {
+      try { return JSON.parse(localStorage.getItem(GAME_KEY)); } catch { return null; }
+    }
+    function saveGameState() { localStorage.setItem(GAME_KEY, JSON.stringify(gameState)); }
+
+    // === LOAD PUZZLE ===
+    async function loadPuzzle() {
+      const res = await fetch('headlines.json');
+      const headlines = await res.json();
+      const today = getESTDate();
+      puzzle = headlines.find(h => h.date === today);
+      if (!puzzle) {
+        // Fallback: cycle through puzzles
+        const daysSinceFirst = Math.floor((new Date(today) - new Date(headlines[0].date)) / 86400000);
+        puzzle = headlines[daysSinceFirst % headlines.length];
+      }
+      // Load or init game state
+      const saved = loadGameState();
+      if (saved && saved.puzzleId === puzzle.id) {
+        gameState = saved;
+      } else {
+        gameState = {
+          puzzleId: puzzle.id,
+          attempts: [], // { guess, matched: index or -1 }
+          revealed: new Array(puzzle.redacted.length).fill(false),
+          done: false,
+          won: false
+        };
+        saveGameState();
+      }
+      renderGame();
+    }
+
+    // === RENDER ===
+    function renderGame() {
+      // Source
+      $('headlineSource').innerHTML = `via <span>${puzzle.source}</span> &nbsp;·&nbsp; #${puzzle.id}`;
+
+      // Headline
+      renderHeadline();
+
+      // Attempts dots
+      renderAttempts();
+
+      if (gameState.done) {
+        showResults();
+      } else {
+        $('guessInput').focus();
+      }
+
+      // Animate in
+      gsap.from('#gameHeader', { opacity: 0, y: -20, duration: 0.6 });
+      gsap.from('#headlineDisplay', { opacity: 0, y: 20, duration: 0.6, delay: 0.2 });
+    }
+
+    function renderHeadline() {
+      let html = puzzle.headline;
+      // Replace redacted words with bars — process longest first to avoid substring issues
+      const indices = puzzle.redacted
+        .map((w, i) => ({ word: w, index: i }))
+        .sort((a, b) => b.word.length - a.word.length);
+
+      // Use placeholders
+      const placeholders = [];
+      let temp = html;
+      indices.forEach(({ word, index }) => {
+        const ph = `%%REDACT_${index}%%`;
+        temp = temp.replace(word, ph);
+        placeholders.push({ ph, word, index });
+      });
+
+      placeholders.sort((a, b) => a.index - b.index);
+      placeholders.forEach(({ ph, word, index }) => {
+        let replacement;
+        if (gameState.revealed[index]) {
+          replacement = `<span class="redacted-word"><span class="redacted-index">${index + 1}</span><span class="redacted-bar revealed" data-idx="${index}">${word}</span></span>`;
+        } else if (gameState.done) {
+          replacement = `<span class="redacted-word"><span class="redacted-index">${index + 1}</span><span class="redacted-bar failed" data-idx="${index}">${word}</span></span>`;
+        } else {
+          // Show character count as underscores
+          const hasHint = gameState.attempts.some(a => a.matched === -1);
+          const hintFor = getHintIndices();
+          const display = hintFor.has(index)
+            ? word[0] + '·'.repeat(word.length - 1)
+            : '·'.repeat(word.length);
+          const cls = hintFor.has(index) ? 'redacted-bar hint' : 'redacted-bar';
+          replacement = `<span class="redacted-word"><span class="redacted-index">${index + 1}</span><span class="${cls}" data-idx="${index}">${display}</span></span>`;
+        }
+        temp = temp.replace(ph, replacement);
+      });
+
+      $('headlineText').innerHTML = temp;
+    }
+
+    function getHintIndices() {
+      // After a wrong guess, show hints for unrevealed words
+      const hints = new Set();
+      gameState.attempts.forEach(a => {
+        if (a.matched === -1) {
+          // Show hint for all unrevealed
+          gameState.revealed.forEach((r, i) => { if (!r) hints.add(i); });
+        }
+      });
+      return hints;
+    }
+
+    function renderAttempts() {
+      let dots = '';
+      for (let i = 0; i < MAX_ATTEMPTS; i++) {
+        const a = gameState.attempts[i];
+        let cls = 'attempt-dot';
+        if (a) cls += a.matched >= 0 ? ' used-correct' : ' used-wrong';
+        dots += `<div class="${cls}"></div>`;
+      }
+      $('attemptsDots').innerHTML = dots;
+    }
+
+    // === GUESS ===
+    function handleGuess(guess) {
+      if (gameState.done || !guess.trim()) return;
+
+      const normalized = guess.trim().toLowerCase();
+      let matchedIdx = -1;
+
+      puzzle.redacted.forEach((word, i) => {
+        if (!gameState.revealed[i] && word.toLowerCase() === normalized) {
+          matchedIdx = i;
+        }
+      });
+
+      gameState.attempts.push({ guess: guess.trim(), matched: matchedIdx });
+
+      if (matchedIdx >= 0) {
+        gameState.revealed[matchedIdx] = true;
+        $('feedback').className = 'feedback correct';
+        $('feedback').textContent = `✓ Correct! Word #${matchedIdx + 1} revealed.`;
+
+        // Animate reveal
+        renderHeadline();
+        const bar = document.querySelector(`.redacted-bar[data-idx="${matchedIdx}"]`);
+        if (bar) {
+          gsap.from(bar, { opacity: 0, scale: 1.1, duration: 0.4, ease: 'power2.out' });
+        }
+      } else {
+        $('feedback').className = 'feedback wrong';
+        const remaining = MAX_ATTEMPTS - gameState.attempts.length;
+        $('feedback').textContent = `✗ Wrong! ${remaining} attempt${remaining !== 1 ? 's' : ''} left.`;
+        renderHeadline(); // Update hints
+        gsap.from('#feedback', { x: -10, duration: 0.1, repeat: 3, yoyo: true });
+      }
+
+      renderAttempts();
+
+      // Check win/lose
+      if (gameState.revealed.every(Boolean)) {
+        gameState.done = true;
+        gameState.won = true;
+        finishGame();
+      } else if (gameState.attempts.length >= MAX_ATTEMPTS) {
+        gameState.done = true;
+        gameState.won = false;
+        finishGame();
+      }
+
+      saveGameState();
+      $('guessInput').value = '';
+      if (!gameState.done) $('guessInput').focus();
+    }
+
+    function finishGame() {
+      // Update stats
+      const s = initStats();
+      s.played++;
+      if (gameState.won) {
+        s.won++;
+        s.streak++;
+        if (s.streak > s.maxStreak) s.maxStreak = s.streak;
+      } else {
+        s.streak = 0;
+      }
+      saveStats(s);
+
+      // Reveal all
+      renderHeadline();
+
+      setTimeout(() => showResults(), 600);
+    }
+
+    function showResults() {
+      $('guessArea').style.display = 'none';
+      $('feedback').textContent = '';
+
+      const panel = $('resultsPanel');
+      panel.classList.add('show');
+
+      const status = $('resultsStatus');
+      if (gameState.won) {
+        status.className = 'results-status win';
+        status.textContent = 'DECLASSIFIED';
+      } else {
+        status.className = 'results-status lose';
+        status.textContent = 'REDACTED';
+      }
+
+      $('fullHeadline').textContent = puzzle.headline;
+      $('contextText').textContent = puzzle.context;
+
+      renderStats('resultsStats');
+      startCountdown();
+
+      gsap.from(panel, { opacity: 0, y: 30, duration: 0.6 });
+    }
+
+    // === SHARE ===
+    function generateShareText() {
+      const emojis = puzzle.redacted.map((_, i) => gameState.revealed[i] ? '🟩' : '🟥').join('');
+      const usedAttempts = gameState.attempts.length;
+      return `REDACT #${puzzle.id} ${emojis} ${usedAttempts}/${MAX_ATTEMPTS}\nufcr.online/game/`;
+    }
+
+    // === COUNTDOWN ===
+    function startCountdown() {
+      function tick() {
+        const target = getMidnightEST();
+        const diff = target - new Date();
+        if (diff <= 0) {
+          $('countdown').textContent = '00:00:00';
+          return;
+        }
+        const h = String(Math.floor(diff / 3600000)).padStart(2, '0');
+        const m = String(Math.floor((diff % 3600000) / 60000)).padStart(2, '0');
+        const s = String(Math.floor((diff % 60000) / 1000)).padStart(2, '0');
+        $('countdown').textContent = `${h}:${m}:${s}`;
+      }
+      tick();
+      setInterval(tick, 1000);
+    }
+
+    // === TOAST ===
+    function showToast(msg) {
+      const t = $('toast');
+      t.textContent = msg;
+      gsap.to(t, { opacity: 1, y: 0, duration: 0.3 });
+      gsap.to(t, { opacity: 0, y: 100, duration: 0.3, delay: 2 });
+    }
+
+    // === EVENTS ===
+    $('guessForm').addEventListener('submit', e => {
+      e.preventDefault();
+      handleGuess($('guessInput').value);
+    });
+
+    $('shareBtn').addEventListener('click', () => {
+      const text = generateShareText();
+      navigator.clipboard.writeText(text).then(() => showToast('Copied to clipboard!'));
+    });
+
+    $('statsBtn').addEventListener('click', () => {
+      renderStats('modalStats');
+      $('statsModal').classList.add('show');
+    });
+    $('statsClose').addEventListener('click', () => $('statsModal').classList.remove('show'));
+    $('statsModal').addEventListener('click', e => { if (e.target === $('statsModal')) $('statsModal').classList.remove('show'); });
+
+    $('helpBtn').addEventListener('click', () => $('helpModal').classList.add('show'));
+    $('helpClose').addEventListener('click', () => $('helpModal').classList.remove('show'));
+    $('helpModal').addEventListener('click', e => { if (e.target === $('helpModal')) $('helpModal').classList.remove('show'); });
+
+    // === INIT ===
+    loadPuzzle();
+  })();
+  </script>
+</body>
+</html>

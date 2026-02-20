@@ -1,0 +1,317 @@
+[
+  {
+    "id": 1,
+    "date": "2026-02-20",
+    "headline": "Supreme Court Rules 6-3 That Universities Cannot Ban Political Speech on Campus",
+    "redacted": ["Supreme Court", "Ban", "Political Speech"],
+    "source": "Washington Examiner",
+    "context": "The landmark ruling reaffirmed First Amendment protections for students expressing political views at public universities.",
+    "difficulty": "medium"
+  },
+  {
+    "id": 2,
+    "date": "2026-02-21",
+    "headline": "Texas Governor Signs Bill Requiring Border Wall Construction to Resume Immediately",
+    "redacted": ["Texas", "Border Wall", "Immediately"],
+    "source": "Daily Caller",
+    "context": "Governor Abbott signed the executive order after months of legal battles over federal immigration enforcement.",
+    "difficulty": "easy"
+  },
+  {
+    "id": 3,
+    "date": "2026-02-22",
+    "headline": "Facebook Whistleblower Reveals Algorithm Suppressed Conservative News by 40 Percent",
+    "redacted": ["Facebook", "Conservative", "40 Percent"],
+    "source": "New York Post",
+    "context": "Internal documents showed the platform's algorithm systematically reduced the reach of right-leaning outlets.",
+    "difficulty": "medium"
+  },
+  {
+    "id": 4,
+    "date": "2026-02-23",
+    "headline": "Stanford Professor Fired After Refusing to Add Trigger Warnings to Constitution Lectures",
+    "redacted": ["Stanford", "Trigger Warnings", "Constitution"],
+    "source": "The College Fix",
+    "context": "The tenured professor argued that the Constitution should be taught without ideological filters.",
+    "difficulty": "hard"
+  },
+  {
+    "id": 5,
+    "date": "2026-02-24",
+    "headline": "House Passes Parents Bill of Rights Act in Bipartisan 230 to 195 Vote",
+    "redacted": ["Parents Bill of Rights", "Bipartisan", "230"],
+    "source": "Fox News",
+    "context": "The legislation guarantees parental access to school curricula, library books, and budget information.",
+    "difficulty": "hard"
+  },
+  {
+    "id": 6,
+    "date": "2026-02-25",
+    "headline": "Elon Musk Releases Twitter Files Showing FBI Flagged Accounts for Censorship",
+    "redacted": ["Elon Musk", "Twitter Files", "FBI"],
+    "source": "The Free Press",
+    "context": "The document dump revealed coordination between federal agencies and social media platforms to suppress content.",
+    "difficulty": "easy"
+  },
+  {
+    "id": 7,
+    "date": "2026-02-26",
+    "headline": "Florida Becomes First State to Ban DEI Offices at Public Universities",
+    "redacted": ["Florida", "DEI", "Public Universities"],
+    "source": "National Review",
+    "context": "Governor DeSantis championed the legislation as a win against institutional ideological conformity.",
+    "difficulty": "easy"
+  },
+  {
+    "id": 8,
+    "date": "2026-02-27",
+    "headline": "Google Employees Demand Company Stop Working with U.S. Military on AI Projects",
+    "redacted": ["Google", "Military", "AI"],
+    "source": "The Verge",
+    "context": "Thousands of employees signed a petition opposing the company's involvement in Project Maven drone technology.",
+    "difficulty": "medium"
+  },
+  {
+    "id": 9,
+    "date": "2026-02-28",
+    "headline": "Yale Students Shout Down Conservative Speaker Forcing Campus Police to Escort Him Out",
+    "redacted": ["Yale", "Conservative", "Campus Police"],
+    "source": "Washington Free Beacon",
+    "context": "The disruption reignited national debate over free speech norms at elite institutions.",
+    "difficulty": "medium"
+  },
+  {
+    "id": 10,
+    "date": "2026-03-01",
+    "headline": "Senate Confirms Youngest Federal Judge in 30 Years at Age 33 on Party-Line Vote",
+    "redacted": ["Youngest", "30 Years", "33"],
+    "source": "Politico",
+    "context": "The confirmation shifted the appellate court's ideological balance for a generation.",
+    "difficulty": "hard"
+  },
+  {
+    "id": 11,
+    "date": "2026-03-02",
+    "headline": "Biden Administration Secretly Paid Influencers to Promote COVID Vaccine on TikTok",
+    "redacted": ["Biden", "Influencers", "TikTok"],
+    "source": "Washington Post",
+    "context": "Documents revealed the HHS spent millions on covert social media campaigns targeting young Americans.",
+    "difficulty": "medium"
+  },
+  {
+    "id": 12,
+    "date": "2026-03-03",
+    "headline": "University of Florida College Republicans Win Campus Organization of the Year Award",
+    "redacted": ["University of Florida", "College Republicans", "Organization of the Year"],
+    "source": "The Alligator",
+    "context": "UFCR was recognized for hosting the most campus events and achieving record membership growth.",
+    "difficulty": "easy"
+  },
+  {
+    "id": 13,
+    "date": "2026-03-04",
+    "headline": "Amazon Removes Best-Selling Book Criticizing Gender Ideology Without Explanation",
+    "redacted": ["Amazon", "Gender Ideology", "Explanation"],
+    "source": "Daily Wire",
+    "context": "The book had been the number one seller in its category for three consecutive weeks before removal.",
+    "difficulty": "medium"
+  },
+  {
+    "id": 14,
+    "date": "2026-03-05",
+    "headline": "Supreme Court Agrees to Hear Case on Second Amendment Rights for 18-Year-Olds",
+    "redacted": ["Supreme Court", "Second Amendment", "18-Year-Olds"],
+    "source": "SCOTUSblog",
+    "context": "The case challenges state laws that restrict firearm purchases for adults under 21.",
+    "difficulty": "medium"
+  },
+  {
+    "id": 15,
+    "date": "2026-03-06",
+    "headline": "Harvard Drops to 30th in Free Speech Rankings After Banning Controversial Student Club",
+    "redacted": ["Harvard", "30th", "Student Club"],
+    "source": "FIRE",
+    "context": "The Foundation for Individual Rights and Expression called the ban a chilling effect on student organizing.",
+    "difficulty": "hard"
+  },
+  {
+    "id": 16,
+    "date": "2026-03-07",
+    "headline": "DeSantis Signs Executive Order Banning Central Bank Digital Currency in Florida",
+    "redacted": ["DeSantis", "Central Bank Digital Currency", "Florida"],
+    "source": "Fox Business",
+    "context": "The governor argued CBDCs would give the federal government unprecedented surveillance over personal finances.",
+    "difficulty": "medium"
+  },
+  {
+    "id": 17,
+    "date": "2026-03-08",
+    "headline": "Pentagon Report Reveals Military Academies Teaching Critical Race Theory to Cadets",
+    "redacted": ["Pentagon", "Critical Race Theory", "Cadets"],
+    "source": "Washington Times",
+    "context": "Congressional Republicans demanded an immediate review of curricula at West Point and the Naval Academy.",
+    "difficulty": "medium"
+  },
+  {
+    "id": 18,
+    "date": "2026-03-09",
+    "headline": "YouTube Demonetizes Channel with 5 Million Subscribers Over Election Integrity Content",
+    "redacted": ["YouTube", "5 Million", "Election Integrity"],
+    "source": "Reclaim The Net",
+    "context": "The creator's videos questioning mail-in ballot procedures were flagged by the platform's misinformation policy.",
+    "difficulty": "hard"
+  },
+  {
+    "id": 19,
+    "date": "2026-03-10",
+    "headline": "Republican Governors Form Coalition to Challenge Federal Vaccine Mandate in Court",
+    "redacted": ["Republican", "Coalition", "Vaccine Mandate"],
+    "source": "Associated Press",
+    "context": "Twenty-four state attorneys general joined the lawsuit arguing the mandate exceeded executive authority.",
+    "difficulty": "easy"
+  },
+  {
+    "id": 20,
+    "date": "2026-03-11",
+    "headline": "Columbia University Protesters Occupy Hamilton Hall Demanding Divestment from Israel",
+    "redacted": ["Columbia", "Hamilton Hall", "Israel"],
+    "source": "New York Times",
+    "context": "The occupation marked the most significant campus protest at the university since 1968.",
+    "difficulty": "medium"
+  },
+  {
+    "id": 21,
+    "date": "2026-03-12",
+    "headline": "Twitter Suspends Babylon Bee Account After Satirical Post About Rachel Levine",
+    "redacted": ["Babylon Bee", "Satirical", "Rachel Levine"],
+    "source": "The Federalist",
+    "context": "The satire site refused to delete the tweet, calling the suspension an attack on political humor.",
+    "difficulty": "hard"
+  },
+  {
+    "id": 22,
+    "date": "2026-03-13",
+    "headline": "Virginia Parents Pack School Board Meeting to Protest Critical Race Theory Curriculum",
+    "redacted": ["Virginia", "School Board", "Critical Race Theory"],
+    "source": "Daily Signal",
+    "context": "The packed meeting became a flashpoint in the nationwide debate over K-12 education content.",
+    "difficulty": "easy"
+  },
+  {
+    "id": 23,
+    "date": "2026-03-14",
+    "headline": "Trump Raises 52 Million Dollars in 24 Hours After Arraignment in Manhattan Court",
+    "redacted": ["52 Million", "24 Hours", "Manhattan"],
+    "source": "CNN",
+    "context": "The fundraising haul shattered previous records and demonstrated his base's loyalty amid legal challenges.",
+    "difficulty": "hard"
+  },
+  {
+    "id": 24,
+    "date": "2026-03-15",
+    "headline": "Apple Removes Parler from App Store Citing Content Moderation Concerns",
+    "redacted": ["Apple", "Parler", "Content Moderation"],
+    "source": "Reuters",
+    "context": "The removal sparked debate over whether tech companies have too much power over public discourse.",
+    "difficulty": "medium"
+  },
+  {
+    "id": 25,
+    "date": "2026-03-16",
+    "headline": "Oklahoma Governor Signs Law Requiring Schools to Display Ten Commandments in Classrooms",
+    "redacted": ["Oklahoma", "Ten Commandments", "Classrooms"],
+    "source": "Associated Press",
+    "context": "Civil liberties groups immediately filed suit arguing the law violated separation of church and state.",
+    "difficulty": "medium"
+  },
+  {
+    "id": 26,
+    "date": "2026-03-17",
+    "headline": "ACLU Reverses Position and Now Argues Some Speech Should Be Regulated on Campus",
+    "redacted": ["ACLU", "Reverses", "Regulated"],
+    "source": "Wall Street Journal",
+    "context": "The shift marked a dramatic departure from the organization's decades-long absolutist free speech stance.",
+    "difficulty": "hard"
+  },
+  {
+    "id": 27,
+    "date": "2026-03-18",
+    "headline": "Border Patrol Reports Record 2.4 Million Illegal Crossings in Single Fiscal Year",
+    "redacted": ["Border Patrol", "2.4 Million", "Fiscal Year"],
+    "source": "Fox News",
+    "context": "The unprecedented numbers fueled calls for immediate policy changes and additional border security funding.",
+    "difficulty": "medium"
+  },
+  {
+    "id": 28,
+    "date": "2026-03-19",
+    "headline": "MIT Students Launch Free Speech Wall After Administration Censors Conservative Flyers",
+    "redacted": ["MIT", "Free Speech Wall", "Conservative"],
+    "source": "Campus Reform",
+    "context": "The student-led protest attracted national media attention and support from First Amendment organizations.",
+    "difficulty": "medium"
+  },
+  {
+    "id": 29,
+    "date": "2026-03-20",
+    "headline": "SpaceX Wins 3 Billion Dollar NASA Contract Beating Boeing and Blue Origin Bids",
+    "redacted": ["SpaceX", "3 Billion", "Boeing"],
+    "source": "CNBC",
+    "context": "The contract solidified the private space company's dominance in government launch contracts.",
+    "difficulty": "easy"
+  },
+  {
+    "id": 30,
+    "date": "2026-03-21",
+    "headline": "Governor Youngkin Bans TikTok on State Government Devices Citing National Security",
+    "redacted": ["Youngkin", "TikTok", "National Security"],
+    "source": "Richmond Times-Dispatch",
+    "context": "Virginia joined a growing list of states restricting the Chinese-owned app on official devices.",
+    "difficulty": "easy"
+  },
+  {
+    "id": 31,
+    "date": "2026-03-22",
+    "headline": "Heritage Foundation Report Shows 87 Percent of Universities Have Restrictive Speech Codes",
+    "redacted": ["Heritage Foundation", "87 Percent", "Speech Codes"],
+    "source": "Daily Signal",
+    "context": "The comprehensive study analyzed policies at over 400 institutions and found widespread First Amendment violations.",
+    "difficulty": "hard"
+  },
+  {
+    "id": 32,
+    "date": "2026-03-23",
+    "headline": "Wisconsin Supreme Court Flips to Liberal Majority After Protasiewicz Wins by 11 Points",
+    "redacted": ["Wisconsin", "Protasiewicz", "11 Points"],
+    "source": "Milwaukee Journal Sentinel",
+    "context": "The most expensive judicial race in American history reshaped the court's ideological balance on redistricting.",
+    "difficulty": "hard"
+  },
+  {
+    "id": 33,
+    "date": "2026-03-24",
+    "headline": "Instagram Removes Post by Congressman Sharing Official Government Immigration Statistics",
+    "redacted": ["Instagram", "Congressman", "Immigration"],
+    "source": "Breitbart",
+    "context": "The platform later restored the post and blamed an automated system error for the removal.",
+    "difficulty": "easy"
+  },
+  {
+    "id": 34,
+    "date": "2026-03-25",
+    "headline": "Turning Point USA Hosts Largest Ever Student Conference with 12000 Attendees in Phoenix",
+    "redacted": ["Turning Point USA", "12000", "Phoenix"],
+    "source": "Newsmax",
+    "context": "The four-day event featured presidential candidates and became the biggest conservative youth gathering in history.",
+    "difficulty": "hard"
+  },
+  {
+    "id": 35,
+    "date": "2026-03-26",
+    "headline": "California Teachers Union Sues Parents Who Recorded School Board Meeting on Cell Phones",
+    "redacted": ["California", "Teachers Union", "Cell Phones"],
+    "source": "Daily Wire",
+    "context": "The lawsuit claimed recording violated privacy rights, but critics called it an attempt to hide transparency.",
+    "difficulty": "medium"
+  }
+]
