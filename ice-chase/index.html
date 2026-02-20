@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>ICE CHASE — UFCR Games</title>
+  <link rel="icon" href="../assets/images/shield-logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    :root{--orange:#FA4616;--gold:#F0A830;--navy:#001845;--dark:#0A0E1A;--red:#D32F2F;--green:#43A047;--blue:#2255aa;--font-body:'Inter',sans-serif;--font-heading:'Oswald',sans-serif}
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+    html,body{width:100%;height:100%;overflow:hidden;font-family:var(--font-body);background:#111;color:#fff;-webkit-tap-highlight-color:transparent;user-select:none;touch-action:none}
+    .nav{position:fixed;top:0;left:0;right:0;z-index:100;height:44px;background:rgba(0,24,69,.95);backdrop-filter:blur(20px);border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:center;justify-content:space-between;padding:0 12px}
+    .nav-logo{display:flex;align-items:center;gap:6px;text-decoration:none;color:#fff}
+    .nav-logo img{height:26px;border-radius:3px;background:#fff;padding:1px}
+    .nav-logo span{font-family:var(--font-heading);font-size:.95rem;font-weight:700;letter-spacing:.08em}
+    .nav-back{font-size:.65rem;color:rgba(255,255,255,.5);text-decoration:none;letter-spacing:.1em;text-transform:uppercase;font-weight:600}
+    .hud{position:fixed;top:44px;left:0;right:0;z-index:90;display:flex;justify-content:space-between;padding:6px 16px;background:rgba(0,24,69,.7);backdrop-filter:blur(10px);border-bottom:1px solid rgba(255,255,255,.05)}
+    .hud-item{text-align:center;flex:1}
+    .hud-label{font-size:.5rem;text-transform:uppercase;letter-spacing:.15em;color:rgba(255,255,255,.3)}
+    .hud-value{font-family:var(--font-heading);font-size:1.1rem;font-weight:700}
+    .hud-value.score{color:var(--gold)}.hud-value.speed{color:var(--green)}.hud-value.dist{color:var(--orange)}.hud-value.busts{color:var(--blue)}
+    canvas{position:fixed;top:0;left:0;width:100%;height:100%;display:block}
+    .screen-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(5,8,18,.94);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:200;padding:24px;text-align:center}
+    .screen-overlay.hidden{display:none}
+    .screen-title{font-family:var(--font-heading);font-size:clamp(2.2rem,8vw,4rem);font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px}
+    .screen-sub{font-size:.9rem;color:rgba(255,255,255,.45);margin-bottom:24px;max-width:380px;line-height:1.6}
+    .screen-stats{margin-bottom:24px;min-width:220px}
+    .stat-row{display:flex;justify-content:space-between;font-size:.9rem;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.05)}
+    .stat-label{color:rgba(255,255,255,.35)}.stat-val{font-weight:700;color:var(--gold)}
+    .level-badge{font-family:var(--font-heading);font-size:.65rem;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin-bottom:6px}
+    .btn{font-family:var(--font-heading);font-size:1rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;background:var(--orange);color:#fff;border:none;padding:12px 32px;cursor:pointer;transition:all .3s}
+    .btn:hover{background:#e03a0e;transform:translateY(-2px)}
+    .share-btns{display:flex;gap:10px;margin-top:12px}
+    .share-btn{font-family:var(--font-heading);font-size:.65rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;padding:8px 14px;border:1px solid rgba(255,255,255,.12);background:transparent;color:#fff;cursor:pointer;display:flex;align-items:center;gap:5px;transition:all .3s}
+    .share-btn:hover{background:rgba(255,255,255,.06)}
+    .how-to{max-width:360px;margin-bottom:20px;text-align:left}
+    .how-to li{font-size:.82rem;color:rgba(255,255,255,.5);margin-bottom:5px;line-height:1.5;list-style:none;padding-left:18px;position:relative}
+    .how-to li::before{content:'';position:absolute;left:0;top:7px;width:6px;height:6px;background:var(--orange);border-radius:50%}
+    .touch-controls{position:fixed;bottom:20px;left:0;right:0;z-index:95;display:none;justify-content:space-between;padding:0 20px;pointer-events:none}
+    .touch-btn{width:70px;height:70px;border-radius:50%;background:rgba(255,255,255,.08);border:2px solid rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;pointer-events:auto;font-size:1.4rem;color:rgba(255,255,255,.4);-webkit-tap-highlight-color:transparent}
+    .touch-btn:active{background:rgba(255,255,255,.2);border-color:rgba(255,255,255,.3)}
+    .touch-side{display:flex;gap:10px;align-items:flex-end}
+    @media(hover:none)and(pointer:coarse){.touch-controls{display:flex}}
+  </style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="../" class="nav-logo"><img src="../assets/images/shield-logo.png" alt="UFCR"><span>UFCR</span></a>
+  <a href="../games/" class="nav-back"><i class="fas fa-arrow-left"></i> Games</a>
+</nav>
+
+<div class="hud" id="hud" style="display:none">
+  <div class="hud-item"><div class="hud-label">Score</div><div class="hud-value score" id="hudScore">0</div></div>
+  <div class="hud-item"><div class="hud-label">Busts</div><div class="hud-value busts" id="hudBusts">0</div></div>
+  <div class="hud-item"><div class="hud-label">Speed</div><div class="hud-value speed" id="hudSpeed">0</div></div>
+  <div class="hud-item"><div class="hud-label">Distance</div><div class="hud-value dist" id="hudDist">---</div></div>
+</div>
+
+<div class="screen-overlay" id="startScreen">
+  <div class="level-badge">UFCR GAMES</div>
+  <div class="screen-title" style="color:var(--orange)">ICE CHASE</div>
+  <p class="screen-sub">High-speed pursuit through city streets. Chase down the runner's vehicle before they escape. Ram them to make the bust.</p>
+  <ul class="how-to">
+    <li><strong>Arrow keys / WASD</strong> to steer and accelerate</li>
+    <li><strong>Touch:</strong> on-screen buttons on mobile</li>
+    <li>Chase the <strong style="color:#ff4444">red car</strong> — get close and ram it</li>
+    <li>Dodge civilian traffic — crashing slows you down</li>
+    <li>Runner escapes if distance exceeds the limit</li>
+    <li>Each bust spawns a faster runner</li>
+  </ul>
+  <button class="btn" id="startBtn">Start Chase</button>
+</div>
+
+<div class="screen-overlay hidden" id="gameOverScreen">
+  <div class="level-badge">PURSUIT ENDED</div>
+  <div class="screen-title" id="goTitle" style="color:var(--red)">Escaped!</div>
+  <p class="screen-sub" id="goSub"></p>
+  <div class="screen-stats" id="goStats"></div>
+  <button class="btn" id="restartBtn">Chase Again</button>
+  <div class="share-btns">
+    <button class="share-btn" id="shareBtn"><i class="fab fa-x-twitter"></i> Share</button>
+    <button class="share-btn" id="copyBtn"><i class="fas fa-copy"></i> Copy</button>
+  </div>
+</div>
+
+<canvas id="game"></canvas>
+
+<div class="touch-controls" id="touchControls">
+  <div class="touch-side">
+    <button class="touch-btn" id="btnLeft"><i class="fas fa-arrow-left"></i></button>
+  </div>
+  <div class="touch-side">
+    <button class="touch-btn" id="btnUp"><i class="fas fa-arrow-up"></i></button>
+    <button class="touch-btn" id="btnDown"><i class="fas fa-arrow-down"></i></button>
+    <button class="touch-btn" id="btnRight"><i class="fas fa-arrow-right"></i></button>
+  </div>
+</div>
+
+<script>
+const CV = document.getElementById('game');
+const cx = CV.getContext('2d');
+
+let W, H, dpr;
+function resize() {
+  dpr = window.devicePixelRatio || 1;
+  W = window.innerWidth; H = window.innerHeight;
+  CV.width = W * dpr; CV.height = H * dpr;
+  CV.style.width = W + 'px'; CV.style.height = H + 'px';
+  cx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+resize();
+window.addEventListener('resize', resize);
+
+// ─── CONSTANTS ───
+const NAV_H = 80;
+const ROAD_W = 280;
+const LANE_W = 70;
+const CAR_W = 24;
+const CAR_L = 42;
+
+// ─── INPUT ───
+const keys = {};
+window.addEventListener('keydown', e => keys[e.key.toLowerCase()] = true);
+window.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
+
+// Touch controls
+const touchState = { left: false, right: false, up: false, down: false };
+function setupTouch(id, key) {
+  const el = document.getElementById(id);
+  el.addEventListener('touchstart', e => { e.preventDefault(); touchState[key] = true; }, { passive: false });
+  el.addEventListener('touchend', e => { touchState[key] = false; });
+  el.addEventListener('touchcancel', e => { touchState[key] = false; });
+}
+setupTouch('btnLeft', 'left');
+setupTouch('btnRight', 'right');
+setupTouch('btnUp', 'up');
+setupTouch('btnDown', 'down');
+
+function isLeft() { return keys['a'] || keys['arrowleft'] || touchState.left; }
+function isRight() { return keys['d'] || keys['arrowright'] || touchState.right; }
+function isUp() { return keys['w'] || keys['arrowup'] || touchState.up; }
+function isDown() { return keys['s'] || keys['arrowdown'] || touchState.down; }
+
+// ─── STATE ───
+let gameRunning = false, lastTime = 0;
+let score = 0, busts = 0;
+let player, runner, civilians, effects, tireMarks;
+let roadOffset = 0;
+let maxDist = 500; // runner escapes at this distance
+let chaseDist = 0;
+let ramCooldown = 0;
+let flashTimer = 0;
+
+// ─── CARS ───
+function createPlayer() {
+  return {
+    x: W / 2,
+    y: H * 0.65,
+    angle: -Math.PI / 2, // facing up
+    speed: 0,
+    maxSpeed: 280,
+    accel: 320,
+    brake: 400,
+    friction: 120,
+    turnSpeed: 2.8,
+    driftAngle: 0,
+    sliding: false,
+    hp: 100,
+  };
+}
+
+function createRunner() {
+  return {
+    x: W / 2,
+    y: H * 0.35,
+    angle: -Math.PI / 2,
+    speed: 160 + busts * 20,
+    maxSpeed: 200 + busts * 25,
+    turnTimer: 0,
+    turnDir: 0,
+    laneTarget: W / 2,
+    swerveTimer: 0,
+    hit: false,
+    hitTimer: 0,
+    // Runner gets smarter
+    agility: Math.min(3.5, 2 + busts * 0.2),
+  };
+}
+
+function createCivilian(y) {
+  const lanes = [-1.5, -0.5, 0.5, 1.5];
+  const lane = lanes[Math.floor(Math.random() * lanes.length)];
+  const goingUp = Math.random() > 0.3;
+  return {
+    x: W / 2 + lane * LANE_W,
+    y: y || -CAR_L * 2,
+    angle: goingUp ? -Math.PI / 2 : Math.PI / 2,
+    speed: goingUp ? (80 + Math.random() * 40) : (60 + Math.random() * 30),
+    going: goingUp ? -1 : 1,
+    color: ['#ddd', '#aab', '#889', '#bba', '#999', '#778'][Math.floor(Math.random() * 6)],
+    hit: false,
+  };
+}
+
+// ─── DRAW CAR ───
+function drawCar(x, y, angle, w, l, bodyColor, isICE, isRunner, driftAngle) {
+  cx.save();
+  cx.translate(x, y);
+  cx.rotate(angle + (driftAngle || 0) * 0.3);
+
+  // Shadow
+  cx.fillStyle = 'rgba(0,0,0,0.25)';
+  cx.beginPath();
+  cx.ellipse(2, 2, w * 0.55, l * 0.52, 0, 0, Math.PI * 2);
+  cx.fill();
+
+  // Body
+  const bg = cx.createLinearGradient(-w/2, 0, w/2, 0);
+  if (isICE) {
+    bg.addColorStop(0, '#1a3d6e');
+    bg.addColorStop(0.5, '#2558a0');
+    bg.addColorStop(1, '#1a3d6e');
+  } else if (isRunner) {
+    bg.addColorStop(0, '#8b1a1a');
+    bg.addColorStop(0.5, '#cc2222');
+    bg.addColorStop(1, '#8b1a1a');
+  } else {
+    bg.addColorStop(0, bodyColor);
+    bg.addColorStop(1, bodyColor);
+  }
+  cx.fillStyle = bg;
+  cx.beginPath();
+  cx.roundRect(-w/2, -l/2, w, l, 4);
+  cx.fill();
+
+  // Roof
+  cx.fillStyle = isICE ? 'rgba(150,200,255,0.2)' : isRunner ? 'rgba(255,100,100,0.15)' : 'rgba(255,255,255,0.08)';
+  cx.beginPath();
+  cx.roundRect(-w * 0.35, -l * 0.2, w * 0.7, l * 0.35, 3);
+  cx.fill();
+
+  // Windshield (front)
+  cx.fillStyle = 'rgba(100,180,255,0.25)';
+  cx.fillRect(-w * 0.35, -l * 0.42, w * 0.7, l * 0.12);
+
+  // Rear window
+  cx.fillStyle = 'rgba(100,150,200,0.15)';
+  cx.fillRect(-w * 0.3, l * 0.2, w * 0.6, l * 0.1);
+
+  // Headlights
+  cx.fillStyle = 'rgba(255,255,200,0.6)';
+  cx.fillRect(-w * 0.35, -l / 2, w * 0.15, 3);
+  cx.fillRect(w * 0.2, -l / 2, w * 0.15, 3);
+
+  // Taillights
+  cx.fillStyle = isRunner ? 'rgba(255,50,50,0.7)' : 'rgba(255,50,50,0.4)';
+  cx.fillRect(-w * 0.35, l / 2 - 3, w * 0.15, 3);
+  cx.fillRect(w * 0.2, l / 2 - 3, w * 0.15, 3);
+
+  if (isICE) {
+    // ICE text
+    cx.fillStyle = 'rgba(255,255,255,0.7)';
+    cx.font = '700 7px Oswald, sans-serif';
+    cx.textAlign = 'center';
+    cx.fillText('ICE', 0, l * 0.08);
+
+    // Light bar
+    const flash = Math.sin(Date.now() * 0.015);
+    cx.fillStyle = flash > 0 ? 'rgba(255,50,50,0.8)' : 'rgba(50,100,255,0.8)';
+    cx.fillRect(-w * 0.3, -l * 0.25, w * 0.25, 3);
+    cx.fillStyle = flash > 0 ? 'rgba(50,100,255,0.8)' : 'rgba(255,50,50,0.8)';
+    cx.fillRect(w * 0.05, -l * 0.25, w * 0.25, 3);
+
+    // Light glow
+    cx.fillStyle = flash > 0 ? 'rgba(255,50,50,0.06)' : 'rgba(50,100,255,0.06)';
+    cx.beginPath();
+    cx.arc(0, -l * 0.24, 25, 0, Math.PI * 2);
+    cx.fill();
+  }
+
+  if (isRunner) {
+    // Spoiler hint
+    cx.fillStyle = 'rgba(60,10,10,0.5)';
+    cx.fillRect(-w * 0.4, l * 0.38, w * 0.8, 3);
+  }
+
+  // Wheels
+  cx.fillStyle = '#111';
+  const ww = 4, wl = 8;
+  cx.fillRect(-w/2 - 1, -l * 0.3, ww, wl);
+  cx.fillRect(w/2 - ww + 1, -l * 0.3, ww, wl);
+  cx.fillRect(-w/2 - 1, l * 0.15, ww, wl);
+  cx.fillRect(w/2 - ww + 1, l * 0.15, ww, wl);
+
+  cx.restore();
+}
+
+// ─── DRAW ROAD ───
+function drawRoad() {
+  // Grass / side areas
+  cx.fillStyle = '#1a2a1a';
+  cx.fillRect(0, 0, W, H);
+
+  // Sidewalks
+  const roadL = W / 2 - ROAD_W / 2;
+  const roadR = W / 2 + ROAD_W / 2;
+
+  cx.fillStyle = '#3a3a3a';
+  cx.fillRect(roadL - 20, 0, 20, H);
+  cx.fillRect(roadR, 0, 20, H);
+
+  // Road surface
+  const rg = cx.createLinearGradient(roadL, 0, roadR, 0);
+  rg.addColorStop(0, '#2a2a2a');
+  rg.addColorStop(0.5, '#333');
+  rg.addColorStop(1, '#2a2a2a');
+  cx.fillStyle = rg;
+  cx.fillRect(roadL, 0, ROAD_W, H);
+
+  // Lane dashes
+  roadOffset = (roadOffset + player.speed * 0.016) % 40;
+  cx.strokeStyle = 'rgba(255,255,255,0.2)';
+  cx.lineWidth = 2;
+  cx.setLineDash([18, 22]);
+  for (let i = -1; i <= 1; i++) {
+    const lx = W / 2 + i * LANE_W;
+    cx.beginPath();
+    cx.moveTo(lx, -roadOffset);
+    cx.lineTo(lx, H + 40);
+    cx.stroke();
+  }
+  cx.setLineDash([]);
+
+  // Center line (double yellow)
+  cx.strokeStyle = 'rgba(255,200,50,0.25)';
+  cx.lineWidth = 2;
+  cx.beginPath(); cx.moveTo(W/2 - 2, 0); cx.lineTo(W/2 - 2, H); cx.stroke();
+  cx.beginPath(); cx.moveTo(W/2 + 2, 0); cx.lineTo(W/2 + 2, H); cx.stroke();
+
+  // Road edges (solid white)
+  cx.strokeStyle = 'rgba(255,255,255,0.15)';
+  cx.lineWidth = 2;
+  cx.beginPath(); cx.moveTo(roadL, 0); cx.lineTo(roadL, H); cx.stroke();
+  cx.beginPath(); cx.moveTo(roadR, 0); cx.lineTo(roadR, H); cx.stroke();
+
+  // Buildings on sides
+  drawBuildings(roadL - 20, roadR + 20);
+
+  // Tire marks
+  tireMarks.forEach(tm => {
+    cx.strokeStyle = `rgba(30,30,30,${tm.life * 0.4})`;
+    cx.lineWidth = 2;
+    cx.beginPath();
+    cx.moveTo(tm.x1, tm.y1);
+    cx.lineTo(tm.x2, tm.y2);
+    cx.stroke();
+  });
+}
+
+function drawBuildings(leftEdge, rightStart) {
+  // Simple building silhouettes scrolling
+  const bOffset = (roadOffset * 0.3) % 120;
+  cx.fillStyle = '#151a15';
+  for (let y = -bOffset; y < H; y += 120) {
+    // Left side
+    cx.fillRect(0, y, leftEdge - 25, 50);
+    cx.fillRect(0, y + 60, leftEdge - 30, 40);
+    // Right side
+    cx.fillRect(rightStart + 25, y + 20, W - rightStart - 25, 45);
+    cx.fillRect(rightStart + 20, y + 80, W - rightStart - 20, 35);
+  }
+  // Windows
+  cx.fillStyle = 'rgba(200,180,100,0.1)';
+  for (let y = -bOffset; y < H; y += 120) {
+    for (let x = 5; x < leftEdge - 30; x += 12) {
+      cx.fillRect(x, y + 5, 5, 5);
+      cx.fillRect(x, y + 15, 5, 5);
+    }
+    for (let x = rightStart + 30; x < W - 5; x += 12) {
+      cx.fillRect(x, y + 25, 5, 5);
+      cx.fillRect(x, y + 35, 5, 5);
+    }
+  }
+}
+
+// ─── DISTANCE INDICATOR ───
+function drawDistIndicator() {
+  const barW = 160, barH = 6;
+  const bx = W / 2 - barW / 2;
+  const by = NAV_H + 8;
+
+  // Background
+  cx.fillStyle = 'rgba(0,0,0,0.4)';
+  cx.beginPath();
+  cx.roundRect(bx - 4, by - 4, barW + 8, barH + 8 + 12, 4);
+  cx.fill();
+
+  // Track
+  cx.fillStyle = 'rgba(255,255,255,0.1)';
+  cx.beginPath();
+  cx.roundRect(bx, by, barW, barH, 3);
+  cx.fill();
+
+  // Fill based on distance
+  const pct = Math.min(1, chaseDist / maxDist);
+  const fillColor = pct < 0.5 ? '#43A047' : pct < 0.75 ? '#F0A830' : '#D32F2F';
+  cx.fillStyle = fillColor;
+  cx.beginPath();
+  cx.roundRect(bx, by, barW * pct, barH, 3);
+  cx.fill();
+
+  // ICE icon (player)
+  const iceX = bx + barW * (1 - pct);
+  cx.fillStyle = '#2558a0';
+  cx.beginPath();
+  cx.arc(Math.max(bx + 4, Math.min(bx + barW - 4, iceX)), by + barH / 2, 5, 0, Math.PI * 2);
+  cx.fill();
+
+  // Runner icon
+  cx.fillStyle = '#cc2222';
+  cx.beginPath();
+  cx.arc(bx + barW - 4, by + barH / 2, 5, 0, Math.PI * 2);
+  cx.fill();
+
+  // Label
+  cx.fillStyle = 'rgba(255,255,255,0.35)';
+  cx.font = '600 8px Oswald, sans-serif';
+  cx.textAlign = 'center';
+  cx.fillText(pct < 0.5 ? 'CLOSING IN' : pct < 0.75 ? 'GETTING AWAY' : 'ALMOST ESCAPED', W / 2, by + barH + 10);
+}
+
+// ─── EFFECTS ───
+function drawEffects() {
+  cx.textAlign = 'center';
+  effects.forEach(e => {
+    cx.globalAlpha = e.life;
+    cx.fillStyle = e.color;
+    cx.font = `700 ${e.size || 16}px Oswald, sans-serif`;
+    cx.fillText(e.text, e.x, e.y - (1 - e.life) * 30);
+    cx.globalAlpha = 1;
+  });
+}
+
+// ─── UPDATE ───
+function update(dt) {
+  if (!gameRunning) return;
+
+  // ── Player physics ──
+  const p = player;
+
+  // Acceleration
+  if (isUp()) p.speed += p.accel * dt;
+  else if (isDown()) p.speed -= p.brake * dt;
+  else p.speed -= p.friction * dt;
+  p.speed = Math.max(0, Math.min(p.maxSpeed, p.speed));
+
+  // Steering
+  const turnMult = Math.min(1, p.speed / 100);
+  if (isLeft()) p.angle -= p.turnSpeed * turnMult * dt;
+  if (isRight()) p.angle += p.turnSpeed * turnMult * dt;
+
+  // Drift detection
+  const turning = isLeft() || isRight();
+  const fast = p.speed > 180;
+  p.sliding = turning && fast;
+  if (p.sliding) {
+    p.driftAngle += (isLeft() ? -1 : 1) * dt * 2;
+    p.driftAngle = Math.max(-0.4, Math.min(0.4, p.driftAngle));
+    // Tire marks
+    tireMarks.push({
+      x1: p.x - Math.cos(p.angle) * 8, y1: p.y - Math.sin(p.angle) * 8,
+      x2: p.x + Math.cos(p.angle) * 8, y2: p.y + Math.sin(p.angle) * 8,
+      life: 2,
+    });
+  } else {
+    p.driftAngle *= 0.9;
+  }
+
+  // Move player
+  p.x += Math.cos(p.angle) * p.speed * dt;
+  p.y += Math.sin(p.angle) * p.speed * dt;
+
+  // Clamp to road (with bounce)
+  const roadL = W / 2 - ROAD_W / 2 + CAR_W;
+  const roadR = W / 2 + ROAD_W / 2 - CAR_W;
+  if (p.x < roadL) { p.x = roadL; p.speed *= 0.5; p.angle = -Math.PI / 2; }
+  if (p.x > roadR) { p.x = roadR; p.speed *= 0.5; p.angle = -Math.PI / 2; }
+  if (p.y < NAV_H + 40) p.y = NAV_H + 40;
+  if (p.y > H - 40) p.y = H - 40;
+
+  // Keep player angle mostly upward
+  // Normalize angle
+  while (p.angle > Math.PI) p.angle -= Math.PI * 2;
+  while (p.angle < -Math.PI) p.angle += Math.PI * 2;
+
+  // ── Runner AI ──
+  const r = runner;
+  r.swerveTimer -= dt;
+  if (r.swerveTimer <= 0) {
+    r.swerveTimer = 1 + Math.random() * 2;
+    const lanes = [W/2 - LANE_W * 1.5, W/2 - LANE_W * 0.5, W/2 + LANE_W * 0.5, W/2 + LANE_W * 1.5];
+    r.laneTarget = lanes[Math.floor(Math.random() * lanes.length)];
+  }
+
+  // Steer toward target lane
+  const laneErr = r.laneTarget - r.x;
+  r.angle = -Math.PI / 2 + Math.atan(laneErr * 0.01) * r.agility * 0.3;
+  r.x += laneErr * r.agility * dt;
+
+  // Move runner
+  r.speed = Math.min(r.maxSpeed, r.speed + 30 * dt);
+  r.y += Math.sin(r.angle) * r.speed * dt;
+
+  // Keep runner on screen (relative: it should always be "ahead")
+  // Runner Y stays relative to player
+  const targetRunnerY = p.y - 120 - chaseDist * 0.3;
+  r.y += (targetRunnerY - r.y) * 3 * dt;
+  r.y = Math.max(NAV_H + 30, Math.min(H - 60, r.y));
+
+  // Clamp runner to road
+  const rrl = W / 2 - ROAD_W / 2 + CAR_W + 5;
+  const rrr = W / 2 + ROAD_W / 2 - CAR_W - 5;
+  r.x = Math.max(rrl, Math.min(rrr, r.x));
+
+  // Hit state
+  if (r.hit) {
+    r.hitTimer -= dt;
+    if (r.hitTimer <= 0) r.hit = false;
+  }
+
+  // ── Distance ──
+  // Distance grows when runner is faster, shrinks when player is faster
+  const relSpeed = r.speed - p.speed;
+  chaseDist += relSpeed * dt * 0.5;
+  chaseDist = Math.max(0, chaseDist);
+
+  if (chaseDist >= maxDist) {
+    endGame(false);
+    return;
+  }
+
+  // ── Ram detection ──
+  ramCooldown -= dt;
+  const dx = p.x - r.x, dy = p.y - r.y;
+  const dist = Math.sqrt(dx * dx + dy * dy);
+  if (dist < 35 && ramCooldown <= 0 && p.speed > 80) {
+    r.hit = true;
+    r.hitTimer = 0.5;
+    r.speed *= 0.3;
+    p.speed *= 0.6;
+    ramCooldown = 0.8;
+
+    // Bust!
+    busts++;
+    score += 100 + busts * 50;
+    chaseDist = 0;
+    effects.push({ x: r.x, y: r.y, text: 'BUSTED! +' + (100 + busts * 50), color: '#F0A830', life: 1.5, size: 18 });
+
+    // Flash
+    flashTimer = 0.15;
+
+    // New runner
+    setTimeout(() => {
+      runner = createRunner();
+      effects.push({ x: W/2, y: H * 0.4, text: 'NEW SUSPECT FLEEING', color: '#ff4444', life: 2, size: 14 });
+    }, 800);
+  }
+
+  // ── Civilians ──
+  // Spawn
+  if (Math.random() < dt * (1.5 + busts * 0.3)) {
+    civilians.push(createCivilian(Math.random() > 0.5 ? -CAR_L * 2 : H + CAR_L * 2));
+  }
+
+  civilians.forEach(c => {
+    c.y += c.going * c.speed * dt;
+    // Scroll with player speed
+    c.y += (p.speed * 0.3) * dt;
+
+    // Collision with player
+    const cdx = p.x - c.x, cdy = p.y - c.y;
+    const cdist = Math.sqrt(cdx * cdx + cdy * cdy);
+    if (cdist < 30 && !c.hit) {
+      c.hit = true;
+      p.speed *= 0.4;
+      effects.push({ x: c.x, y: c.y, text: 'CRASH', color: '#ff4444', life: 1, size: 14 });
+      // Push car away
+      c.x += (c.x - p.x) * 0.5;
+    }
+  });
+
+  // Remove off-screen
+  civilians = civilians.filter(c => c.y > -100 && c.y < H + 100);
+
+  // ── Tire marks ──
+  tireMarks.forEach(tm => tm.life -= dt);
+  tireMarks = tireMarks.filter(tm => tm.life > 0);
+  // Scroll tire marks
+  tireMarks.forEach(tm => { tm.y1 += p.speed * 0.3 * dt; tm.y2 += p.speed * 0.3 * dt; });
+
+  // ── Effects ──
+  effects.forEach(e => e.life -= dt * 0.8);
+  effects = effects.filter(e => e.life > 0);
+
+  // ── HUD ──
+  document.getElementById('hudScore').textContent = score;
+  document.getElementById('hudBusts').textContent = busts;
+  document.getElementById('hudSpeed').textContent = Math.floor(p.speed);
+  const distPct = Math.floor((1 - chaseDist / maxDist) * 100);
+  document.getElementById('hudDist').textContent = distPct + '%';
+}
+
+// ─── DRAW ───
+function draw() {
+  cx.clearRect(0, 0, W, H);
+  drawRoad();
+
+  // Draw civilians
+  civilians.forEach(c => {
+    drawCar(c.x, c.y, c.angle, CAR_W * 0.9, CAR_L * 0.85, c.color, false, false);
+  });
+
+  // Draw runner
+  if (runner && !runner.busted) {
+    drawCar(runner.x, runner.y, runner.angle, CAR_W, CAR_L, null, false, true);
+  }
+
+  // Draw player
+  drawCar(player.x, player.y, player.angle, CAR_W * 1.1, CAR_L * 1.05, null, true, false, player.driftAngle);
+
+  // Headlight beams from player
+  cx.save();
+  cx.translate(player.x, player.y);
+  cx.rotate(player.angle);
+  const hlg = cx.createRadialGradient(0, -CAR_L, 0, 0, -CAR_L * 3, CAR_W * 2);
+  hlg.addColorStop(0, 'rgba(255,255,200,0.06)');
+  hlg.addColorStop(1, 'rgba(255,255,200,0)');
+  cx.fillStyle = hlg;
+  cx.beginPath();
+  cx.moveTo(-CAR_W * 0.3, -CAR_L / 2);
+  cx.lineTo(-CAR_W * 2, -CAR_L * 4);
+  cx.lineTo(CAR_W * 2, -CAR_L * 4);
+  cx.lineTo(CAR_W * 0.3, -CAR_L / 2);
+  cx.closePath();
+  cx.fill();
+  cx.restore();
+
+  drawDistIndicator();
+  drawEffects();
+
+  // Flash on bust
+  if (flashTimer > 0) {
+    cx.fillStyle = `rgba(255,255,255,${flashTimer * 3})`;
+    cx.fillRect(0, 0, W, H);
+    flashTimer -= 0.016;
+  }
+
+  // Night vignette
+  const vg = cx.createRadialGradient(W/2, H/2, H * 0.25, W/2, H/2, H * 0.7);
+  vg.addColorStop(0, 'rgba(0,0,0,0)');
+  vg.addColorStop(1, 'rgba(0,0,0,0.3)');
+  cx.fillStyle = vg;
+  cx.fillRect(0, 0, W, H);
+}
+
+// ─── LOOP ───
+function loop(ts) {
+  const dt = Math.min((ts - lastTime) / 1000, 0.05);
+  lastTime = ts;
+  update(dt);
+  draw();
+  requestAnimationFrame(loop);
+}
+
+// ─── START / END ───
+function startGame() {
+  score = 0; busts = 0; chaseDist = 0;
+  player = createPlayer();
+  runner = createRunner();
+  civilians = []; effects = []; tireMarks = [];
+  flashTimer = 0; ramCooldown = 0;
+  gameRunning = true;
+  document.getElementById('hud').style.display = 'flex';
+  document.getElementById('startScreen').classList.add('hidden');
+  document.getElementById('gameOverScreen').classList.add('hidden');
+}
+
+function endGame(caught) {
+  gameRunning = false;
+  const t = document.getElementById('goTitle');
+  if (caught) {
+    t.textContent = 'Suspect Caught!';
+    t.style.color = '#43A047';
+  } else {
+    t.textContent = 'Suspect Escaped!';
+    t.style.color = '#D32F2F';
+  }
+  document.getElementById('goSub').textContent = `You made ${busts} bust${busts !== 1 ? 's' : ''} with a score of ${score} before the chase ended.`;
+  document.getElementById('goStats').innerHTML = `
+    <div class="stat-row"><span class="stat-label">Score</span><span class="stat-val">${score}</span></div>
+    <div class="stat-row"><span class="stat-label">Busts</span><span class="stat-val">${busts}</span></div>`;
+  document.getElementById('gameOverScreen').classList.remove('hidden');
+}
+
+function shareText() {
+  return `ICE CHASE\n\nScore: ${score}\nBusts: ${busts}\n\nCan you catch more?\nufcr.online/ice-chase/`;
+}
+
+document.getElementById('startBtn').addEventListener('click', startGame);
+document.getElementById('restartBtn').addEventListener('click', startGame);
+document.getElementById('shareBtn').addEventListener('click', () => {
+  window.open('https://x.com/intent/tweet?text=' + encodeURIComponent(shareText()), '_blank');
+});
+document.getElementById('copyBtn').addEventListener('click', () => {
+  navigator.clipboard.writeText(shareText()).then(() => {
+    document.getElementById('copyBtn').innerHTML = '<i class="fas fa-check"></i> Copied!';
+    setTimeout(() => { document.getElementById('copyBtn').innerHTML = '<i class="fas fa-copy"></i> Copy'; }, 2000);
+  });
+});
+
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
