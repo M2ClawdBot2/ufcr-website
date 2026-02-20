@@ -171,8 +171,8 @@ function mkRunner(b) {
   return {
     x: laneX(Math.floor(Math.random() * LANE_COUNT)),
     y: H * 0.3,
-    baseSpeed: 160 + (b || 0) * 10,
-    speed: 160 + (b || 0) * 10,
+    baseSpeed: 185 + (b || 0) * 12,
+    speed: 185 + (b || 0) * 12,
     swerveTimer: 0,
     targetX: W / 2,
     targetLane: Math.floor(LANE_COUNT / 2),
@@ -540,8 +540,8 @@ function update(dt) {
     setTimeout(() => {
       if (!gameRunning) return;
       runner = mkRunner(busts);
-      // Spawn new runner ahead of player
-      runner.y = p.y - 180;
+      // Spawn new runner from top of screen
+      runner.y = TOP + 10;
       effects.push({ x: W / 2, y: runner.y, text: 'NEW SUSPECT', color: '#ff5555', life: 2, size: 15 });
     }, 700);
   }
