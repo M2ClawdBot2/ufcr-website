@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Games — UFCR</title>
+  <link rel="icon" href="../assets/images/shield-logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    :root {
+      --blue: #0021A5;
+      --orange: #FA4616;
+      --gold: #F0A830;
+      --white: #FFFFFF;
+      --navy: #001845;
+      --dark: #0A0E1A;
+      --font-body: 'Inter', -apple-system, sans-serif;
+      --font-heading: 'Oswald', 'Inter', sans-serif;
+      --ease: cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html { -webkit-font-smoothing: antialiased; font-size: 16px; }
+    body { font-family: var(--font-body); background: var(--dark); color: var(--white); overflow-x: hidden; }
+    a { text-decoration: none; color: inherit; }
+
+    .nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      height: 80px;
+      background: rgba(0,24,69,0.95);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .nav-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .nav-logo { display: flex; align-items: center; gap: 12px; }
+    .nav-logo img { height: 44px; border-radius: 6px; background: white; padding: 2px; }
+    .nav-logo span { font-family: var(--font-heading); font-size: 1.4rem; font-weight: 700; letter-spacing: 0.08em; }
+    .nav-back {
+      font-family: var(--font-heading);
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: rgba(255,255,255,0.5);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      transition: color 0.3s;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .nav-back:hover { color: var(--white); }
+
+    .content {
+      min-height: 100vh;
+      padding: 160px 24px 80px;
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    .page-label {
+      font-family: var(--font-heading);
+      font-size: 0.85rem;
+      font-weight: 600;
+      letter-spacing: 0.35em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 16px;
+      text-align: center;
+    }
+
+    .page-title {
+      font-family: var(--font-heading);
+      font-size: clamp(3rem, 7vw, 5rem);
+      font-weight: 700;
+      text-transform: uppercase;
+      text-align: center;
+      margin-bottom: 16px;
+      letter-spacing: 0.02em;
+    }
+
+    .page-sub {
+      font-size: 1.05rem;
+      color: rgba(255,255,255,0.4);
+      text-align: center;
+      margin-bottom: 60px;
+    }
+
+    .games-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 24px;
+    }
+
+    .game-card {
+      display: block;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      padding: 40px 32px;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.4s var(--ease);
+    }
+
+    .game-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 3px;
+      background: var(--orange);
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 0.4s var(--ease);
+    }
+    .game-card:hover::before { transform: scaleX(1); }
+
+    .game-card:hover {
+      background: rgba(255,255,255,0.07);
+      border-color: rgba(250,70,22,0.3);
+      transform: translateY(-6px);
+    }
+
+    .game-icon {
+      font-size: 2.5rem;
+      margin-bottom: 20px;
+    }
+
+    .game-tag {
+      font-family: var(--font-heading);
+      font-size: 0.65rem;
+      font-weight: 600;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 8px;
+    }
+
+    .game-name {
+      font-family: var(--font-heading);
+      font-size: 1.8rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+
+    .game-desc {
+      font-size: 0.9rem;
+      line-height: 1.65;
+      color: rgba(255,255,255,0.45);
+      margin-bottom: 24px;
+    }
+
+    .game-play {
+      font-family: var(--font-heading);
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--orange);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: gap 0.3s var(--ease);
+    }
+    .game-card:hover .game-play { gap: 14px; }
+
+    /* Coming soon card */
+    .game-card.coming-soon {
+      opacity: 0.4;
+      pointer-events: none;
+    }
+    .game-card.coming-soon::before { display: none; }
+
+    .coming-badge {
+      font-family: var(--font-heading);
+      font-size: 0.65rem;
+      font-weight: 600;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--navy);
+      background: var(--gold);
+      padding: 4px 12px;
+      display: inline-block;
+      margin-bottom: 12px;
+    }
+
+    .mini-footer {
+      text-align: center;
+      padding: 40px 24px;
+      border-top: 1px solid rgba(255,255,255,0.04);
+      margin-top: 80px;
+    }
+    .mini-footer p { font-size: 0.75rem; color: rgba(255,255,255,0.15); }
+    .mini-footer a { color: rgba(255,255,255,0.25); transition: color 0.3s; }
+    .mini-footer a:hover { color: var(--white); }
+
+    @media (max-width: 640px) {
+      .content { padding: 120px 16px 60px; }
+      .games-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="nav">
+    <div class="nav-inner">
+      <a href="../" class="nav-logo">
+        <img src="../assets/images/shield-logo.png" alt="UFCR Logo">
+        <span>UFCR</span>
+      </a>
+      <a href="../" class="nav-back"><i class="fas fa-arrow-left"></i> Back to Site</a>
+    </div>
+  </nav>
+
+  <div class="content">
+    <p class="page-label">UFCR Arcade</p>
+    <h1 class="page-title">Games</h1>
+    <p class="page-sub">Take a break. Play something.</p>
+
+    <div class="games-grid">
+
+      <a href="../redact/" class="game-card">
+        <div class="game-icon">🔲</div>
+        <div class="game-tag">Daily Word Game</div>
+        <h2 class="game-name">REDACT</h2>
+        <p class="game-desc">Real headlines. Key words blacked out. Guess what's been censored. New puzzle every day.</p>
+        <div class="game-play">Play Now <span>→</span></div>
+      </a>
+
+      <div class="game-card coming-soon">
+        <div class="game-icon">🎮</div>
+        <div class="coming-badge">Coming Soon</div>
+        <h2 class="game-name">???</h2>
+        <p class="game-desc">More games on the way. Stay tuned.</p>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="mini-footer">
+    <p>&copy; 2026 University of Florida College Republicans · <a href="../">ufcr.online</a></p>
+  </div>
+
+</body>
+</html>
