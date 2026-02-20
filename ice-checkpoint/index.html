@@ -376,9 +376,9 @@ function genPerson() {
   const plate = genPlate();
   const vin = genVIN();
 
-  const licExpiry = genDate(2025, 2029);
-  const visaExpiry = genDate(2025, 2028);
-  const workExpiry = genDate(2025, 2028);
+  const licExpiry = genDate(2026, 2030);
+  const visaExpiry = genDate(2026, 2029);
+  const workExpiry = genDate(2026, 2029);
   const office = randEl(OFFICES);
   const employer = randEl(EMPLOYERS);
 
@@ -442,9 +442,8 @@ function applyForgery(type, p) {
   p.forgeries.push(type);
   switch (type) {
     case 'expired_license': {
-      const exp = genDate(2022, 2025);
-      // Make sure it's actually expired (before 2026)
-      exp.y = randInt(2022, 2025);
+      const exp = genDate(2020, 2025);
+      exp.y = randInt(2020, 2025);
       exp.str = pad(exp.m) + '/' + pad(exp.d) + '/' + exp.y;
       p.docs.find(d => d.type === 'license').expiry = exp.str;
       break;
@@ -469,7 +468,7 @@ function applyForgery(type, p) {
     }
     case 'expired_visa': {
       const v = p.docs.find(d => d.type === 'visa');
-      if (v) { v.expiry = pad(randInt(1,12)) + '/' + pad(randInt(1,28)) + '/' + randInt(2022, 2025); }
+      if (v) { v.expiry = pad(randInt(1,12)) + '/' + pad(randInt(1,28)) + '/' + randInt(2020, 2025); }
       break;
     }
     case 'fake_office': {
@@ -489,7 +488,7 @@ function applyForgery(type, p) {
     }
     case 'expired_work_permit': {
       const w = p.docs.find(d => d.type === 'work_permit');
-      if (w) { w.expiry = pad(randInt(1,12)) + '/' + pad(randInt(1,28)) + '/' + randInt(2022, 2025); }
+      if (w) { w.expiry = pad(randInt(1,12)) + '/' + pad(randInt(1,28)) + '/' + randInt(2020, 2025); }
       break;
     }
     case 'fake_employer': {
