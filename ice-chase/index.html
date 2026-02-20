@@ -551,11 +551,12 @@ function update(dt) {
     });
   }
 
-  // Base scroll speed for civilians/scenery (doesn't change on crash)
-  const baseScroll = 180;
-
   civilians.forEach(c => {
-    c.y += c.dir * c.speed * dt + baseScroll * 0.35 * dt;
+    // Civilian has its own world speed. On screen, it moves relative to player.
+    // If civilian drives up at 80 and player drives up at 200, civilian appears to move down at 120.
+    const civWorldSpeed = c.dir === -1 ? c.speed : -c.speed; // negative = moving up in world
+    const relativeSpeed = p.speed - civWorldSpeed; // how fast they pass us (positive = moves down on screen)
+    c.y += relativeSpeed * dt;
 
     // Player collision
     if (!c.hit && Math.abs(p.x - c.x) < CAR_W * 0.85 && Math.abs(p.y - c.y) < CAR_H * 0.8) {
