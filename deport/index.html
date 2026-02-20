@@ -10,44 +10,36 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <style>
-    :root {
-      --orange:#FA4616; --gold:#F0A830; --navy:#001845; --dark:#0A0E1A;
-      --red:#D32F2F; --green:#43A047;
-      --font-body:'Inter',sans-serif; --font-heading:'Oswald',sans-serif;
-    }
+    :root{--orange:#FA4616;--gold:#F0A830;--navy:#001845;--dark:#0A0E1A;--red:#D32F2F;--green:#43A047;--font-body:'Inter',sans-serif;--font-heading:'Oswald',sans-serif}
     *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
-    html,body{width:100%;height:100%;overflow:hidden;font-family:var(--font-body);background:#1b2b1b;color:#fff;-webkit-tap-highlight-color:transparent;user-select:none}
-
-    .nav{position:fixed;top:0;left:0;right:0;z-index:100;height:48px;background:rgba(0,24,69,0.95);backdrop-filter:blur(20px);border-bottom:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:space-between;padding:0 12px}
+    html,body{width:100%;height:100%;overflow:hidden;font-family:var(--font-body);background:#111;color:#fff;-webkit-tap-highlight-color:transparent;user-select:none;touch-action:none}
+    .nav{position:fixed;top:0;left:0;right:0;z-index:100;height:44px;background:rgba(0,24,69,.95);backdrop-filter:blur(20px);border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:center;justify-content:space-between;padding:0 12px}
     .nav-logo{display:flex;align-items:center;gap:6px;text-decoration:none;color:#fff}
-    .nav-logo img{height:28px;border-radius:3px;background:#fff;padding:1px}
-    .nav-logo span{font-family:var(--font-heading);font-size:1rem;font-weight:700;letter-spacing:.08em}
-    .nav-back{font-size:.7rem;color:rgba(255,255,255,.5);text-decoration:none;letter-spacing:.1em;text-transform:uppercase;font-weight:600}
-
-    .hud{position:fixed;top:48px;left:0;right:0;z-index:90;display:flex;justify-content:space-between;padding:8px 16px;background:rgba(0,24,69,.7);backdrop-filter:blur(10px);border-bottom:1px solid rgba(255,255,255,.05)}
+    .nav-logo img{height:26px;border-radius:3px;background:#fff;padding:1px}
+    .nav-logo span{font-family:var(--font-heading);font-size:.95rem;font-weight:700;letter-spacing:.08em}
+    .nav-back{font-size:.65rem;color:rgba(255,255,255,.5);text-decoration:none;letter-spacing:.1em;text-transform:uppercase;font-weight:600}
+    .hud{position:fixed;top:44px;left:0;right:0;z-index:90;display:flex;justify-content:space-between;padding:6px 16px;background:rgba(0,24,69,.7);backdrop-filter:blur(10px);border-bottom:1px solid rgba(255,255,255,.05)}
     .hud-item{text-align:center;flex:1}
-    .hud-label{font-size:.55rem;text-transform:uppercase;letter-spacing:.15em;color:rgba(255,255,255,.35)}
-    .hud-value{font-family:var(--font-heading);font-size:1.2rem;font-weight:700}
-    .hud-value.score{color:var(--gold)}.hud-value.timer{color:var(--orange)}.hud-value.missed{color:var(--red)}.hud-value.level{color:var(--green)}
-
-    canvas{position:fixed;top:0;left:0;width:100%;height:100%;display:block}
-
-    .screen-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(10,14,26,.93);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:200;padding:24px;text-align:center}
+    .hud-label{font-size:.5rem;text-transform:uppercase;letter-spacing:.15em;color:rgba(255,255,255,.3)}
+    .hud-value{font-family:var(--font-heading);font-size:1.1rem;font-weight:700}
+    .hud-value.score{color:var(--gold)}.hud-value.wave{color:var(--green)}.hud-value.active{color:var(--orange)}
+    canvas{position:fixed;top:0;left:0;width:100%;height:100%;display:block;cursor:none}
+    .screen-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(5,8,18,.94);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:200;padding:24px;text-align:center}
     .screen-overlay.hidden{display:none}
-    .screen-title{font-family:var(--font-heading);font-size:clamp(2.5rem,8vw,4.5rem);font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px}
-    .screen-sub{font-size:.95rem;color:rgba(255,255,255,.5);margin-bottom:28px;max-width:380px;line-height:1.6}
-    .screen-stats{margin-bottom:28px;min-width:240px}
-    .stat-row{display:flex;justify-content:space-between;font-size:.95rem;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.06)}
-    .stat-label{color:rgba(255,255,255,.4)}.stat-val{font-weight:700;color:var(--gold)}
-    .level-badge{font-family:var(--font-heading);font-size:.7rem;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin-bottom:8px}
-    .btn{font-family:var(--font-heading);font-size:1.05rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;background:var(--orange);color:#fff;border:none;padding:13px 36px;cursor:pointer;transition:all .3s}
+    .screen-title{font-family:var(--font-heading);font-size:clamp(2.2rem,8vw,4rem);font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px}
+    .screen-sub{font-size:.9rem;color:rgba(255,255,255,.45);margin-bottom:24px;max-width:360px;line-height:1.6}
+    .screen-stats{margin-bottom:24px;min-width:220px}
+    .stat-row{display:flex;justify-content:space-between;font-size:.9rem;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.05)}
+    .stat-label{color:rgba(255,255,255,.35)}.stat-val{font-weight:700;color:var(--gold)}
+    .level-badge{font-family:var(--font-heading);font-size:.65rem;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin-bottom:6px}
+    .btn{font-family:var(--font-heading);font-size:1rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;background:var(--orange);color:#fff;border:none;padding:12px 32px;cursor:pointer;transition:all .3s}
     .btn:hover{background:#e03a0e;transform:translateY(-2px)}
-    .share-btns{display:flex;gap:10px;margin-top:14px}
-    .share-btn{font-family:var(--font-heading);font-size:.7rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;padding:9px 16px;border:1px solid rgba(255,255,255,.15);background:transparent;color:#fff;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all .3s}
-    .share-btn:hover{background:rgba(255,255,255,.08)}
-    .instructions{max-width:340px;margin-bottom:24px;text-align:left}
-    .instructions li{font-size:.85rem;color:rgba(255,255,255,.55);margin-bottom:6px;line-height:1.5;list-style:none;padding-left:20px;position:relative}
-    .instructions li::before{content:'';position:absolute;left:0;top:7px;width:8px;height:8px;border:2px solid var(--orange);border-radius:50%}
+    .share-btns{display:flex;gap:10px;margin-top:12px}
+    .share-btn{font-family:var(--font-heading);font-size:.65rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;padding:8px 14px;border:1px solid rgba(255,255,255,.12);background:transparent;color:#fff;cursor:pointer;display:flex;align-items:center;gap:5px;transition:all .3s}
+    .share-btn:hover{background:rgba(255,255,255,.06)}
+    .how-to{max-width:340px;margin-bottom:20px;text-align:left}
+    .how-to li{font-size:.82rem;color:rgba(255,255,255,.5);margin-bottom:5px;line-height:1.5;list-style:none;padding-left:18px;position:relative}
+    .how-to li::before{content:'';position:absolute;left:0;top:7px;width:6px;height:6px;background:var(--orange);border-radius:50%}
   </style>
 </head>
 <body>
@@ -58,31 +50,32 @@
 </nav>
 
 <div class="hud" id="hud" style="display:none">
-  <div class="hud-item"><div class="hud-label">Score</div><div class="hud-value score" id="hudScore">0</div></div>
-  <div class="hud-item"><div class="hud-label">Level</div><div class="hud-value level" id="hudLevel">1</div></div>
-  <div class="hud-item"><div class="hud-label">Time</div><div class="hud-value timer" id="hudTimer">90</div></div>
-  <div class="hud-item"><div class="hud-label">Missed</div><div class="hud-value missed" id="hudMissed">0/15</div></div>
+  <div class="hud-item"><div class="hud-label">Caught</div><div class="hud-value score" id="hudScore">0</div></div>
+  <div class="hud-item"><div class="hud-label">Wave</div><div class="hud-value wave" id="hudWave">1</div></div>
+  <div class="hud-item"><div class="hud-label">Climbing</div><div class="hud-value active" id="hudActive">0</div></div>
 </div>
 
 <div class="screen-overlay" id="startScreen">
   <div class="level-badge">UFCR GAMES</div>
   <div class="screen-title" style="color:var(--orange)">DEPORT</div>
-  <p class="screen-sub">You're in the ICE helicopter patrolling the border zone. Spot illegal crossings and tap to dispatch agents before they escape into the city.</p>
-  <ul class="instructions">
-    <li>You patrol from above — the map scrolls automatically</li>
-    <li>Runners appear and head toward the city</li>
-    <li><strong>Tap or click</strong> on them to dispatch ICE</li>
-    <li>Miss 15 and the border is breached</li>
-    <li>They get faster and more frequent each level</li>
+  <p class="screen-sub">Patrol the border from your ICE helicopter. Shine your spotlight on illegals climbing the wall and hold it until the ICE truck picks them up. If even one gets over — game over.</p>
+  <ul class="how-to">
+    <li>Move your helicopter with mouse or finger</li>
+    <li>Your spotlight shines below the chopper</li>
+    <li>Illegals approach the wall and start climbing — you have 10 seconds</li>
+    <li>Spotlight them and <strong>hold the light</strong> until the ICE truck arrives</li>
+    <li>If you move the light away, the truck turns back</li>
+    <li>One illegal over the wall = game over</li>
   </ul>
   <button class="btn" id="startBtn">Start Patrol</button>
 </div>
 
 <div class="screen-overlay hidden" id="gameOverScreen">
-  <div class="level-badge">PATROL ENDED</div>
-  <div class="screen-title" id="goTitle">Game Over</div>
+  <div class="level-badge">BORDER BREACHED</div>
+  <div class="screen-title" id="goTitle" style="color:var(--red)">Game Over</div>
+  <p class="screen-sub" id="goSub"></p>
   <div class="screen-stats" id="goStats"></div>
-  <button class="btn" id="restartBtn">Patrol Again</button>
+  <button class="btn" id="restartBtn">Try Again</button>
   <div class="share-btns">
     <button class="share-btn" id="shareBtn"><i class="fab fa-x-twitter"></i> Share</button>
     <button class="share-btn" id="copyBtn"><i class="fas fa-copy"></i> Copy</button>
@@ -92,589 +85,705 @@
 <canvas id="game"></canvas>
 
 <script>
-const C = document.getElementById('game');
-const ctx = C.getContext('2d');
+const CV = document.getElementById('game');
+const cx = CV.getContext('2d');
 
 let W, H, dpr;
 function resize() {
   dpr = window.devicePixelRatio || 1;
   W = window.innerWidth; H = window.innerHeight;
-  C.width = W * dpr; C.height = H * dpr;
-  C.style.width = W + 'px'; C.style.height = H + 'px';
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  CV.width = W * dpr; CV.height = H * dpr;
+  CV.style.width = W + 'px'; CV.style.height = H + 'px';
+  cx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  // Recalc zones
+  NAV_H = 44 + 36; // nav + hud
+  WALL_Y = NAV_H + 40;
+  WALL_H = 32;
+  GROUND_TOP = WALL_Y + WALL_H + 10;
+  SPAWN_Y = H + 20;
+  CITY_Y = WALL_Y - 20; // above wall = city
 }
+
+let NAV_H, WALL_Y, WALL_H, GROUND_TOP, SPAWN_Y, CITY_Y;
 resize();
 window.addEventListener('resize', resize);
 
-// ─── CONSTANTS ───
-const HUD_TOP = 92;
-const MAX_MISSED = 15;
-const GAME_TIME = 90;
-const GOLD = '#F0A830', ORANGE = '#FA4616', RED = '#D32F2F';
+// ─── COLORS ───
+const COL = {
+  night: '#0d1520',
+  ground: '#2a2218',
+  groundLight: '#3a3025',
+  wall: '#888',
+  wallLight: '#aaa',
+  wallDark: '#666',
+  road: '#333',
+  spotlight: 'rgba(255,255,200,',
+  orange: '#FA4616',
+  gold: '#F0A830',
+  red: '#D32F2F',
+  green: '#43A047',
+  truckBlue: '#2255aa',
+};
 
 // ─── STATE ───
-let score=0, missed=0, level=1, timeLeft=GAME_TIME;
-let totalDeported=0, combo=0, maxCombo=0;
-let gameRunning=false, gameTimer=null;
-let scrollY=0, runners=[], effects=[], dispatches=[];
-let spawnAccum=0, lastTime=0;
+let gameRunning = false;
+let score = 0, wave = 1, lastTime = 0;
+let heliX, heliY, targetX, targetY;
+let illegals = [], trucks = [], effects = [], stars = [];
+let spawnTimer = 0, waveCount = 0;
+let heliAngle = 0, heliBladeAngle = 0;
 
-// ─── TERRAIN SEED ───
-// Pre-generate cactus, rock, and bush positions
-const cacti = [], rocks = [], bushes = [];
-for (let i = 0; i < 60; i++) {
-  cacti.push({ x: Math.random(), y: Math.random() * 8000 - 4000, h: 14 + Math.random() * 12, type: Math.floor(Math.random()*3) });
-}
+// Stars
 for (let i = 0; i < 80; i++) {
-  rocks.push({ x: Math.random(), y: Math.random() * 8000 - 4000, r: 3 + Math.random() * 5, shade: 0.15 + Math.random() * 0.1 });
-}
-for (let i = 0; i < 50; i++) {
-  bushes.push({ x: Math.random(), y: Math.random() * 8000 - 4000, r: 5 + Math.random() * 8 });
-}
-// Buildings for city zone
-const buildings = [];
-for (let i = 0; i < 40; i++) {
-  buildings.push({ x: Math.random(), y: -800 - Math.random() * 1200, w: 18 + Math.random() * 35, h: 22 + Math.random() * 40, shade: 0.3 + Math.random() * 0.2 });
+  stars.push({ x: Math.random(), y: Math.random() * 0.35, brightness: 0.2 + Math.random() * 0.6, twinkle: Math.random() * Math.PI * 2 });
 }
 
 // ─── LEVEL CONFIG ───
-function getLevelConfig(lvl) {
+function getWaveConfig(w) {
   return {
-    spawnInterval: Math.max(0.35, 1.4 - (lvl-1) * 0.11),
-    runnerSpeed: 58 + (lvl-1) * 13,
-    maxRunners: Math.min(22, 6 + lvl * 2),
+    spawnInterval: Math.max(1.5, 5 - (w-1) * 0.4),
+    climbTime: 10, // always 10s to climb
+    truckSpeed: 120 + w * 10,
+    truckArriveTime: Math.max(1.5, 3.5 - (w-1) * 0.2), // time spotlight must hold
+    maxSimultaneous: Math.min(6, 1 + Math.floor(w * 0.6)),
   };
 }
 
-// ─── SPAWN ───
-function spawnRunner() {
-  const cfg = getLevelConfig(level);
-  runners.push({
-    x: 25 + Math.random() * (W - 50),
-    y: scrollY + H + 40,
-    speed: cfg.runnerSpeed * (0.8 + Math.random() * 0.4),
-    size: 6,
-    sway: (Math.random() - 0.5) * 0.7,
-    phase: Math.random() * Math.PI * 2,
-    alive: true,
-    deported: false,
-    deportAnim: 0,
-    // Runner clothing tones (muted earth tones)
-    shirtColor: `hsl(${20 + Math.random()*30}, ${15+Math.random()*15}%, ${35+Math.random()*20}%)`,
-    pantsColor: `hsl(${210 + Math.random()*30}, ${10+Math.random()*10}%, ${25+Math.random()*15}%)`,
-    skinTone: `hsl(${25 + Math.random()*15}, ${30+Math.random()*20}%, ${55+Math.random()*20}%)`,
-    hatChance: Math.random() > 0.5,
-    bagChance: Math.random() > 0.6,
-    stride: 0,
+// ─── ILLEGAL ───
+function spawnIllegal() {
+  const x = 40 + Math.random() * (W - 80);
+  illegals.push({
+    x, y: SPAWN_Y,
+    // Walk to wall then climb
+    state: 'walking', // walking -> climbing -> over
+    walkSpeed: 40 + Math.random() * 20,
+    climbProgress: 0, // 0 to 1
+    climbTime: 10,
+    spotted: false,
+    spotTime: 0, // how long spotlight held
+    truckArriveTime: getWaveConfig(wave).truckArriveTime,
+    caught: false,
+    catchAnim: 0,
+    overAnim: 0,
+    // Appearance (low poly cute)
+    bodyHue: 20 + Math.random() * 30,
+    shirtHue: Math.random() * 360,
+    hatType: Math.floor(Math.random() * 3),
+    size: 8 + Math.random() * 2,
+    id: Math.random(),
+  });
+}
+
+// ─── TRUCK ───
+function dispatchTruck(target) {
+  // Already has a truck?
+  if (trucks.some(t => t.targetId === target.id && t.active)) return;
+  trucks.push({
+    x: -40,
+    y: target.y + 10,
+    targetId: target.id,
+    targetX: target.x,
+    speed: getWaveConfig(wave).truckSpeed,
+    active: true,
+    returning: false,
+    loadAnim: 0,
+    hasPassenger: false,
   });
 }
 
 // ─── EFFECTS ───
-function addEffect(x, y, text, color) { effects.push({ x, y, text, color, life: 1 }); }
-function addDispatch(x, y) { dispatches.push({ x, y, life: 1 }); }
+function addEffect(x, y, text, color) {
+  effects.push({ x, y, text, color, life: 1 });
+}
 
 // ─── INPUT ───
-function handleTap(cx, cy) {
-  if (!gameRunning) return;
-  const px = cx, py = cy + scrollY - HUD_TOP;
-  let bestD = 36, bestI = -1;
-  for (let i = 0; i < runners.length; i++) {
-    const r = runners[i];
-    if (!r.alive || r.deported) continue;
-    const dx = r.x - px, dy = r.y - py;
-    const d = Math.sqrt(dx*dx + dy*dy);
-    if (d < bestD) { bestD = d; bestI = i; }
-  }
-  if (bestI >= 0) {
-    const r = runners[bestI];
-    r.deported = true; r.deportAnim = 0; r.alive = false;
-    combo++; if (combo > maxCombo) maxCombo = combo;
-    totalDeported++;
-    const pts = 10 + (level-1)*5 + Math.floor(combo/3)*5;
-    score += pts;
-    const texts = ['DEPORTED','REMOVED','DISPATCHED','INTERCEPTED','CAUGHT','ICE\'D'];
-    const label = combo >= 3 ? texts[Math.floor(Math.random()*texts.length)] + ' x' + combo : '+' + pts;
-    addEffect(r.x, r.y, label, GOLD);
-    addDispatch(r.x, r.y);
-    updateHUD(); checkLevelUp();
-  }
+heliX = W / 2; heliY = H / 2;
+targetX = heliX; targetY = heliY;
+
+function setTarget(px, py) {
+  targetX = px;
+  targetY = Math.max(NAV_H + 20, py);
 }
-C.addEventListener('click', e => handleTap(e.clientX, e.clientY));
-C.addEventListener('touchstart', e => { e.preventDefault(); handleTap(e.touches[0].clientX, e.touches[0].clientY); }, { passive: false });
+
+CV.addEventListener('mousemove', e => setTarget(e.clientX, e.clientY));
+CV.addEventListener('touchmove', e => { e.preventDefault(); setTarget(e.touches[0].clientX, e.touches[0].clientY); }, { passive: false });
+CV.addEventListener('touchstart', e => { e.preventDefault(); setTarget(e.touches[0].clientX, e.touches[0].clientY); }, { passive: false });
 
 // ─── HUD ───
 function updateHUD() {
   document.getElementById('hudScore').textContent = score;
-  document.getElementById('hudLevel').textContent = level;
-  document.getElementById('hudTimer').textContent = timeLeft;
-  document.getElementById('hudMissed').textContent = missed + '/' + MAX_MISSED;
-}
-function checkLevelUp() {
-  if (totalDeported >= level * 10) {
-    level++;
-    addEffect(W/2, scrollY + H/2, 'LEVEL ' + level, GOLD);
-    updateHUD();
-  }
+  document.getElementById('hudWave').textContent = wave;
+  const climbing = illegals.filter(i => i.state === 'climbing' && !i.caught).length;
+  document.getElementById('hudActive').textContent = climbing;
 }
 
-// ─── DRAW: TERRAIN ───
-function drawTerrain() {
-  // Desert gradient
-  const g = ctx.createLinearGradient(0, 0, 0, H);
-  g.addColorStop(0, '#c2a67a');
-  g.addColorStop(0.3, '#d4b98a');
-  g.addColorStop(1, '#c8ad78');
-  ctx.fillStyle = g;
-  ctx.fillRect(0, 0, W, H);
+// ─── DRAW HELPERS ───
+function drawLowPolyPerson(x, y, size, hue, shirtHue, hatType, climbing, climbProg) {
+  const s = size;
+  let bodyY = y;
+  let legSpread = 0;
 
-  // Subtle sand texture lines
-  ctx.strokeStyle = 'rgba(180,155,110,0.25)';
-  ctx.lineWidth = 1;
-  const sandOff = (scrollY * 0.15) % 40;
-  for (let y = -sandOff; y < H; y += 40) {
-    ctx.beginPath();
-    ctx.moveTo(0, y + Math.sin(y * 0.05) * 3);
-    for (let x = 0; x < W; x += 20) {
-      ctx.lineTo(x, y + Math.sin((x + scrollY) * 0.02) * 4);
-    }
-    ctx.stroke();
+  if (climbing) {
+    // Person facing wall, climbing up
+    const wallBase = WALL_Y + WALL_H;
+    bodyY = wallBase - climbProg * (WALL_H + s * 2);
+    legSpread = Math.sin(climbProg * 20) * 2;
   }
 
-  // City zone (top region)
-  const fenceScreenY = -scrollY + HUD_TOP;
-  const cityBottom = fenceScreenY - 80;
-  if (cityBottom > -200) {
-    // Concrete ground for city
-    const cg = ctx.createLinearGradient(0, 0, 0, Math.max(0, cityBottom));
-    cg.addColorStop(0, '#6b6b78');
-    cg.addColorStop(1, '#8a8a90');
-    ctx.fillStyle = cg;
-    ctx.fillRect(0, 0, W, Math.max(0, cityBottom));
-
-    // Buildings
-    buildings.forEach(b => {
-      const bx = b.x * W;
-      const by = b.y - scrollY + HUD_TOP;
-      if (by > -60 && by < H) {
-        // Building body
-        ctx.fillStyle = `rgba(60,60,75,${b.shade + 0.3})`;
-        ctx.fillRect(bx - b.w/2, by - b.h, b.w, b.h);
-        // Windows
-        ctx.fillStyle = 'rgba(200,190,140,0.3)';
-        for (let wy = by - b.h + 5; wy < by - 4; wy += 8) {
-          for (let wx = bx - b.w/2 + 4; wx < bx + b.w/2 - 4; wx += 7) {
-            ctx.fillRect(wx, wy, 4, 4);
-          }
-        }
-        // Roof line
-        ctx.fillStyle = 'rgba(40,40,55,0.5)';
-        ctx.fillRect(bx - b.w/2 - 1, by - b.h - 2, b.w + 2, 3);
-      }
-    });
-
-    // City label
-    ctx.fillStyle = 'rgba(250,70,22,0.25)';
-    ctx.font = '600 10px Oswald, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.letterSpacing = '3px';
-    ctx.fillText('CITY ZONE — DO NOT LET THEM REACH HERE', W/2, Math.max(20, cityBottom - 10));
+  // Shadow (only on ground)
+  if (!climbing) {
+    cx.fillStyle = 'rgba(0,0,0,0.3)';
+    cx.beginPath();
+    cx.ellipse(x, bodyY + s * 1.5, s * 0.8, s * 0.2, 0, 0, Math.PI * 2);
+    cx.fill();
   }
 
-  // Rocks
-  rocks.forEach(rk => {
-    const rx = rk.x * W;
-    const ry = rk.y - scrollY + HUD_TOP;
-    if (ry < -20 || ry > H + 20) return;
-    ctx.fillStyle = `rgba(140,125,100,${rk.shade})`;
-    ctx.beginPath();
-    ctx.ellipse(rx, ry, rk.r * 1.3, rk.r * 0.7, 0, 0, Math.PI * 2);
-    ctx.fill();
-  });
-
-  // Bushes
-  bushes.forEach(b => {
-    const bx = b.x * W;
-    const by = b.y - scrollY + HUD_TOP;
-    if (by < -20 || by > H + 20) return;
-    ctx.fillStyle = 'rgba(90,110,60,0.35)';
-    ctx.beginPath();
-    ctx.arc(bx, by, b.r, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = 'rgba(70,95,45,0.25)';
-    ctx.beginPath();
-    ctx.arc(bx + b.r * 0.3, by - b.r * 0.2, b.r * 0.7, 0, Math.PI * 2);
-    ctx.fill();
-  });
-
-  // Cacti
-  cacti.forEach(c => {
-    const cx = c.x * W;
-    const cy = c.y - scrollY + HUD_TOP;
-    if (cy < -30 || cy > H + 30) return;
-    const h = c.h;
-    // Trunk
-    ctx.fillStyle = 'rgba(55,85,45,0.6)';
-    ctx.beginPath();
-    ctx.roundRect(cx - 2.5, cy - h, 5, h, 2);
-    ctx.fill();
-    // Arms
-    if (c.type === 0) {
-      ctx.beginPath();
-      ctx.roundRect(cx + 2, cy - h * 0.65, 8, 3, 1.5);
-      ctx.fill();
-      ctx.beginPath();
-      ctx.roundRect(cx + 7, cy - h * 0.65 - 7, 3, 10, 1.5);
-      ctx.fill();
-    } else if (c.type === 1) {
-      ctx.beginPath();
-      ctx.roundRect(cx - 10, cy - h * 0.5, 8, 3, 1.5);
-      ctx.fill();
-      ctx.beginPath();
-      ctx.roundRect(cx - 10, cy - h * 0.5 - 6, 3, 9, 1.5);
-      ctx.fill();
-    }
-  });
-
-  // ─── BORDER FENCE ───
-  if (fenceScreenY > -40 && fenceScreenY < H + 40) {
-    // Ground strip
-    ctx.fillStyle = 'rgba(100,85,65,0.3)';
-    ctx.fillRect(0, fenceScreenY - 6, W, 12);
-
-    // Steel posts
-    for (let x = 20; x < W; x += 40) {
-      // Post shadow
-      ctx.fillStyle = 'rgba(0,0,0,0.1)';
-      ctx.fillRect(x + 2, fenceScreenY - 22, 4, 44);
-      // Post
-      const pg = ctx.createLinearGradient(x - 2, 0, x + 4, 0);
-      pg.addColorStop(0, '#9a9a9a');
-      pg.addColorStop(0.5, '#d0d0d0');
-      pg.addColorStop(1, '#888');
-      ctx.fillStyle = pg;
-      ctx.fillRect(x - 2, fenceScreenY - 24, 4, 48);
-      // Post cap
-      ctx.fillStyle = '#aaa';
-      ctx.fillRect(x - 3, fenceScreenY - 26, 6, 3);
-    }
-
-    // Horizontal rails
-    ctx.strokeStyle = '#aaa';
-    ctx.lineWidth = 2;
-    [-16, -6, 4, 14].forEach(off => {
-      ctx.beginPath();
-      ctx.moveTo(0, fenceScreenY + off);
-      ctx.lineTo(W, fenceScreenY + off);
-      ctx.stroke();
-    });
-
-    // Razor wire (top)
-    ctx.strokeStyle = 'rgba(180,180,180,0.6)';
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    for (let x = 0; x < W; x += 6) {
-      const yy = fenceScreenY - 26 + Math.sin(x * 0.3) * 3;
-      x === 0 ? ctx.moveTo(x, yy) : ctx.lineTo(x, yy);
-    }
-    ctx.stroke();
-    // Wire barbs
-    ctx.strokeStyle = 'rgba(160,160,160,0.4)';
-    for (let x = 8; x < W; x += 12) {
-      const yy = fenceScreenY - 26 + Math.sin(x * 0.3) * 3;
-      ctx.beginPath(); ctx.moveTo(x, yy - 3); ctx.lineTo(x + 2, yy + 3); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(x, yy + 3); ctx.lineTo(x - 2, yy - 3); ctx.stroke();
-    }
-
-    // Label
-    ctx.fillStyle = 'rgba(255,255,255,0.12)';
-    ctx.font = '600 9px Oswald, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('U.S. BORDER', W/2, fenceScreenY + 32);
-  }
-}
-
-// ─── DRAW: RUNNER (stylized human figure, no emoji) ───
-function drawRunner(r) {
-  const sx = r.x;
-  const sy = r.y - scrollY + HUD_TOP;
-  if (sy < -40 || sy > H + 40) return;
-
-  if (r.deported) {
-    const a = 1 - r.deportAnim;
-    // Red ping
-    ctx.beginPath();
-    ctx.arc(sx, sy, 20 * r.deportAnim + 8, 0, Math.PI * 2);
-    ctx.strokeStyle = `rgba(250,70,22,${a * 0.7})`;
-    ctx.lineWidth = 2;
-    ctx.stroke();
-    // X mark
-    ctx.strokeStyle = `rgba(250,70,22,${a})`;
-    ctx.lineWidth = 3;
-    ctx.beginPath(); ctx.moveTo(sx-6, sy-6); ctx.lineTo(sx+6, sy+6); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(sx+6, sy-6); ctx.lineTo(sx-6, sy+6); ctx.stroke();
-    return;
+  // Legs
+  cx.strokeStyle = `hsl(220,15%,30%)`;
+  cx.lineWidth = 2.5;
+  cx.lineCap = 'round';
+  if (climbing) {
+    cx.beginPath(); cx.moveTo(x - 2, bodyY + s * 0.5); cx.lineTo(x - 3 - legSpread, bodyY + s * 1.5); cx.stroke();
+    cx.beginPath(); cx.moveTo(x + 2, bodyY + s * 0.5); cx.lineTo(x + 3 + legSpread, bodyY + s * 1.5); cx.stroke();
+  } else {
+    const walk = Math.sin(Date.now() * 0.008 + x) * 2;
+    cx.beginPath(); cx.moveTo(x - 2, bodyY + s * 0.4); cx.lineTo(x - 2 + walk, bodyY + s * 1.4); cx.stroke();
+    cx.beginPath(); cx.moveTo(x + 2, bodyY + s * 0.4); cx.lineTo(x + 2 - walk, bodyY + s * 1.4); cx.stroke();
   }
 
-  const s = r.size;
-  const stride = Math.sin(r.stride) * 3;
+  // Body (low poly = simple rectangle with slight taper)
+  cx.fillStyle = `hsl(${shirtHue},25%,35%)`;
+  cx.beginPath();
+  cx.moveTo(x - s * 0.5, bodyY - s * 0.3);
+  cx.lineTo(x + s * 0.5, bodyY - s * 0.3);
+  cx.lineTo(x + s * 0.4, bodyY + s * 0.5);
+  cx.lineTo(x - s * 0.4, bodyY + s * 0.5);
+  cx.closePath();
+  cx.fill();
 
-  // Drop shadow
-  ctx.fillStyle = 'rgba(0,0,0,0.2)';
-  ctx.beginPath();
-  ctx.ellipse(sx, sy + s * 1.8, s * 1, s * 0.35, 0, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Legs (animated stride)
-  ctx.strokeStyle = r.pantsColor;
-  ctx.lineWidth = 2.5;
-  ctx.lineCap = 'round';
-  // Left leg
-  ctx.beginPath();
-  ctx.moveTo(sx - 2, sy + s * 0.4);
-  ctx.lineTo(sx - 2 + stride, sy + s * 1.6);
-  ctx.stroke();
-  // Right leg
-  ctx.beginPath();
-  ctx.moveTo(sx + 2, sy + s * 0.4);
-  ctx.lineTo(sx + 2 - stride, sy + s * 1.6);
-  ctx.stroke();
-
-  // Torso
-  ctx.fillStyle = r.shirtColor;
-  ctx.beginPath();
-  ctx.roundRect(sx - s * 0.6, sy - s * 0.5, s * 1.2, s * 1.1, 2);
-  ctx.fill();
-
-  // Arms (swinging)
-  ctx.strokeStyle = r.skinTone;
-  ctx.lineWidth = 2;
-  // Left arm
-  ctx.beginPath();
-  ctx.moveTo(sx - s * 0.6, sy - s * 0.2);
-  ctx.lineTo(sx - s * 1.1 - stride * 0.5, sy + s * 0.5);
-  ctx.stroke();
-  // Right arm
-  ctx.beginPath();
-  ctx.moveTo(sx + s * 0.6, sy - s * 0.2);
-  ctx.lineTo(sx + s * 1.1 + stride * 0.5, sy + s * 0.5);
-  ctx.stroke();
-
-  // Backpack
-  if (r.bagChance) {
-    ctx.fillStyle = 'rgba(80,70,55,0.7)';
-    ctx.beginPath();
-    ctx.roundRect(sx - s * 0.8, sy - s * 0.3, s * 0.5, s * 0.7, 2);
-    ctx.fill();
+  // Arms
+  cx.strokeStyle = `hsl(${hue},35%,55%)`;
+  cx.lineWidth = 2;
+  if (climbing) {
+    // Arms reaching up
+    cx.beginPath(); cx.moveTo(x - s * 0.5, bodyY - s * 0.1); cx.lineTo(x - s * 0.7, bodyY - s * 1); cx.stroke();
+    cx.beginPath(); cx.moveTo(x + s * 0.5, bodyY - s * 0.1); cx.lineTo(x + s * 0.7, bodyY - s * 1.2); cx.stroke();
+  } else {
+    const armSwing = Math.sin(Date.now() * 0.008 + x) * s * 0.3;
+    cx.beginPath(); cx.moveTo(x - s * 0.5, bodyY - s * 0.1); cx.lineTo(x - s * 0.9 - armSwing, bodyY + s * 0.5); cx.stroke();
+    cx.beginPath(); cx.moveTo(x + s * 0.5, bodyY - s * 0.1); cx.lineTo(x + s * 0.9 + armSwing, bodyY + s * 0.5); cx.stroke();
   }
 
   // Head
-  ctx.fillStyle = r.skinTone;
-  ctx.beginPath();
-  ctx.arc(sx, sy - s * 0.9, s * 0.5, 0, Math.PI * 2);
-  ctx.fill();
+  cx.fillStyle = `hsl(${hue},35%,55%)`;
+  cx.beginPath();
+  cx.arc(x, bodyY - s * 0.7, s * 0.4, 0, Math.PI * 2);
+  cx.fill();
 
-  // Hair/hat
-  if (r.hatChance) {
-    ctx.fillStyle = 'rgba(60,50,40,0.8)';
-    ctx.beginPath();
-    ctx.ellipse(sx, sy - s * 1.15, s * 0.6, s * 0.2, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillRect(sx - s * 0.35, sy - s * 1.4, s * 0.7, s * 0.35);
-  } else {
-    ctx.fillStyle = 'rgba(30,25,20,0.7)';
-    ctx.beginPath();
-    ctx.arc(sx, sy - s * 1.05, s * 0.45, Math.PI, 0);
-    ctx.fill();
+  // Hat
+  if (hatType === 0) {
+    // Baseball cap
+    cx.fillStyle = `hsl(${shirtHue + 40},20%,25%)`;
+    cx.beginPath();
+    cx.ellipse(x, bodyY - s * 0.95, s * 0.5, s * 0.15, 0, 0, Math.PI * 2);
+    cx.fill();
+    cx.fillRect(x - s * 0.3, bodyY - s * 1.15, s * 0.6, s * 0.3);
+  } else if (hatType === 1) {
+    // Beanie
+    cx.fillStyle = `hsl(0,0%,20%)`;
+    cx.beginPath();
+    cx.arc(x, bodyY - s * 0.9, s * 0.38, Math.PI, 0);
+    cx.fill();
+  }
+  // hatType 2 = no hat
+
+  return bodyY;
+}
+
+function drawHelicopter(x, y) {
+  const s = 18;
+  // Body shadow
+  cx.fillStyle = 'rgba(0,0,0,0.15)';
+  cx.beginPath();
+  cx.ellipse(x + 3, y + 3, s * 1.2, s * 0.5, heliAngle * 0.1, 0, Math.PI * 2);
+  cx.fill();
+
+  // Tail boom
+  cx.strokeStyle = '#444';
+  cx.lineWidth = 3;
+  cx.beginPath();
+  cx.moveTo(x, y);
+  cx.lineTo(x - s * 1.8, y + s * 0.2);
+  cx.stroke();
+
+  // Tail rotor housing
+  cx.fillStyle = '#3a3a3a';
+  cx.fillRect(x - s * 2, y - s * 0.3, s * 0.4, s * 0.6);
+
+  // Main body
+  const bg = cx.createLinearGradient(x - s * 0.6, y - s * 0.5, x + s * 0.6, y + s * 0.5);
+  bg.addColorStop(0, '#4a4a4a');
+  bg.addColorStop(0.5, '#5a5a5a');
+  bg.addColorStop(1, '#404040');
+  cx.fillStyle = bg;
+  cx.beginPath();
+  cx.ellipse(x, y, s * 1, s * 0.55, 0, 0, Math.PI * 2);
+  cx.fill();
+
+  // Windshield
+  cx.fillStyle = 'rgba(100,180,255,0.3)';
+  cx.beginPath();
+  cx.ellipse(x + s * 0.3, y - s * 0.05, s * 0.45, s * 0.3, 0.2, 0, Math.PI * 2);
+  cx.fill();
+
+  // ICE marking
+  cx.fillStyle = 'rgba(255,255,255,0.6)';
+  cx.font = `700 ${s * 0.4}px Oswald, sans-serif`;
+  cx.textAlign = 'center';
+  cx.fillText('ICE', x - s * 0.2, y + s * 0.15);
+
+  // Skids
+  cx.strokeStyle = '#555';
+  cx.lineWidth = 1.5;
+  cx.beginPath(); cx.moveTo(x - s * 0.6, y + s * 0.55); cx.lineTo(x - s * 0.6, y + s * 0.8); cx.lineTo(x + s * 0.6, y + s * 0.8); cx.lineTo(x + s * 0.6, y + s * 0.55); cx.stroke();
+
+  // Main rotor (spinning)
+  heliBladeAngle += 0.15;
+  cx.strokeStyle = 'rgba(200,200,200,0.5)';
+  cx.lineWidth = 2;
+  for (let i = 0; i < 4; i++) {
+    const a = heliBladeAngle + (Math.PI / 2) * i;
+    cx.beginPath();
+    cx.moveTo(x, y);
+    cx.lineTo(x + Math.cos(a) * s * 2.2, y + Math.sin(a) * s * 0.6);
+    cx.stroke();
   }
 
-  // Detection ring
-  const pulse = Math.sin(Date.now() * 0.004 + r.phase) * 0.3 + 0.7;
-  ctx.beginPath();
-  ctx.arc(sx, sy, s * 2.5, 0, Math.PI * 2);
-  ctx.strokeStyle = `rgba(250,70,22,${pulse * 0.2})`;
-  ctx.lineWidth = 1;
-  ctx.setLineDash([3, 4]);
-  ctx.stroke();
-  ctx.setLineDash([]);
+  // Rotor disc (motion blur)
+  cx.fillStyle = 'rgba(200,200,200,0.06)';
+  cx.beginPath();
+  cx.ellipse(x, y, s * 2.2, s * 0.6, 0, 0, Math.PI * 2);
+  cx.fill();
+
+  // Rotor hub
+  cx.fillStyle = '#666';
+  cx.beginPath();
+  cx.arc(x, y, 3, 0, Math.PI * 2);
+  cx.fill();
 }
 
-// ─── DRAW: EFFECTS ───
-function drawEffects() {
-  ctx.textAlign = 'center';
+function drawTruck(t) {
+  const s = 12;
+  // Shadow
+  cx.fillStyle = 'rgba(0,0,0,0.2)';
+  cx.fillRect(t.x - s * 1.2 + 2, t.y + s * 0.4 + 2, s * 2.4, s * 0.3);
+
+  // Truck body
+  cx.fillStyle = '#e8e8e8';
+  cx.beginPath();
+  cx.roundRect(t.x - s * 1.2, t.y - s * 0.6, s * 2.4, s * 1, 2);
+  cx.fill();
+
+  // Cab
+  cx.fillStyle = COL.truckBlue;
+  cx.beginPath();
+  cx.roundRect(t.x + s * 0.5, t.y - s * 0.8, s * 0.8, s * 1.2, [2, 2, 0, 0]);
+  cx.fill();
+
+  // Windshield
+  cx.fillStyle = 'rgba(150,200,255,0.4)';
+  cx.fillRect(t.x + s * 0.6, t.y - s * 0.6, s * 0.55, s * 0.4);
+
+  // ICE text on side
+  cx.fillStyle = COL.truckBlue;
+  cx.font = `700 ${s * 0.55}px Oswald, sans-serif`;
+  cx.textAlign = 'center';
+  cx.fillText('ICE', t.x - s * 0.2, t.y + s * 0.15);
+
+  // Wheels
+  cx.fillStyle = '#222';
+  cx.beginPath(); cx.arc(t.x - s * 0.7, t.y + s * 0.45, s * 0.22, 0, Math.PI * 2); cx.fill();
+  cx.beginPath(); cx.arc(t.x + s * 0.8, t.y + s * 0.45, s * 0.22, 0, Math.PI * 2); cx.fill();
+
+  // Flashing light
+  if (Math.sin(Date.now() * 0.01) > 0) {
+    cx.fillStyle = 'rgba(255,50,50,0.6)';
+    cx.beginPath(); cx.arc(t.x + s * 0.7, t.y - s * 0.8, 3, 0, Math.PI * 2); cx.fill();
+  } else {
+    cx.fillStyle = 'rgba(50,100,255,0.6)';
+    cx.beginPath(); cx.arc(t.x + s * 0.9, t.y - s * 0.8, 3, 0, Math.PI * 2); cx.fill();
+  }
+}
+
+function drawWall() {
+  // Wall shadow
+  cx.fillStyle = 'rgba(0,0,0,0.3)';
+  cx.fillRect(0, WALL_Y + WALL_H, W, 8);
+
+  // Main wall body
+  const wg = cx.createLinearGradient(0, WALL_Y, 0, WALL_Y + WALL_H);
+  wg.addColorStop(0, '#b0b0b0');
+  wg.addColorStop(0.3, '#c8c8c8');
+  wg.addColorStop(0.7, '#a0a0a0');
+  wg.addColorStop(1, '#888');
+  cx.fillStyle = wg;
+  cx.fillRect(0, WALL_Y, W, WALL_H);
+
+  // Steel slat pattern
+  cx.strokeStyle = 'rgba(0,0,0,0.08)';
+  cx.lineWidth = 1;
+  for (let x = 8; x < W; x += 16) {
+    cx.beginPath(); cx.moveTo(x, WALL_Y); cx.lineTo(x, WALL_Y + WALL_H); cx.stroke();
+  }
+
+  // Horizontal rails
+  cx.strokeStyle = 'rgba(0,0,0,0.1)';
+  cx.lineWidth = 1.5;
+  cx.beginPath(); cx.moveTo(0, WALL_Y + WALL_H * 0.33); cx.lineTo(W, WALL_Y + WALL_H * 0.33); cx.stroke();
+  cx.beginPath(); cx.moveTo(0, WALL_Y + WALL_H * 0.66); cx.lineTo(W, WALL_Y + WALL_H * 0.66); cx.stroke();
+
+  // Top razor wire
+  cx.strokeStyle = 'rgba(180,180,180,0.5)';
+  cx.lineWidth = 1;
+  cx.beginPath();
+  for (let x = 0; x < W; x += 4) {
+    const yy = WALL_Y - 2 + Math.sin(x * 0.4) * 2.5;
+    x === 0 ? cx.moveTo(x, yy) : cx.lineTo(x, yy);
+  }
+  cx.stroke();
+
+  // Coils
+  for (let x = 10; x < W; x += 20) {
+    cx.strokeStyle = 'rgba(160,160,160,0.3)';
+    cx.beginPath();
+    cx.ellipse(x, WALL_Y - 3, 8, 3, 0, 0, Math.PI * 2);
+    cx.stroke();
+  }
+
+  // Wall top highlight
+  cx.fillStyle = 'rgba(255,255,255,0.08)';
+  cx.fillRect(0, WALL_Y, W, 2);
+}
+
+// ─── SPOTLIGHT ───
+function drawSpotlight(sx, sy) {
+  // Main cone
+  const r = 50;
+  const g = cx.createRadialGradient(sx, sy, 0, sx, sy, r);
+  g.addColorStop(0, 'rgba(255,255,210,0.18)');
+  g.addColorStop(0.5, 'rgba(255,255,200,0.08)');
+  g.addColorStop(1, 'rgba(255,255,200,0)');
+  cx.fillStyle = g;
+  cx.beginPath();
+  cx.arc(sx, sy, r, 0, Math.PI * 2);
+  cx.fill();
+
+  // Hard circle edge
+  cx.strokeStyle = 'rgba(255,255,200,0.1)';
+  cx.lineWidth = 1;
+  cx.beginPath();
+  cx.arc(sx, sy, r * 0.7, 0, Math.PI * 2);
+  cx.stroke();
+
+  // Beam line from heli to ground
+  cx.strokeStyle = 'rgba(255,255,200,0.04)';
+  cx.lineWidth = r * 0.3;
+  cx.beginPath();
+  cx.moveTo(heliX, heliY);
+  cx.lineTo(sx, sy);
+  cx.stroke();
+}
+
+function isSpotlit(ix, iy) {
+  // Spotlight position = slightly below helicopter
+  const sx = heliX, sy = heliY + 50;
+  const dx = ix - sx, dy = iy - sy;
+  return Math.sqrt(dx*dx + dy*dy) < 45;
+}
+
+// ─── MAIN DRAW ───
+function draw() {
+  // Night sky
+  cx.fillStyle = COL.night;
+  cx.fillRect(0, 0, W, H);
+
+  // Stars
+  stars.forEach(s => {
+    const sy = s.y * (WALL_Y - 20);
+    const twinkle = Math.sin(Date.now() * 0.002 + s.twinkle) * 0.3 + 0.7;
+    cx.fillStyle = `rgba(255,255,255,${s.brightness * twinkle * 0.5})`;
+    cx.beginPath();
+    cx.arc(s.x * W, sy, 1, 0, Math.PI * 2);
+    cx.fill();
+  });
+
+  // City skyline (above wall, background)
+  cx.fillStyle = '#151b28';
+  const bldgs = [
+    [0.05, 0.6], [0.1, 0.8], [0.18, 0.5], [0.22, 0.9], [0.3, 0.4], [0.35, 0.7],
+    [0.42, 1.0], [0.48, 0.6], [0.55, 0.8], [0.6, 0.5], [0.68, 0.9], [0.73, 0.7],
+    [0.8, 0.6], [0.85, 1.0], [0.92, 0.5], [0.97, 0.7],
+  ];
+  bldgs.forEach(([bx, bh]) => {
+    const x = bx * W;
+    const h = bh * 30;
+    const w = 20 + bh * 15;
+    cx.fillRect(x - w/2, WALL_Y - h - 5, w, h + 5);
+    // Windows
+    cx.fillStyle = 'rgba(200,180,100,0.15)';
+    for (let wy = WALL_Y - h; wy < WALL_Y - 5; wy += 6) {
+      for (let wx = x - w/2 + 3; wx < x + w/2 - 3; wx += 6) {
+        if (Math.random() > 0.3) cx.fillRect(wx, wy, 3, 3);
+      }
+    }
+    cx.fillStyle = '#151b28';
+  });
+
+  // Ground (desert south of wall)
+  const gg = cx.createLinearGradient(0, GROUND_TOP, 0, H);
+  gg.addColorStop(0, '#2a2015');
+  gg.addColorStop(0.5, '#251c12');
+  gg.addColorStop(1, '#1a1510');
+  cx.fillStyle = gg;
+  cx.fillRect(0, GROUND_TOP, W, H - GROUND_TOP);
+
+  // Ground texture
+  cx.fillStyle = 'rgba(60,45,30,0.2)';
+  for (let i = 0; i < 50; i++) {
+    const rx = ((i * 73 + 11) % W);
+    const ry = GROUND_TOP + ((i * 47 + 23) % (H - GROUND_TOP));
+    cx.beginPath();
+    cx.ellipse(rx, ry, 2 + (i%3), 1, 0, 0, Math.PI * 2);
+    cx.fill();
+  }
+
+  // Dirt road
+  cx.fillStyle = 'rgba(50,40,28,0.4)';
+  cx.fillRect(0, H - 40, W, 20);
+  cx.strokeStyle = 'rgba(80,65,45,0.2)';
+  cx.setLineDash([12, 8]);
+  cx.beginPath(); cx.moveTo(0, H - 30); cx.lineTo(W, H - 30); cx.stroke();
+  cx.setLineDash([]);
+
+  // Wall
+  drawWall();
+
+  // Spotlight on ground
+  const spotGX = heliX, spotGY = heliY + 50;
+  drawSpotlight(spotGX, spotGY);
+
+  // Illegals
+  illegals.forEach(il => {
+    if (il.caught) {
+      // Caught flash
+      if (il.catchAnim < 1) {
+        cx.fillStyle = `rgba(67,160,71,${1 - il.catchAnim})`;
+        cx.beginPath();
+        cx.arc(il.x, il.drawY || il.y, 15, 0, Math.PI * 2);
+        cx.fill();
+      }
+      return;
+    }
+
+    let drawY;
+    if (il.state === 'walking') {
+      drawY = il.y;
+      drawLowPolyPerson(il.x, drawY, il.size, il.bodyHue, il.shirtHue, il.hatType, false, 0);
+    } else if (il.state === 'climbing') {
+      drawLowPolyPerson(il.x, il.y, il.size, il.bodyHue, il.shirtHue, il.hatType, true, il.climbProgress);
+      drawY = (WALL_Y + WALL_H) - il.climbProgress * (WALL_H + il.size * 2);
+
+      // Climb progress ring
+      cx.strokeStyle = il.spotted ? 'rgba(250,70,22,0.5)' : 'rgba(255,200,50,0.3)';
+      cx.lineWidth = 2;
+      cx.beginPath();
+      cx.arc(il.x, drawY - il.size * 1.5, il.size + 4, -Math.PI/2, -Math.PI/2 + il.climbProgress * Math.PI * 2);
+      cx.stroke();
+
+      // If spotted, show truck progress
+      if (il.spotted && il.spotTime > 0) {
+        const pct = Math.min(1, il.spotTime / il.truckArriveTime);
+        cx.strokeStyle = 'rgba(67,160,71,0.7)';
+        cx.lineWidth = 2.5;
+        cx.beginPath();
+        cx.arc(il.x, drawY - il.size * 1.5, il.size + 7, -Math.PI/2, -Math.PI/2 + pct * Math.PI * 2);
+        cx.stroke();
+      }
+    } else if (il.state === 'over') {
+      // Made it over - animate up into city
+      drawY = WALL_Y - 10 - il.overAnim * 30;
+      drawLowPolyPerson(il.x, drawY, il.size, il.bodyHue, il.shirtHue, il.hatType, false, 0);
+    }
+
+    il.drawY = drawY;
+  });
+
+  // Trucks
+  trucks.forEach(t => { if (t.active) drawTruck(t); });
+
+  // Effects
+  cx.textAlign = 'center';
   effects.forEach(e => {
-    const sy = e.y - scrollY + HUD_TOP;
-    const a = e.life;
-    ctx.globalAlpha = a;
-    ctx.fillStyle = e.color;
-    ctx.font = `700 ${13 + (1-a)*6}px Oswald, sans-serif`;
-    ctx.fillText(e.text, e.x, sy - (1-a)*35);
-    ctx.globalAlpha = 1;
+    cx.globalAlpha = e.life;
+    cx.fillStyle = e.color;
+    cx.font = `700 ${14}px Oswald, sans-serif`;
+    cx.fillText(e.text, e.x, e.y - (1-e.life) * 25);
+    cx.globalAlpha = 1;
   });
 
-  dispatches.forEach(d => {
-    const sy = d.y - scrollY + HUD_TOP;
-    const p = 1 - d.life;
-    // Expanding ring
-    ctx.beginPath();
-    ctx.arc(d.x, sy, p * 30 + 5, 0, Math.PI * 2);
-    ctx.strokeStyle = `rgba(250,70,22,${d.life * 0.6})`;
-    ctx.lineWidth = 2;
-    ctx.stroke();
-    // Inner crosshair
-    if (d.life > 0.4) {
-      const ca = (d.life - 0.4) / 0.6;
-      ctx.strokeStyle = `rgba(255,255,255,${ca * 0.5})`;
-      ctx.lineWidth = 1;
-      const len = 10;
-      ctx.beginPath(); ctx.moveTo(d.x - len, sy); ctx.lineTo(d.x - 4, sy); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(d.x + 4, sy); ctx.lineTo(d.x + len, sy); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(d.x, sy - len); ctx.lineTo(d.x, sy - 4); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(d.x, sy + 4); ctx.lineTo(d.x, sy + len); ctx.stroke();
-    }
-  });
+  // Night overlay (darken everything slightly)
+  cx.fillStyle = 'rgba(0,5,15,0.15)';
+  cx.fillRect(0, 0, W, H);
+
+  // Helicopter (drawn last, on top)
+  drawHelicopter(heliX, heliY);
 }
 
-// ─── DRAW: HELICOPTER OVERLAY ───
-function drawHelicopterOverlay() {
-  // Subtle spotlight
-  const spotX = W/2 + Math.sin(Date.now() * 0.0008) * W * 0.15;
-  const sg = ctx.createRadialGradient(spotX, H * 0.45, 0, spotX, H * 0.45, 180);
-  sg.addColorStop(0, 'rgba(255,255,220,0.03)');
-  sg.addColorStop(1, 'rgba(255,255,220,0)');
-  ctx.fillStyle = sg;
-  ctx.fillRect(0, 0, W, H);
+// ─── UPDATE ───
+function update(dt) {
+  if (!gameRunning) return;
 
-  // Vignette
-  const vg = ctx.createRadialGradient(W/2, H/2, H * 0.3, W/2, H/2, H * 0.75);
-  vg.addColorStop(0, 'rgba(0,0,0,0)');
-  vg.addColorStop(1, 'rgba(0,0,0,0.25)');
-  ctx.fillStyle = vg;
-  ctx.fillRect(0, 0, W, H);
+  // Move heli toward target (smooth)
+  const dx = targetX - heliX, dy = targetY - heliY;
+  heliX += dx * 6 * dt;
+  heliY += dy * 6 * dt;
+  heliAngle = dx * 0.002;
 
-  // ─── MINIMAP ───
-  const mw = 40, mh = 90, mx = W - mw - 8, my = HUD_TOP + 8;
-  ctx.fillStyle = 'rgba(0,0,0,0.45)';
-  ctx.beginPath();
-  ctx.roundRect(mx, my, mw, mh, 4);
-  ctx.fill();
-  ctx.strokeStyle = 'rgba(255,255,255,0.1)';
-  ctx.lineWidth = 1;
-  ctx.stroke();
+  const spotX = heliX, spotY = heliY + 50;
 
-  const mapRange = H * 4;
-  const mapScale = mh / mapRange;
-  const viewTop = scrollY * mapScale;
+  // Spawn
+  const cfg = getWaveConfig(wave);
+  spawnTimer -= dt;
+  const activeCount = illegals.filter(i => !i.caught && i.state !== 'over').length;
+  if (spawnTimer <= 0 && activeCount < cfg.maxSimultaneous) {
+    spawnIllegal();
+    spawnTimer = cfg.spawnInterval * (0.7 + Math.random() * 0.6);
+    waveCount++;
+    if (waveCount >= 5 + wave * 2) {
+      wave++;
+      waveCount = 0;
+      addEffect(W/2, H/2, 'WAVE ' + wave, COL.gold);
+    }
+  }
 
-  // Viewport
-  ctx.fillStyle = 'rgba(250,70,22,0.2)';
-  ctx.fillRect(mx + 2, my + 2 + viewTop, mw - 4, H * mapScale);
+  // Update illegals
+  illegals.forEach(il => {
+    if (il.caught) {
+      il.catchAnim += dt * 2;
+      return;
+    }
 
-  // Fence on minimap
-  const fmapY = my + 2 + (-scrollY + HUD_TOP) * mapScale + (0) * mapScale;
-  // approximate
-  const fmy = my + mh * 0.5;
-  ctx.strokeStyle = 'rgba(255,255,255,0.3)';
-  ctx.beginPath(); ctx.moveTo(mx + 4, fmy); ctx.lineTo(mx + mw - 4, fmy); ctx.stroke();
+    if (il.state === 'walking') {
+      il.y -= il.walkSpeed * dt;
+      if (il.y <= WALL_Y + WALL_H + il.size) {
+        il.state = 'climbing';
+        il.y = WALL_Y + WALL_H;
+      }
+    } else if (il.state === 'climbing') {
+      il.climbProgress += dt / il.climbTime;
 
-  // Runners on minimap
-  runners.forEach(r => {
-    if (!r.alive) return;
-    const rmx = mx + 2 + (r.x / W) * (mw - 4);
-    const rmy = my + 2 + (r.y - scrollY) * mapScale + mh * 0.3;
-    if (rmy > my && rmy < my + mh) {
-      ctx.fillStyle = '#ff5533';
-      ctx.beginPath();
-      ctx.arc(rmx, rmy, 1.5, 0, Math.PI * 2);
-      ctx.fill();
+      // Check spotlight
+      const climbY = (WALL_Y + WALL_H) - il.climbProgress * (WALL_H + il.size * 2);
+      const inSpot = isSpotlit(il.x, climbY);
+
+      if (inSpot) {
+        il.spotted = true;
+        il.spotTime += dt;
+        // Check if truck arrived
+        if (il.spotTime >= il.truckArriveTime) {
+          il.caught = true;
+          il.catchAnim = 0;
+          score++;
+          addEffect(il.x, climbY, 'CAUGHT +1', COL.green);
+          updateHUD();
+        }
+      } else {
+        // Lost spotlight — reset truck progress (truck turns back)
+        if (il.spotted) {
+          il.spotTime = Math.max(0, il.spotTime - dt * 2); // drains faster than fills
+          if (il.spotTime <= 0) il.spotted = false;
+        }
+      }
+
+      if (il.climbProgress >= 1 && !il.caught) {
+        il.state = 'over';
+        il.overAnim = 0;
+      }
+    } else if (il.state === 'over') {
+      il.overAnim += dt;
+      if (il.overAnim > 0.5) {
+        endGame();
+      }
     }
   });
 
-  // Scan line overlay
-  const scanY = (Date.now() * 0.04) % H;
-  ctx.strokeStyle = 'rgba(100,255,140,0.04)';
-  ctx.lineWidth = 1;
-  ctx.beginPath(); ctx.moveTo(0, scanY); ctx.lineTo(W, scanY); ctx.stroke();
+  // Update trucks (visual only, driving toward spotted illegals)
+  trucks.forEach(t => {
+    if (!t.active) return;
+    const target = illegals.find(i => i.id === t.targetId);
+    if (!target || target.caught || !target.spotted) {
+      t.returning = true;
+    }
+    if (t.returning) {
+      t.x -= t.speed * dt * 1.5;
+      if (t.x < -50) t.active = false;
+    } else {
+      if (t.x < t.targetX - 20) t.x += t.speed * dt;
+    }
+  });
+
+  // Dispatch trucks for spotted illegals
+  illegals.forEach(il => {
+    if (il.spotted && !il.caught && il.state === 'climbing') {
+      if (!trucks.some(t => t.targetId === il.id && t.active && !t.returning)) {
+        dispatchTruck(il);
+      }
+    }
+  });
+
+  // Clean up
+  illegals = illegals.filter(i => !(i.caught && i.catchAnim > 1.5));
+  effects.forEach(e => e.life -= dt * 1.2);
+  effects = effects.filter(e => e.life > 0);
+
+  updateHUD();
 }
 
-// ─── GAME LOOP ───
+// ─── LOOP ───
 function loop(ts) {
   const dt = Math.min((ts - lastTime) / 1000, 0.05);
   lastTime = ts;
-
-  if (gameRunning) {
-    scrollY -= dt * (28 + level * 5);
-    const minScroll = -H * 2;
-    if (scrollY < minScroll) scrollY = minScroll;
-
-    const cfg = getLevelConfig(level);
-    spawnAccum += dt;
-    if (spawnAccum >= cfg.spawnInterval && runners.filter(r=>r.alive).length < cfg.maxRunners) {
-      spawnRunner();
-      spawnAccum = 0;
-    }
-
-    runners.forEach(r => {
-      if (r.deported) { r.deportAnim += dt * 3; if (r.deportAnim >= 1) r.deported = false; return; }
-      if (!r.alive) return;
-      r.y -= r.speed * dt;
-      r.x += Math.sin(r.phase + r.y * 0.008) * r.sway;
-      r.x = Math.max(12, Math.min(W - 12, r.x));
-      r.stride += dt * 8;
-      if (r.y < -900) {
-        r.alive = false; missed++; combo = 0;
-        addEffect(r.x, r.y, 'ESCAPED', RED);
-        updateHUD();
-        if (missed >= MAX_MISSED) endGame();
-      }
-    });
-
-    runners = runners.filter(r => r.alive || r.deported);
-    effects.forEach(e => e.life -= dt * 1.4);
-    effects = effects.filter(e => e.life > 0);
-    dispatches.forEach(d => d.life -= dt * 2);
-    dispatches = dispatches.filter(d => d.life > 0);
-  }
-
-  ctx.clearRect(0, 0, W, H);
-  drawTerrain();
-  runners.forEach(r => drawRunner(r));
-  drawEffects();
-  if (gameRunning) drawHelicopterOverlay();
-
+  update(dt);
+  draw();
   requestAnimationFrame(loop);
 }
 
 // ─── START / END ───
 function startGame() {
-  score=0; missed=0; level=1; timeLeft=GAME_TIME;
-  combo=0; maxCombo=0; totalDeported=0;
-  runners=[]; effects=[]; dispatches=[]; spawnAccum=0;
-  scrollY = H * 0.5;
+  score = 0; wave = 1; waveCount = 0;
+  illegals = []; trucks = []; effects = [];
+  spawnTimer = 2;
+  heliX = W / 2; heliY = H * 0.5;
+  targetX = heliX; targetY = heliY;
   gameRunning = true;
   document.getElementById('hud').style.display = 'flex';
   document.getElementById('startScreen').classList.add('hidden');
   document.getElementById('gameOverScreen').classList.add('hidden');
   updateHUD();
-  clearInterval(gameTimer);
-  gameTimer = setInterval(() => { timeLeft--; updateHUD(); if (timeLeft <= 0) endGame(); }, 1000);
 }
 
 function endGame() {
-  gameRunning = false; clearInterval(gameTimer);
-  const t = document.getElementById('goTitle');
-  if (missed >= MAX_MISSED) { t.textContent = 'Border Breached'; t.style.color = RED; }
-  else { t.textContent = 'Patrol Complete'; t.style.color = GOLD; }
+  if (!gameRunning) return;
+  gameRunning = false;
+  document.getElementById('goSub').textContent = `An illegal made it over the wall. You caught ${score} before the breach.`;
   document.getElementById('goStats').innerHTML = `
-    <div class="stat-row"><span class="stat-label">Score</span><span class="stat-val">${score}</span></div>
-    <div class="stat-row"><span class="stat-label">Deported</span><span class="stat-val">${totalDeported}</span></div>
-    <div class="stat-row"><span class="stat-label">Escaped</span><span class="stat-val">${missed}</span></div>
-    <div class="stat-row"><span class="stat-label">Max Level</span><span class="stat-val">${level}</span></div>
-    <div class="stat-row"><span class="stat-label">Best Combo</span><span class="stat-val">x${maxCombo}</span></div>`;
+    <div class="stat-row"><span class="stat-label">Caught</span><span class="stat-val">${score}</span></div>
+    <div class="stat-row"><span class="stat-label">Wave Reached</span><span class="stat-val">${wave}</span></div>`;
   document.getElementById('gameOverScreen').classList.remove('hidden');
 }
 
 function shareText() {
-  return `DEPORT — ICE Patrol\n\nScore: ${score}\nDeported: ${totalDeported}\nEscaped: ${missed}\nLevel ${level} | x${maxCombo} combo\n\nPatrol the border: ufcr.online/deport/`;
+  return `DEPORT — ICE Helicopter Patrol\n\nI caught ${score} illegals before the border was breached!\nWave ${wave}\n\nCan you do better?\nufcr.online/deport/`;
 }
 
 document.getElementById('startBtn').addEventListener('click', startGame);
