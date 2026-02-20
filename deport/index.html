@@ -215,7 +215,7 @@ CV.addEventListener('touchstart', e => { e.preventDefault(); setTarget(e.touches
 function updateHUD() {
   document.getElementById('hudScore').textContent = score;
   document.getElementById('hudWave').textContent = wave;
-  const climbing = illegals.filter(i => i.state === 'climbing' && !i.caught).length;
+  const climbing = illegals.filter(i => !i.caught && i.state !== 'over').length;
   document.getElementById('hudActive').textContent = climbing;
 }
 
@@ -624,20 +624,20 @@ function draw() {
       cx.beginPath();
       cx.arc(il.x, drawY - il.size * 1.5, il.size + 4, -Math.PI/2, -Math.PI/2 + il.climbProgress * Math.PI * 2);
       cx.stroke();
-
-      // If spotted, show truck progress
-      if (il.spotted && il.spotTime > 0) {
-        const pct = Math.min(1, il.spotTime / il.truckArriveTime);
-        cx.strokeStyle = 'rgba(67,160,71,0.7)';
-        cx.lineWidth = 2.5;
-        cx.beginPath();
-        cx.arc(il.x, drawY - il.size * 1.5, il.size + 7, -Math.PI/2, -Math.PI/2 + pct * Math.PI * 2);
-        cx.stroke();
-      }
     } else if (il.state === 'over') {
       // Made it over - animate up into city
       drawY = WALL_Y - 10 - il.overAnim * 30;
       drawLowPolyPerson(il.x, drawY, il.size, il.bodyHue, il.shirtHue, il.hatType, false, 0);
+    }
+
+    // Show truck progress ring (any state)
+    if (il.spotted && il.spotTime > 0 && !il.caught && drawY) {
+      const pct = Math.min(1, il.spotTime / il.truckArriveTime);
+      cx.strokeStyle = 'rgba(67,160,71,0.7)';
+      cx.lineWidth = 2.5;
+      cx.beginPath();
+      cx.arc(il.x, drawY - il.size * 1.5, il.size + 7, -Math.PI/2, -Math.PI/2 + pct * Math.PI * 2);
+      cx.stroke();
     }
 
     il.drawY = drawY;
@@ -698,37 +698,19 @@ function update(dt) {
       return;
     }
 
+    // Get current visual Y for spotlight check
+    let checkY = il.y;
+
     if (il.state === 'walking') {
       il.y -= il.walkSpeed * dt;
+      checkY = il.y;
       if (il.y <= WALL_Y + WALL_H + il.size) {
         il.state = 'climbing';
         il.y = WALL_Y + WALL_H;
       }
     } else if (il.state === 'climbing') {
       il.climbProgress += dt / il.climbTime;
-
-      // Check spotlight
-      const climbY = (WALL_Y + WALL_H) - il.climbProgress * (WALL_H + il.size * 2);
-      const inSpot = isSpotlit(il.x, climbY);
-
-      if (inSpot) {
-        il.spotted = true;
-        il.spotTime += dt;
-        // Check if truck arrived
-        if (il.spotTime >= il.truckArriveTime) {
-          il.caught = true;
-          il.catchAnim = 0;
-          score++;
-          addEffect(il.x, climbY, 'CAUGHT +1', COL.green);
-          updateHUD();
-        }
-      } else {
-        // Lost spotlight — reset truck progress (truck turns back)
-        if (il.spotted) {
-          il.spotTime = Math.max(0, il.spotTime - dt * 2); // drains faster than fills
-          if (il.spotTime <= 0) il.spotted = false;
-        }
-      }
+      checkY = (WALL_Y + WALL_H) - il.climbProgress * (WALL_H + il.size * 2);
 
       if (il.climbProgress >= 1 && !il.caught) {
         il.state = 'over';
@@ -738,6 +720,27 @@ function update(dt) {
       il.overAnim += dt;
       if (il.overAnim > 0.5) {
         endGame();
+      }
+    }
+
+    // Spotlight check — works in ANY state (walking, climbing, over)
+    if (!il.caught && il.state !== 'over') {
+      const inSpot = isSpotlit(il.x, checkY);
+      if (inSpot) {
+        il.spotted = true;
+        il.spotTime += dt;
+        if (il.spotTime >= il.truckArriveTime) {
+          il.caught = true;
+          il.catchAnim = 0;
+          score++;
+          addEffect(il.x, checkY, 'CAUGHT +1', COL.green);
+          updateHUD();
+        }
+      } else {
+        if (il.spotted) {
+          il.spotTime = Math.max(0, il.spotTime - dt * 2);
+          if (il.spotTime <= 0) il.spotted = false;
+        }
       }
     }
   });
@@ -768,7 +771,7 @@ function update(dt) {
 
   // Dispatch trucks for spotted illegals
   illegals.forEach(il => {
-    if (il.spotted && !il.caught && il.state === 'climbing') {
+    if (il.spotted && !il.caught && il.state !== 'over') {
       if (!trucks.some(t => t.targetId === il.id && t.active && !t.returning)) {
         dispatchTruck(il);
       }
