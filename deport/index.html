@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>DEPORT — UFCR Games</title>
+  <link rel="icon" href="../assets/images/shield-logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    :root {
+      --blue: #0021A5;
+      --orange: #FA4616;
+      --gold: #F0A830;
+      --navy: #001845;
+      --dark: #0A0E1A;
+      --red: #D32F2F;
+      --green: #43A047;
+      --font-body: 'Inter', sans-serif;
+      --font-heading: 'Oswald', sans-serif;
+    }
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { 
+      width: 100%; height: 100%; overflow: hidden;
+      font-family: var(--font-body); background: var(--dark); color: #fff;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    /* NAV */
+    .nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      height: 56px;
+      background: rgba(0,24,69,0.95);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 16px;
+    }
+    .nav-logo { display: flex; align-items: center; gap: 8px; text-decoration: none; color: #fff; }
+    .nav-logo img { height: 32px; border-radius: 4px; background: #fff; padding: 1px; }
+    .nav-logo span { font-family: var(--font-heading); font-size: 1.1rem; font-weight: 700; letter-spacing: 0.08em; }
+    .nav-back { font-size: 0.75rem; color: rgba(255,255,255,0.5); text-decoration: none; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 600; }
+    .nav-back:hover { color: #fff; }
+
+    /* GAME AREA */
+    .game-wrapper {
+      position: fixed; top: 56px; left: 0; right: 0; bottom: 0;
+      display: flex; flex-direction: column;
+    }
+
+    /* HUD */
+    .hud {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 12px 20px;
+      background: rgba(0,24,69,0.6);
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      flex-shrink: 0;
+    }
+    .hud-item { text-align: center; }
+    .hud-label { font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.15em; color: rgba(255,255,255,0.4); margin-bottom: 2px; }
+    .hud-value { font-family: var(--font-heading); font-size: 1.4rem; font-weight: 700; }
+    .hud-value.score { color: var(--gold); }
+    .hud-value.timer { color: var(--orange); }
+    .hud-value.missed { color: var(--red); }
+    .hud-value.level { color: var(--green); }
+
+    /* FIELD */
+    .field {
+      flex: 1; position: relative; overflow: hidden;
+      background: linear-gradient(180deg, #1a3a2a 0%, #2d5a3a 40%, #8B7355 40%, #A0896C 100%);
+    }
+
+    /* Fence */
+    .fence {
+      position: absolute; left: 0; right: 0; top: 38%;
+      height: 50px; z-index: 10;
+      display: flex; justify-content: center; align-items: flex-end;
+    }
+    .fence-segment {
+      width: 3px; height: 40px; background: #888; margin: 0 18px;
+      position: relative; border-radius: 1px;
+    }
+    .fence-segment::before {
+      content: ''; position: absolute; top: 5px; left: -10px;
+      width: 23px; height: 2px; background: #777;
+    }
+    .fence-segment::after {
+      content: ''; position: absolute; top: 20px; left: -10px;
+      width: 23px; height: 2px; background: #777;
+    }
+    .fence-wire {
+      position: absolute; top: -2px; left: 5%; right: 5%;
+      height: 2px; background: repeating-linear-gradient(90deg, #999 0px, #999 8px, transparent 8px, transparent 12px);
+    }
+
+    /* HOLES */
+    .holes-container {
+      position: absolute; top: 10%; left: 0; right: 0; bottom: 5%;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(3, 1fr);
+      gap: 8px;
+      padding: 10px;
+      z-index: 20;
+    }
+
+    .hole {
+      position: relative;
+      display: flex; align-items: flex-end; justify-content: center;
+      cursor: pointer;
+    }
+
+    .hole-ground {
+      position: absolute; bottom: 8%; left: 10%; right: 10%;
+      height: 28px;
+      background: radial-gradient(ellipse, #5a4a3a 0%, #4a3a2a 60%, transparent 72%);
+      border-radius: 50%;
+      z-index: 2;
+    }
+
+    /* CHARACTER */
+    .character {
+      position: absolute; bottom: 18%; left: 50%;
+      transform: translateX(-50%) translateY(100%);
+      width: 64px; height: 80px;
+      z-index: 1;
+      transition: none;
+      pointer-events: none;
+      opacity: 0;
+    }
+    .character.visible {
+      opacity: 1;
+      animation: popUp 0.2s ease-out forwards;
+    }
+    .character.deported {
+      animation: deported 0.4s ease-in forwards;
+    }
+    .character.escaped {
+      animation: escape 0.3s ease-in forwards;
+    }
+
+    .char-body {
+      width: 100%; height: 100%;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      font-size: 3rem;
+      position: relative;
+    }
+    .char-emoji { font-size: 3.2rem; line-height: 1; }
+
+    /* Hit effect */
+    .hit-effect {
+      position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      font-family: var(--font-heading);
+      font-size: 1.2rem; font-weight: 700;
+      color: var(--orange);
+      pointer-events: none;
+      animation: hitPop 0.6s ease-out forwards;
+      z-index: 50;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.6);
+    }
+
+    .miss-effect {
+      position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      font-family: var(--font-heading);
+      font-size: 1.4rem; font-weight: 700;
+      color: var(--red);
+      pointer-events: none;
+      animation: hitPop 0.8s ease-out forwards;
+      z-index: 50;
+    }
+
+    @keyframes popUp {
+      0% { transform: translateX(-50%) translateY(100%); }
+      80% { transform: translateX(-50%) translateY(-10%); }
+      100% { transform: translateX(-50%) translateY(0%); }
+    }
+    @keyframes deported {
+      0% { transform: translateX(-50%) translateY(0%) scale(1); opacity: 1; }
+      50% { transform: translateX(-50%) translateY(-20%) scale(1.1); }
+      100% { transform: translateX(-50%) translateY(100%) scale(0.5); opacity: 0; }
+    }
+    @keyframes escape {
+      0% { transform: translateX(-50%) translateY(0%); opacity: 1; }
+      100% { transform: translateX(-50%) translateY(-200%); opacity: 0; }
+    }
+    @keyframes hitPop {
+      0% { opacity: 1; transform: translate(-50%, -50%) scale(0.5); }
+      30% { transform: translate(-50%, -50%) scale(1.3); }
+      100% { opacity: 0; transform: translate(-50%, -80%) scale(1); }
+    }
+
+    /* SCREENS */
+    .screen-overlay {
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(10,14,26,0.95);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      z-index: 200;
+      padding: 24px;
+      text-align: center;
+    }
+    .screen-overlay.hidden { display: none; }
+    .screen-title {
+      font-family: var(--font-heading);
+      font-size: clamp(2.5rem, 8vw, 4.5rem);
+      font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 8px;
+    }
+    .screen-sub {
+      font-size: 1rem; color: rgba(255,255,255,0.5);
+      margin-bottom: 32px; max-width: 400px; line-height: 1.6;
+    }
+    .screen-stats {
+      margin-bottom: 32px;
+    }
+    .stat-row {
+      display: flex; justify-content: space-between; gap: 40px;
+      font-size: 1rem; padding: 8px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .stat-label { color: rgba(255,255,255,0.4); }
+    .stat-val { font-weight: 700; color: var(--gold); }
+    .btn {
+      font-family: var(--font-heading);
+      font-size: 1.1rem; font-weight: 600;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      background: var(--orange); color: #fff;
+      border: none; padding: 14px 40px;
+      cursor: pointer; transition: all 0.3s;
+    }
+    .btn:hover { background: #e03a0e; transform: translateY(-2px); }
+    .btn-secondary {
+      background: transparent; border: 1px solid rgba(255,255,255,0.2);
+      margin-top: 12px;
+    }
+    .btn-secondary:hover { background: rgba(255,255,255,0.08); }
+
+    .level-badge {
+      font-family: var(--font-heading);
+      font-size: 0.7rem; font-weight: 600;
+      letter-spacing: 0.2em; text-transform: uppercase;
+      color: var(--gold); margin-bottom: 8px;
+    }
+
+    /* Level up flash */
+    .level-flash {
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      display: flex; align-items: center; justify-content: center;
+      z-index: 150; pointer-events: none;
+      opacity: 0;
+    }
+    .level-flash.show {
+      animation: flashIn 1.2s ease-out forwards;
+    }
+    .level-flash-text {
+      font-family: var(--font-heading);
+      font-size: clamp(2rem, 10vw, 5rem);
+      font-weight: 700; text-transform: uppercase;
+      color: var(--gold);
+      text-shadow: 0 0 40px rgba(240,168,48,0.5);
+    }
+    @keyframes flashIn {
+      0% { opacity: 0; }
+      15% { opacity: 1; }
+      70% { opacity: 1; }
+      100% { opacity: 0; }
+    }
+
+    /* Share card */
+    .share-btns { display: flex; gap: 12px; margin-top: 16px; }
+    .share-btn {
+      font-family: var(--font-heading);
+      font-size: 0.75rem; font-weight: 600;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      padding: 10px 20px; border: 1px solid rgba(255,255,255,0.15);
+      background: transparent; color: #fff; cursor: pointer;
+      display: flex; align-items: center; gap: 8px;
+      transition: all 0.3s;
+    }
+    .share-btn:hover { background: rgba(255,255,255,0.08); }
+
+    /* Responsive */
+    @media (max-width: 400px) {
+      .char-emoji { font-size: 2.5rem; }
+      .character { width: 50px; height: 65px; }
+      .hole-ground { height: 22px; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="nav">
+    <a href="../" class="nav-logo">
+      <img src="../assets/images/shield-logo.png" alt="UFCR">
+      <span>UFCR</span>
+    </a>
+    <a href="../games/" class="nav-back"><i class="fas fa-arrow-left"></i> Games</a>
+  </nav>
+
+  <!-- START SCREEN -->
+  <div class="screen-overlay" id="startScreen">
+    <div class="level-badge">UFCR GAMES</div>
+    <div class="screen-title" style="color:var(--orange);">DEPORT</div>
+    <p class="screen-sub">Illegals are popping through the border. Tap them to deport before they escape. Miss too many and it's game over.</p>
+    <button class="btn" id="startBtn">Start Game</button>
+  </div>
+
+  <!-- GAME OVER SCREEN -->
+  <div class="screen-overlay hidden" id="gameOverScreen">
+    <div class="level-badge">GAME OVER</div>
+    <div class="screen-title" id="goTitle">Game Over</div>
+    <div class="screen-stats" id="goStats"></div>
+    <button class="btn" id="restartBtn">Play Again</button>
+    <div class="share-btns">
+      <button class="share-btn" id="shareBtn"><i class="fab fa-x-twitter"></i> Share Score</button>
+      <button class="share-btn" id="copyBtn"><i class="fas fa-copy"></i> Copy</button>
+    </div>
+  </div>
+
+  <!-- LEVEL FLASH -->
+  <div class="level-flash" id="levelFlash">
+    <div class="level-flash-text" id="levelFlashText"></div>
+  </div>
+
+  <!-- GAME -->
+  <div class="game-wrapper" id="gameWrapper">
+    <div class="hud">
+      <div class="hud-item">
+        <div class="hud-label">Score</div>
+        <div class="hud-value score" id="hudScore">0</div>
+      </div>
+      <div class="hud-item">
+        <div class="hud-label">Level</div>
+        <div class="hud-value level" id="hudLevel">1</div>
+      </div>
+      <div class="hud-item">
+        <div class="hud-label">Time</div>
+        <div class="hud-value timer" id="hudTimer">60</div>
+      </div>
+      <div class="hud-item">
+        <div class="hud-label">Missed</div>
+        <div class="hud-value missed" id="hudMissed">0/10</div>
+      </div>
+    </div>
+
+    <div class="field" id="field">
+      <div class="fence">
+        <div class="fence-wire"></div>
+        <div class="fence-segment"></div>
+        <div class="fence-segment"></div>
+        <div class="fence-segment"></div>
+        <div class="fence-segment"></div>
+        <div class="fence-segment"></div>
+        <div class="fence-segment"></div>
+        <div class="fence-segment"></div>
+        <div class="fence-segment"></div>
+        <div class="fence-segment"></div>
+        <div class="fence-segment"></div>
+      </div>
+      <div class="holes-container" id="holesContainer"></div>
+    </div>
+  </div>
+
+  <script>
+    const EMOJIS = ['🏃', '🏃‍♂️', '🧑', '👤', '🕵️', '🤫', '😰', '🫣'];
+    const DEPORT_TEXTS = ['DEPORTED!', 'GONE!', 'BYE BYE!', 'ADIOS!', 'OUT!', 'ICE\'D!', 'REMOVED!', 'SENT BACK!'];
+    const ESCAPE_TEXTS = ['ESCAPED!', 'GOT AWAY!', 'MISSED!', 'TOO SLOW!'];
+
+    const MAX_MISSED = 10;
+    const GAME_TIME = 60;
+    const NUM_HOLES = 9;
+
+    let score = 0;
+    let missed = 0;
+    let level = 1;
+    let timeLeft = GAME_TIME;
+    let gameRunning = false;
+    let gameTimer = null;
+    let spawnTimer = null;
+    let combo = 0;
+    let maxCombo = 0;
+    let totalDeported = 0;
+
+    // Level config
+    function getLevelConfig(lvl) {
+      return {
+        spawnInterval: Math.max(400, 1200 - (lvl - 1) * 100),
+        visibleTime: Math.max(800, 2200 - (lvl - 1) * 180),
+        maxActive: Math.min(4, 1 + Math.floor(lvl / 2)),
+        pointsBase: 10 + (lvl - 1) * 5,
+      };
+    }
+
+    // DOM
+    const holesContainer = document.getElementById('holesContainer');
+    const hudScore = document.getElementById('hudScore');
+    const hudLevel = document.getElementById('hudLevel');
+    const hudTimer = document.getElementById('hudTimer');
+    const hudMissed = document.getElementById('hudMissed');
+    const startScreen = document.getElementById('startScreen');
+    const gameOverScreen = document.getElementById('gameOverScreen');
+    const levelFlash = document.getElementById('levelFlash');
+    const levelFlashText = document.getElementById('levelFlashText');
+
+    // Build holes
+    const holes = [];
+    for (let i = 0; i < NUM_HOLES; i++) {
+      const hole = document.createElement('div');
+      hole.className = 'hole';
+      hole.innerHTML = `
+        <div class="hole-ground"></div>
+        <div class="character" data-index="${i}">
+          <div class="char-body"><span class="char-emoji"></span></div>
+        </div>
+      `;
+      holesContainer.appendChild(hole);
+      const character = hole.querySelector('.character');
+      hole.addEventListener('click', () => onHoleClick(i));
+      hole.addEventListener('touchstart', (e) => { e.preventDefault(); onHoleClick(i); }, { passive: false });
+      holes.push({ el: hole, character, active: false, timeout: null });
+    }
+
+    function onHoleClick(index) {
+      const hole = holes[index];
+      if (!gameRunning || !hole.active) return;
+
+      hole.active = false;
+      clearTimeout(hole.timeout);
+
+      const config = getLevelConfig(level);
+      combo++;
+      if (combo > maxCombo) maxCombo = combo;
+      const comboBonus = Math.floor(combo / 3) * 5;
+      const points = config.pointsBase + comboBonus;
+      score += points;
+      totalDeported++;
+
+      // Animate deport
+      const char = hole.character;
+      char.classList.remove('visible');
+      char.classList.add('deported');
+
+      // Hit text
+      const txt = document.createElement('div');
+      txt.className = 'hit-effect';
+      txt.textContent = combo >= 3 ? `${DEPORT_TEXTS[Math.floor(Math.random() * DEPORT_TEXTS.length)]} x${combo}` : `+${points}`;
+      hole.el.appendChild(txt);
+      setTimeout(() => txt.remove(), 700);
+
+      setTimeout(() => {
+        char.classList.remove('deported');
+        char.style.opacity = '0';
+      }, 400);
+
+      updateHUD();
+      checkLevelUp();
+    }
+
+    function spawnCharacter() {
+      if (!gameRunning) return;
+      const config = getLevelConfig(level);
+
+      const activeCount = holes.filter(h => h.active).length;
+      if (activeCount >= config.maxActive) return;
+
+      const available = holes.map((h, i) => ({ h, i })).filter(x => !x.h.active);
+      if (available.length === 0) return;
+
+      const pick = available[Math.floor(Math.random() * available.length)];
+      const hole = pick.h;
+      hole.active = true;
+
+      const char = hole.character;
+      const emoji = EMOJIS[Math.floor(Math.random() * EMOJIS.length)];
+      char.querySelector('.char-emoji').textContent = emoji;
+      char.classList.remove('deported', 'escaped');
+      char.style.opacity = '1';
+      char.classList.add('visible');
+
+      // Auto escape
+      hole.timeout = setTimeout(() => {
+        if (!hole.active) return;
+        hole.active = false;
+        combo = 0;
+        missed++;
+
+        char.classList.remove('visible');
+        char.classList.add('escaped');
+
+        const txt = document.createElement('div');
+        txt.className = 'miss-effect';
+        txt.textContent = ESCAPE_TEXTS[Math.floor(Math.random() * ESCAPE_TEXTS.length)];
+        hole.el.appendChild(txt);
+        setTimeout(() => txt.remove(), 900);
+
+        setTimeout(() => {
+          char.classList.remove('escaped');
+          char.style.opacity = '0';
+        }, 300);
+
+        updateHUD();
+        if (missed >= MAX_MISSED) endGame();
+      }, config.visibleTime);
+    }
+
+    function checkLevelUp() {
+      const threshold = level * 8;
+      if (totalDeported >= threshold) {
+        level++;
+        showLevelFlash(level);
+        updateHUD();
+      }
+    }
+
+    function showLevelFlash(lvl) {
+      levelFlashText.textContent = `Level ${lvl}`;
+      levelFlash.classList.remove('show');
+      void levelFlash.offsetWidth;
+      levelFlash.classList.add('show');
+    }
+
+    function updateHUD() {
+      hudScore.textContent = score;
+      hudLevel.textContent = level;
+      hudTimer.textContent = timeLeft;
+      hudMissed.textContent = `${missed}/${MAX_MISSED}`;
+    }
+
+    function startGame() {
+      score = 0; missed = 0; level = 1; timeLeft = GAME_TIME;
+      combo = 0; maxCombo = 0; totalDeported = 0;
+      gameRunning = true;
+
+      holes.forEach(h => {
+        h.active = false;
+        clearTimeout(h.timeout);
+        h.character.classList.remove('visible', 'deported', 'escaped');
+        h.character.style.opacity = '0';
+      });
+
+      updateHUD();
+      startScreen.classList.add('hidden');
+      gameOverScreen.classList.add('hidden');
+
+      // Spawn loop
+      function spawnLoop() {
+        if (!gameRunning) return;
+        spawnCharacter();
+        const config = getLevelConfig(level);
+        const jitter = (Math.random() - 0.5) * config.spawnInterval * 0.4;
+        spawnTimer = setTimeout(spawnLoop, config.spawnInterval + jitter);
+      }
+      spawnLoop();
+
+      // Timer
+      gameTimer = setInterval(() => {
+        timeLeft--;
+        updateHUD();
+        if (timeLeft <= 0) endGame();
+      }, 1000);
+    }
+
+    function endGame() {
+      gameRunning = false;
+      clearInterval(gameTimer);
+      clearTimeout(spawnTimer);
+      holes.forEach(h => {
+        h.active = false;
+        clearTimeout(h.timeout);
+      });
+
+      const escaped = missed;
+      const goTitle = document.getElementById('goTitle');
+      const goStats = document.getElementById('goStats');
+
+      if (missed >= MAX_MISSED) {
+        goTitle.textContent = 'Border Breached!';
+        goTitle.style.color = 'var(--red)';
+      } else {
+        goTitle.textContent = 'Time\'s Up!';
+        goTitle.style.color = 'var(--gold)';
+      }
+
+      goStats.innerHTML = `
+        <div class="stat-row"><span class="stat-label">Score</span><span class="stat-val">${score}</span></div>
+        <div class="stat-row"><span class="stat-label">Deported</span><span class="stat-val">${totalDeported}</span></div>
+        <div class="stat-row"><span class="stat-label">Escaped</span><span class="stat-val">${escaped}</span></div>
+        <div class="stat-row"><span class="stat-label">Max Level</span><span class="stat-val">${level}</span></div>
+        <div class="stat-row"><span class="stat-label">Best Combo</span><span class="stat-val">x${maxCombo}</span></div>
+      `;
+
+      gameOverScreen.classList.remove('hidden');
+    }
+
+    function getShareText() {
+      return `🚨 DEPORT — UFCR Games\n\n🏆 Score: ${score}\n👮 Deported: ${totalDeported}\n🏃 Escaped: ${missed}\n⚡ Level: ${level} | Combo: x${maxCombo}\n\nCan you beat my score?\n🎮 ufcr.online/deport/`;
+    }
+
+    // Start
+    document.getElementById('startBtn').addEventListener('click', startGame);
+    document.getElementById('restartBtn').addEventListener('click', startGame);
+    document.getElementById('shareBtn').addEventListener('click', () => {
+      const text = getShareText();
+      const url = 'https://x.com/intent/tweet?text=' + encodeURIComponent(text);
+      window.open(url, '_blank');
+    });
+    document.getElementById('copyBtn').addEventListener('click', () => {
+      navigator.clipboard.writeText(getShareText()).then(() => {
+        document.getElementById('copyBtn').innerHTML = '<i class="fas fa-check"></i> Copied!';
+        setTimeout(() => {
+          document.getElementById('copyBtn').innerHTML = '<i class="fas fa-copy"></i> Copy';
+        }, 2000);
+      });
+    });
+  </script>
+</body>
+</html>
