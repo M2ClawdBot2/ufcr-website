@@ -175,7 +175,7 @@ function mkRunner(b) {
     speed: 200 + (b || 0) * 15,
     swerveTimer: 0,
     targetX: W / 2,
-    agility: 2.5 + (b || 0) * 0.12,
+    targetLane: Math.floor(LANE_COUNT / 2),
     tilt: 0,
   };
 }
@@ -460,25 +460,54 @@ function update(dt) {
   // Scroll
   roadScroll += p.speed * dt;
 
-  // Runner AI
+  // Runner AI — drives in lanes, makes deliberate lane changes
   r.swerveTimer -= dt;
   if (r.swerveTimer <= 0) {
-    r.swerveTimer = 0.6 + Math.random() * 1.8;
-    // Swerve away from player
-    let choices = [];
-    for (let i = 0; i < LANE_COUNT; i++) {
-      const lx = laneX(i);
-      if (Math.abs(lx - p.x) > ROAD_W / LANE_COUNT * 0.7) choices.push(lx);
-    }
-    if (choices.length === 0) for (let i = 0; i < LANE_COUNT; i++) choices.push(laneX(i));
-    r.targetX = choices[Math.floor(Math.random() * choices.length)];
-  }
-  const err = r.targetX - r.x;
-  r.x += err * r.agility * dt;
-  r.x = Math.max(ROAD_L + m, Math.min(ROAD_R - m, r.x));
-  r.tilt = err * r.agility * dt * 40;
+    // Decide next move
+    r.swerveTimer = 1.5 + Math.random() * 2.5;
 
-  r.speed = r.baseSpeed + Math.sin(Date.now() * 0.002) * 15;
+    // Find current lane
+    let curLane = 0, minD = 9999;
+    for (let i = 0; i < LANE_COUNT; i++) {
+      const d = Math.abs(r.x - laneX(i));
+      if (d < minD) { minD = d; curLane = i; }
+    }
+
+    // Pick a lane: prefer staying, sometimes dodge away from player
+    const playerClose = gapDist < 150;
+    if (playerClose && Math.random() < 0.7) {
+      // Dodge: pick lane furthest from player
+      let bestLane = curLane, bestDist = 0;
+      for (let i = 0; i < LANE_COUNT; i++) {
+        const d = Math.abs(laneX(i) - p.x);
+        if (d > bestDist) { bestDist = d; bestLane = i; }
+      }
+      // Don't jump more than 1 lane at a time
+      if (bestLane > curLane) r.targetLane = Math.min(curLane + 1, LANE_COUNT - 1);
+      else if (bestLane < curLane) r.targetLane = Math.max(curLane - 1, 0);
+      else r.targetLane = curLane;
+    } else {
+      // Occasional random lane shift (1 lane max)
+      const shift = Math.random() < 0.3 ? (Math.random() < 0.5 ? -1 : 1) : 0;
+      r.targetLane = Math.max(0, Math.min(LANE_COUNT - 1, curLane + shift));
+    }
+
+    r.targetX = laneX(r.targetLane);
+  }
+
+  // Smooth lane change — fixed lateral speed, not proportional to error
+  const err = r.targetX - r.x;
+  const laneChangeSpeed = 80 + busts * 8; // pixels per second
+  if (Math.abs(err) > 2) {
+    r.x += Math.sign(err) * Math.min(Math.abs(err), laneChangeSpeed * dt);
+    r.tilt = Math.sign(err) * Math.min(1, Math.abs(err) / 20);
+  } else {
+    r.x = r.targetX;
+    r.tilt *= 0.85;
+  }
+  r.x = Math.max(ROAD_L + m, Math.min(ROAD_R - m, r.x));
+
+  r.speed = r.baseSpeed + Math.sin(Date.now() * 0.003) * 10;
 
   // Visual Y
   const targetY = Math.max(TOP + 20, p.y - 140 - gapDist * 0.55);
