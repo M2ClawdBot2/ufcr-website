@@ -296,7 +296,7 @@ function drawScene() {
   // Grass texture
   cx.fillStyle = '#3d7a4e';
   const gOff = roadScroll % 16;
-  for (let y = -gOff; y < H; y += 16) {
+  for (let y = gOff - 16; y < H; y += 16) {
     for (let x = 0; x < W; x += 24) {
       if ((x + y * 3) % 48 < 16) cx.fillRect(x, y, 8, 3);
     }
@@ -305,7 +305,7 @@ function drawScene() {
   // Trees
   const treeScroll = roadScroll % 2000;
   trees.forEach(t => {
-    const ty = ((t.yBase - treeScroll) % (H + 200)) - 100;
+    const ty = ((t.yBase + treeScroll) % (H + 200)) - 100;
     // Trunk
     cx.fillStyle = `rgba(90,60,30,${0.5 + t.shade})`;
     cx.fillRect(t.offset + t.size / 2 - 2, ty, 4, t.size * 0.6);
@@ -327,7 +327,7 @@ function drawScene() {
   // Sidewalk lines
   cx.fillStyle = '#a8a090';
   const swOff = roadScroll % 30;
-  for (let y = -swOff; y < H; y += 30) {
+  for (let y = swOff - 30; y < H; y += 30) {
     cx.fillRect(ROAD_L - 14, y, 14, 1);
     cx.fillRect(ROAD_R, y, 14, 1);
   }
@@ -339,7 +339,7 @@ function drawScene() {
   // Road texture
   cx.fillStyle = 'rgba(0,0,0,0.05)';
   const rtOff = roadScroll % 6;
-  for (let y = -rtOff; y < H; y += 6) {
+  for (let y = rtOff - 6; y < H; y += 6) {
     cx.fillRect(ROAD_L, y, ROAD_W, 1);
   }
 
@@ -357,7 +357,7 @@ function drawScene() {
   for (let i = 1; i < LANE_COUNT; i++) {
     if (i === LANE_COUNT / 2) continue;
     const lx = ROAD_L + lw * i;
-    for (let y = -dOff - dashLen; y < H + dashLen; y += total) {
+    for (let y = dOff - total; y < H + dashLen; y += total) {
       cx.fillRect(lx - 1, y, 2, dashLen);
     }
   }
@@ -566,7 +566,7 @@ function update(dt) {
   civilians = civilians.filter(c => c.y > -120 && c.y < H + 120);
 
   // Fade/scroll
-  tireMarks.forEach(tm => { tm.life -= dt; tm.y += p.speed * 0.35 * dt; });
+  tireMarks.forEach(tm => { tm.life -= dt; tm.y += p.speed * 0.5 * dt; });
   tireMarks = tireMarks.filter(tm => tm.life > 0 && tm.y < H + 20);
   sparks.forEach(s => { s.x += s.vx * dt; s.y += s.vy * dt; s.life -= dt; });
   sparks = sparks.filter(s => s.life > 0);
