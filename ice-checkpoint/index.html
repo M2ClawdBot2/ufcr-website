@@ -1,0 +1,1045 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>ICE CHECKPOINT — UFCR Games</title>
+  <link rel="icon" href="../assets/images/shield-logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Oswald:wght@500;600;700&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    :root{--orange:#FA4616;--gold:#F0A830;--navy:#001845;--dark:#0A0E1A;--red:#D32F2F;--green:#43A047;--blue:#2558a0;--font-body:'Inter',sans-serif;--font-heading:'Oswald',sans-serif;--font-doc:'Courier Prime',monospace}
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+    html,body{width:100%;height:100%;overflow:hidden;font-family:var(--font-body);background:var(--dark);color:#fff;-webkit-tap-highlight-color:transparent;user-select:none}
+    .nav{position:fixed;top:0;left:0;right:0;z-index:100;height:44px;background:rgba(0,24,69,.95);backdrop-filter:blur(20px);border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:center;justify-content:space-between;padding:0 12px}
+    .nav-logo{display:flex;align-items:center;gap:6px;text-decoration:none;color:#fff}
+    .nav-logo img{height:26px;border-radius:3px;background:#fff;padding:1px}
+    .nav-logo span{font-family:var(--font-heading);font-size:.95rem;font-weight:700;letter-spacing:.08em}
+    .nav-back{font-size:.65rem;color:rgba(255,255,255,.5);text-decoration:none;letter-spacing:.1em;text-transform:uppercase;font-weight:600}
+
+    /* HUD */
+    .hud{position:fixed;top:44px;left:0;right:0;z-index:90;display:none;justify-content:space-between;padding:6px 12px;background:rgba(0,24,69,.85);backdrop-filter:blur(10px);border-bottom:1px solid rgba(255,255,255,.05)}
+    .hud-item{text-align:center;flex:1}
+    .hud-label{font-size:.45rem;text-transform:uppercase;letter-spacing:.15em;color:rgba(255,255,255,.3)}
+    .hud-value{font-family:var(--font-heading);font-size:1rem;font-weight:700}
+    .hud-value.score{color:var(--gold)}.hud-value.day{color:#7cf}.hud-value.strikes{color:var(--red)}.hud-value.queue{color:var(--orange)}
+
+    /* Game area */
+    #gameArea{position:fixed;top:0;left:0;right:0;bottom:0;display:none;flex-direction:column}
+    
+    /* Scene - top portion showing booth */
+    #scene{flex:0 0 35%;min-height:160px;background:#6aaa5c;position:relative;overflow:hidden;border-bottom:3px solid #555}
+    
+    /* Document inspection area */
+    #deskArea{flex:1;background:#3a2a1a;position:relative;overflow:hidden;display:flex;flex-direction:column}
+    #desk{flex:1;position:relative;overflow:auto;padding:10px;display:flex;gap:10px;flex-wrap:wrap;align-content:flex-start;-webkit-overflow-scrolling:touch}
+    
+    /* Action buttons */
+    #actions{display:flex;gap:0;height:64px;flex-shrink:0}
+    #actions button{flex:1;border:none;font-family:var(--font-heading);font-size:1.1rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;transition:all .15s;color:#fff}
+    #btnAdmit{background:#2d8a3e}
+    #btnAdmit:active{background:#1e6b2e}
+    #btnDetain{background:#c62828}
+    #btnDetain:active{background:#a01c1c}
+    #btnAdmit:disabled,#btnDetain:disabled{opacity:.3;pointer-events:none}
+
+    /* Documents */
+    .doc{background:#f5f0e0;color:#1a1a1a;border:1px solid #c8c0a8;padding:12px;font-family:var(--font-doc);font-size:.7rem;line-height:1.6;min-width:150px;max-width:200px;position:relative;cursor:pointer;transition:transform .2s,box-shadow .2s;flex-shrink:0;box-shadow:2px 2px 8px rgba(0,0,0,.3)}
+    .doc:hover{transform:translateY(-2px);box-shadow:2px 4px 12px rgba(0,0,0,.4)}
+    .doc.zoomed{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(1.8);z-index:200;max-width:240px;box-shadow:0 0 60px rgba(0,0,0,.7)}
+    .doc-header{font-family:var(--font-heading);font-size:.65rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#1a4a8a;border-bottom:1px solid #bbb8a0;padding-bottom:4px;margin-bottom:6px;text-align:center}
+    .doc-field{margin-bottom:3px}
+    .doc-label{font-size:.55rem;color:#888;text-transform:uppercase;letter-spacing:.1em}
+    .doc-val{font-weight:700;font-size:.72rem}
+    .doc-seal{position:absolute;bottom:8px;right:8px;width:30px;height:30px;border:2px solid rgba(26,74,138,.25);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.4rem;color:rgba(26,74,138,.3);font-family:var(--font-heading);font-weight:700;letter-spacing:.05em;text-transform:uppercase}
+    .doc-photo{width:36px;height:44px;background:#ddd;border:1px solid #bbb;float:right;margin:0 0 6px 8px;display:flex;align-items:center;justify-content:center;overflow:hidden}
+    .doc-watermark{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-30deg);font-family:var(--font-heading);font-size:1.2rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:rgba(26,74,138,.06);pointer-events:none;white-space:nowrap}
+    .doc-expired .doc-header{color:#a03030}
+    .doc-flag{position:absolute;top:4px;right:4px;background:var(--red);color:#fff;font-size:.45rem;padding:1px 5px;font-family:var(--font-heading);font-weight:700;letter-spacing:.1em;display:none}
+
+    /* Rulebook */
+    #rulebook{position:fixed;top:44px;left:0;bottom:0;width:280px;background:rgba(10,14,26,.97);border-right:1px solid rgba(255,255,255,.08);z-index:150;transform:translateX(-100%);transition:transform .3s ease;padding:60px 16px 16px;overflow-y:auto;-webkit-overflow-scrolling:touch}
+    #rulebook.open{transform:translateX(0)}
+    #ruleToggle{position:fixed;top:54px;left:8px;z-index:160;background:rgba(0,24,69,.8);border:1px solid rgba(255,255,255,.1);color:#fff;width:32px;height:32px;display:none;align-items:center;justify-content:center;cursor:pointer;font-size:.8rem}
+    .rule-title{font-family:var(--font-heading);font-size:.75rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin-bottom:12px}
+    .rule-item{font-size:.75rem;color:rgba(255,255,255,.6);margin-bottom:8px;padding-left:12px;position:relative;line-height:1.5}
+    .rule-item::before{content:'';position:absolute;left:0;top:6px;width:5px;height:5px;background:var(--orange);border-radius:50%}
+    .rule-new{color:var(--gold);font-weight:600}
+
+    /* Briefing overlay */
+    .overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(5,8,18,.94);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:200;padding:24px;text-align:center}
+    .overlay.hidden{display:none}
+    .overlay-label{font-family:var(--font-heading);font-size:.7rem;font-weight:600;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);margin-bottom:8px}
+    .overlay-title{font-family:var(--font-heading);font-size:clamp(2rem,7vw,3.5rem);font-weight:700;text-transform:uppercase;margin-bottom:8px;letter-spacing:.03em}
+    .overlay-sub{font-size:.85rem;color:rgba(255,255,255,.4);margin-bottom:20px;max-width:400px;line-height:1.6}
+    .overlay-rules{text-align:left;max-width:380px;margin-bottom:24px}
+    .overlay-rules li{font-size:.8rem;color:rgba(255,255,255,.6);margin-bottom:6px;line-height:1.5;list-style:none;padding-left:16px;position:relative}
+    .overlay-rules li::before{content:'';position:absolute;left:0;top:7px;width:5px;height:5px;background:var(--orange);border-radius:50%}
+    .overlay-rules li.new-rule{color:var(--gold);font-weight:600}
+    .btn{font-family:var(--font-heading);font-size:1rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;background:var(--orange);color:#fff;border:none;padding:12px 32px;cursor:pointer;transition:all .3s}
+    .btn:hover{background:#e03a0e}
+    .btn-sm{font-size:.8rem;padding:8px 20px}
+    .stats-grid{min-width:220px;margin-bottom:20px}
+    .stat-row{display:flex;justify-content:space-between;font-size:.85rem;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.05)}
+    .stat-label{color:rgba(255,255,255,.35)}.stat-val{font-weight:700;color:var(--gold)}
+    .share-btns{display:flex;gap:10px;margin-top:12px}
+    .share-btn{font-family:var(--font-heading);font-size:.65rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;padding:8px 14px;border:1px solid rgba(255,255,255,.12);background:transparent;color:#fff;cursor:pointer;display:flex;align-items:center;gap:5px;transition:all .3s}
+    .share-btn:hover{background:rgba(255,255,255,.06)}
+
+    /* Zoom backdrop */
+    #zoomBackdrop{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:190;display:none}
+
+    /* Result flash */
+    .result-flash{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:180;font-family:var(--font-heading);font-size:2rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;pointer-events:none;animation:flashIn .6s ease forwards}
+    @keyframes flashIn{0%{opacity:0;transform:translate(-50%,-50%) scale(1.5)}30%{opacity:1;transform:translate(-50%,-50%) scale(1)}100%{opacity:0;transform:translate(-50%,-50%) scale(1) translateY(-20px)}}
+
+    /* How-to list */
+    .how-to{max-width:380px;margin-bottom:20px;text-align:left}
+    .how-to li{font-size:.8rem;color:rgba(255,255,255,.5);margin-bottom:5px;line-height:1.5;list-style:none;padding-left:16px;position:relative}
+    .how-to li::before{content:'';position:absolute;left:0;top:7px;width:5px;height:5px;background:var(--orange);border-radius:50%}
+  </style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="../" class="nav-logo"><img src="../assets/images/shield-logo.png" alt="UFCR"><span>UFCR</span></a>
+  <a href="../games/" class="nav-back"><i class="fas fa-arrow-left"></i> Games</a>
+</nav>
+
+<!-- START SCREEN -->
+<div class="overlay" id="startScreen">
+  <div class="overlay-label">UFCR Games</div>
+  <div class="overlay-title" style="color:var(--orange)">ICE CHECKPOINT</div>
+  <p class="overlay-sub">You're an ICE agent at a border checkpoint. Inspect documents. Spot forgeries. Admit or detain. Don't let fakes through.</p>
+  <ul class="how-to">
+    <li>Cars pull up — inspect their documents</li>
+    <li>Tap a document to zoom in</li>
+    <li>Check for expired dates, wrong info, missing watermarks</li>
+    <li>New rules added each day — check the rulebook</li>
+    <li>3 strikes and you're fired</li>
+  </ul>
+  <button class="btn" id="startBtn">Start Shift</button>
+</div>
+
+<!-- DAY BRIEFING -->
+<div class="overlay hidden" id="briefScreen">
+  <div class="overlay-label" id="briefLabel">Day 1</div>
+  <div class="overlay-title" id="briefTitle">Morning Briefing</div>
+  <p class="overlay-sub" id="briefSub"></p>
+  <ul class="overlay-rules" id="briefRules"></ul>
+  <button class="btn" id="briefBtn">Begin Shift</button>
+</div>
+
+<!-- GAME OVER -->
+<div class="overlay hidden" id="gameOverScreen">
+  <div class="overlay-label">Shift Over</div>
+  <div class="overlay-title" id="goTitle" style="color:var(--red)">Fired</div>
+  <p class="overlay-sub" id="goSub"></p>
+  <div class="stats-grid" id="goStats"></div>
+  <button class="btn" id="restartBtn">New Shift</button>
+  <div class="share-btns">
+    <button class="share-btn" id="shareBtn"><i class="fab fa-x-twitter"></i> Share</button>
+    <button class="share-btn" id="copyBtn"><i class="fas fa-copy"></i> Copy</button>
+  </div>
+</div>
+
+<!-- GAME AREA -->
+<div id="gameArea">
+  <div class="hud" id="hud">
+    <div class="hud-item"><div class="hud-label">Score</div><div class="hud-value score" id="hudScore">0</div></div>
+    <div class="hud-item"><div class="hud-label">Day</div><div class="hud-value day" id="hudDay">1</div></div>
+    <div class="hud-item"><div class="hud-label">Strikes</div><div class="hud-value strikes" id="hudStrikes">0/3</div></div>
+    <div class="hud-item"><div class="hud-label">Queue</div><div class="hud-value queue" id="hudQueue">0</div></div>
+  </div>
+
+  <canvas id="scene"></canvas>
+  
+  <div id="deskArea">
+    <div id="desk"></div>
+    <div id="actions">
+      <button id="btnAdmit" disabled><i class="fas fa-check"></i> Admit</button>
+      <button id="btnDetain" disabled><i class="fas fa-ban"></i> Detain</button>
+    </div>
+  </div>
+</div>
+
+<button id="ruleToggle"><i class="fas fa-book"></i></button>
+<div id="rulebook">
+  <div class="rule-title">Today's Rules</div>
+  <div id="ruleList"></div>
+</div>
+
+<div id="zoomBackdrop"></div>
+
+<script>
+// ─── CANVAS ───
+const sceneCanvas = document.getElementById('scene');
+const sc = sceneCanvas.getContext('2d');
+let SW, SH, sdpr;
+
+function resizeScene() {
+  sdpr = window.devicePixelRatio || 1;
+  const rect = sceneCanvas.getBoundingClientRect();
+  SW = rect.width; SH = rect.height;
+  sceneCanvas.width = SW * sdpr; sceneCanvas.height = SH * sdpr;
+  sc.setTransform(sdpr, 0, 0, sdpr, 0, 0);
+}
+
+// ─── DATA ───
+const FIRST_NAMES = ['Jose','Maria','Carlos','Sofia','Miguel','Elena','Diego','Ana','Luis','Carmen','Pedro','Rosa','Juan','Lucia','Roberto','Isabel','Alejandro','Valentina','Fernando','Gabriela','Marco','Patricia','Raul','Andrea','Oscar'];
+const LAST_NAMES = ['Garcia','Rodriguez','Martinez','Lopez','Hernandez','Gonzalez','Perez','Sanchez','Ramirez','Torres','Flores','Rivera','Gomez','Diaz','Cruz','Morales','Reyes','Gutierrez','Ortiz','Ramos','Mendoza','Castillo','Vargas','Romero','Alvarez'];
+const STATES = ['Texas','California','Arizona','New Mexico','Florida','Nevada','Colorado','Georgia','North Carolina','Illinois'];
+const STATE_ABBR = {Texas:'TX',California:'CA',Arizona:'AZ','New Mexico':'NM',Florida:'FL',Nevada:'NV',Colorado:'CO',Georgia:'GA','North Carolina':'NC',Illinois:'IL'};
+const OFFICES = ['El Paso','San Diego','Tucson','Laredo','McAllen','Nogales','Brownsville','Del Rio','Eagle Pass','Yuma'];
+const FAKE_OFFICES = ['Puerto Verde','San Marcos Sur','Rio Nuevo','Costa Linda','Playa Norte'];
+const EMPLOYERS = ['Del Sol Farms','Rio Grande Logistics','Mesa Construction','Valley Fresh Produce','Sunbelt Textiles','Border Steel Co','Southwest Packing','Lone Star Dairy','Pacific Harvest','Gulf Coast Marine'];
+const FAKE_EMPLOYERS = ['Phantom LLC','Nowhere Corp','XYZ Holdings','ABC Services Inc'];
+const CAR_COLORS = ['#cc2828','#2255aa','#228833','#aa8822','#666','#884488','#cc6622','#2288aa'];
+const CAR_NAMES = ['Sedan','Pickup','SUV','Hatchback','Van','Coupe'];
+const SKIN_TONES = ['#8d5524','#c68642','#e0ac69','#f1c27d','#a0522d','#cd853f','#d2996c'];
+const HAIR_COLORS = ['#1a1a1a','#3b2314','#5a3825','#2c1608','#4a3000'];
+const HAIR_STYLES = ['short','bald','long','medium'];
+
+// ─── GAME STATE ───
+let gameRunning = false;
+let day = 0, score = 0, strikes = 0, streak = 0;
+let totalCorrect = 0, totalWrong = 0;
+let carsToday = 0, carsProcessed = 0;
+let currentPerson = null;
+let animState = 'idle'; // idle, driving-in, waiting, driving-out, detained
+let carX = 0, carTargetX = 0;
+let allRules = [];
+let zoomedDoc = null;
+
+// Scene animation
+let sceneFrame = 0;
+
+// ─── RULES SYSTEM ───
+const DAY_CONFIGS = [
+  {
+    day: 1,
+    title: 'First Day',
+    sub: 'Welcome to the checkpoint, agent. Start simple — check IDs and registrations.',
+    cars: 6,
+    forgeChance: 0.35,
+    newRules: [
+      'All drivers must have a valid Driver\'s License (not expired)',
+      'Vehicle Registration must match the car at the checkpoint',
+    ],
+    forgeTypes: ['expired_license','wrong_plate'],
+  },
+  {
+    day: 2,
+    title: 'Tightening Up',
+    sub: 'We\'re seeing more fakes. Stay sharp.',
+    cars: 7,
+    forgeChance: 0.4,
+    newRules: [
+      'Name must match across ALL documents',
+      'Photo on license must match the driver',
+    ],
+    forgeTypes: ['expired_license','wrong_plate','name_mismatch','wrong_photo'],
+  },
+  {
+    day: 3,
+    title: 'New Requirements',
+    sub: 'HQ has added travel visa checks for non-citizens.',
+    cars: 8,
+    forgeChance: 0.45,
+    newRules: [
+      'Non-citizen travelers must have a valid Travel Visa',
+      'Visa issuing office must be a recognized port of entry',
+    ],
+    forgeTypes: ['expired_license','wrong_plate','name_mismatch','wrong_photo','expired_visa','fake_office'],
+  },
+  {
+    day: 4,
+    title: 'Intel Alert',
+    sub: 'Forged Texas licenses have been circulating. Check watermarks carefully.',
+    cars: 9,
+    forgeChance: 0.5,
+    newRules: [
+      'ALERT: Texas licenses must show "LONE STAR" watermark',
+      'Check license state abbreviation matches the state name',
+    ],
+    forgeTypes: ['expired_license','wrong_plate','name_mismatch','wrong_photo','expired_visa','fake_office','missing_watermark','wrong_state_abbr'],
+  },
+  {
+    day: 5,
+    title: 'Work Permits',
+    sub: 'All workers must now present employment authorization.',
+    cars: 10,
+    forgeChance: 0.5,
+    newRules: [
+      'Workers must carry a valid Work Permit',
+      'Employer must be a registered company (watch for fakes)',
+    ],
+    forgeTypes: ['expired_license','wrong_plate','name_mismatch','wrong_photo','expired_visa','fake_office','missing_watermark','wrong_state_abbr','expired_work_permit','fake_employer'],
+  },
+  {
+    day: 6,
+    title: 'Crackdown',
+    sub: 'Multiple forgery rings busted. Expect sophisticated fakes.',
+    cars: 10,
+    forgeChance: 0.55,
+    newRules: [
+      'Registration VIN must be exactly 6 digits',
+      'Dates must use MM/DD/YYYY format — reject DD/MM/YYYY',
+    ],
+    forgeTypes: ['expired_license','wrong_plate','name_mismatch','wrong_photo','expired_visa','fake_office','missing_watermark','wrong_state_abbr','expired_work_permit','fake_employer','bad_vin','wrong_date_format'],
+  },
+  {
+    day: 7,
+    title: 'Zero Tolerance',
+    sub: 'Every document scrutinized. No mistakes.',
+    cars: 12,
+    forgeChance: 0.6,
+    newRules: [
+      'All previous rules remain in effect',
+      'Multiple forgeries may appear on a single person',
+    ],
+    forgeTypes: ['expired_license','wrong_plate','name_mismatch','wrong_photo','expired_visa','fake_office','missing_watermark','wrong_state_abbr','expired_work_permit','fake_employer','bad_vin','wrong_date_format'],
+  },
+];
+
+function getDayConfig() {
+  if (day <= DAY_CONFIGS.length) return DAY_CONFIGS[day - 1];
+  // Endless mode after day 7
+  const base = DAY_CONFIGS[DAY_CONFIGS.length - 1];
+  return { ...base, day, cars: 12 + (day - 7) * 2, forgeChance: Math.min(0.75, 0.6 + (day - 7) * 0.03), newRules: ['Vigilance is paramount. Trust nothing.'], title: 'Day ' + day, sub: 'The fakes keep coming. Stay sharp.' };
+}
+
+// ─── PERSON GENERATOR ───
+function randEl(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+function randInt(a, b) { return Math.floor(Math.random() * (b - a + 1)) + a; }
+
+function genDate(yearMin, yearMax, monthMin, monthMax) {
+  const y = randInt(yearMin, yearMax);
+  const m = randInt(monthMin || 1, monthMax || 12);
+  const d = randInt(1, 28);
+  return { m, d, y, str: pad(m) + '/' + pad(d) + '/' + y };
+}
+function pad(n) { return n < 10 ? '0' + n : '' + n; }
+
+function genPlate() {
+  const letters = 'ABCDEFGHJKLMNPRSTUVWXYZ';
+  return randEl(letters) + randEl(letters) + randEl(letters) + '-' + randInt(1000, 9999);
+}
+
+function genVIN() { return '' + randInt(100000, 999999); }
+
+function genFace() {
+  return {
+    skin: randEl(SKIN_TONES),
+    hair: randEl(HAIR_COLORS),
+    hairStyle: randEl(HAIR_STYLES),
+    eyeY: randInt(-1, 1),
+    mouthW: randInt(4, 8),
+    noseH: randInt(2, 4),
+  };
+}
+
+function genPerson() {
+  const cfg = getDayConfig();
+  const isForgery = Math.random() < cfg.forgeChance;
+  
+  const firstName = randEl(FIRST_NAMES);
+  const lastName = randEl(LAST_NAMES);
+  const name = firstName + ' ' + lastName;
+  const state = randEl(STATES);
+  const abbr = STATE_ABBR[state];
+  const isCitizen = Math.random() > 0.45;
+  const isWorker = !isCitizen && Math.random() > 0.4;
+  const face = genFace();
+  const carColor = randEl(CAR_COLORS);
+  const carType = randEl(CAR_NAMES);
+  const plate = genPlate();
+  const vin = genVIN();
+
+  const licExpiry = genDate(2025, 2029);
+  const visaExpiry = genDate(2025, 2028);
+  const workExpiry = genDate(2025, 2028);
+  const office = randEl(OFFICES);
+  const employer = randEl(EMPLOYERS);
+
+  const person = {
+    name, firstName, lastName, state, abbr, face, isCitizen, isWorker,
+    carColor, carType, plate, vin,
+    licExpiry, visaExpiry, workExpiry, office, employer,
+    forgeries: [],
+    docs: [],
+  };
+
+  // Build documents
+  const licData = { type: 'license', name, state, abbr, expiry: licExpiry.str, photo: { ...face }, watermark: state === 'Texas' ? 'LONE STAR' : state.toUpperCase() };
+  const regData = { type: 'registration', name, carType, carColor, plate, vin, state };
+  
+  person.docs.push(licData);
+  person.docs.push(regData);
+
+  if (!isCitizen && day >= 3) {
+    person.docs.push({ type: 'visa', name, expiry: visaExpiry.str, office, country: randEl(['Mexico','Guatemala','Honduras','El Salvador','Colombia','Venezuela','Brazil','Ecuador']) });
+  }
+  if (isWorker && day >= 5) {
+    person.docs.push({ type: 'work_permit', name, expiry: workExpiry.str, employer });
+  }
+
+  // Apply forgeries
+  if (isForgery) {
+    const available = cfg.forgeTypes.filter(f => canApplyForge(f, person));
+    if (available.length > 0) {
+      // 1-2 forgeries on harder days
+      const count = day >= 7 && Math.random() > 0.6 ? 2 : 1;
+      const shuffled = available.sort(() => Math.random() - 0.5);
+      for (let i = 0; i < Math.min(count, shuffled.length); i++) {
+        applyForgery(shuffled[i], person);
+      }
+    }
+  }
+
+  return person;
+}
+
+function canApplyForge(type, p) {
+  switch (type) {
+    case 'expired_license': return true;
+    case 'wrong_plate': return true;
+    case 'name_mismatch': return p.docs.length > 1;
+    case 'wrong_photo': return true;
+    case 'expired_visa': return p.docs.some(d => d.type === 'visa');
+    case 'fake_office': return p.docs.some(d => d.type === 'visa');
+    case 'missing_watermark': return p.state === 'Texas';
+    case 'wrong_state_abbr': return true;
+    case 'expired_work_permit': return p.docs.some(d => d.type === 'work_permit');
+    case 'fake_employer': return p.docs.some(d => d.type === 'work_permit');
+    case 'bad_vin': return true;
+    case 'wrong_date_format': return true;
+    default: return false;
+  }
+}
+
+function applyForgery(type, p) {
+  p.forgeries.push(type);
+  switch (type) {
+    case 'expired_license': {
+      const exp = genDate(2022, 2025);
+      // Make sure it's actually expired (before 2026)
+      exp.y = randInt(2022, 2025);
+      exp.str = pad(exp.m) + '/' + pad(exp.d) + '/' + exp.y;
+      p.docs.find(d => d.type === 'license').expiry = exp.str;
+      break;
+    }
+    case 'wrong_plate': {
+      p.docs.find(d => d.type === 'registration').plate = genPlate(); // different from actual
+      break;
+    }
+    case 'name_mismatch': {
+      // Change name on a random non-first doc
+      const otherDocs = p.docs.filter((d, i) => i > 0);
+      if (otherDocs.length) {
+        const d = randEl(otherDocs);
+        d.name = randEl(FIRST_NAMES) + ' ' + randEl(LAST_NAMES);
+      }
+      break;
+    }
+    case 'wrong_photo': {
+      // Different face on license
+      p.docs.find(d => d.type === 'license').photo = genFace();
+      break;
+    }
+    case 'expired_visa': {
+      const v = p.docs.find(d => d.type === 'visa');
+      if (v) { v.expiry = pad(randInt(1,12)) + '/' + pad(randInt(1,28)) + '/' + randInt(2022, 2025); }
+      break;
+    }
+    case 'fake_office': {
+      const v = p.docs.find(d => d.type === 'visa');
+      if (v) v.office = randEl(FAKE_OFFICES);
+      break;
+    }
+    case 'missing_watermark': {
+      p.docs.find(d => d.type === 'license').watermark = '';
+      break;
+    }
+    case 'wrong_state_abbr': {
+      const lic = p.docs.find(d => d.type === 'license');
+      const wrongAbbrs = Object.values(STATE_ABBR).filter(a => a !== p.abbr);
+      lic.abbr = randEl(wrongAbbrs);
+      break;
+    }
+    case 'expired_work_permit': {
+      const w = p.docs.find(d => d.type === 'work_permit');
+      if (w) { w.expiry = pad(randInt(1,12)) + '/' + pad(randInt(1,28)) + '/' + randInt(2022, 2025); }
+      break;
+    }
+    case 'fake_employer': {
+      const w = p.docs.find(d => d.type === 'work_permit');
+      if (w) w.employer = randEl(FAKE_EMPLOYERS);
+      break;
+    }
+    case 'bad_vin': {
+      const reg = p.docs.find(d => d.type === 'registration');
+      reg.vin = '' + randInt(10000, 99999); // 5 digits instead of 6
+      break;
+    }
+    case 'wrong_date_format': {
+      // Swap DD/MM on a random doc date
+      const docs = p.docs.filter(d => d.expiry);
+      if (docs.length) {
+        const d = randEl(docs);
+        const parts = d.expiry.split('/');
+        d.expiry = parts[1] + '/' + parts[0] + '/' + parts[2]; // swap MM and DD
+        // Only a forgery if DD > 12 (otherwise ambiguous — be fair)
+        // Actually let's make it obvious by ensuring day > 12
+        const newDay = randInt(13, 28);
+        d.expiry = pad(newDay) + '/' + parts[0] + '/' + parts[2];
+      }
+      break;
+    }
+  }
+}
+
+// ─── RENDER DOCUMENTS ───
+function renderDocs(person) {
+  const desk = document.getElementById('desk');
+  desk.innerHTML = '';
+  
+  person.docs.forEach((doc, i) => {
+    const el = document.createElement('div');
+    el.className = 'doc';
+    el.innerHTML = renderDocHTML(doc, person);
+    el.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleZoom(el);
+    });
+    desk.appendChild(el);
+  });
+
+  document.getElementById('btnAdmit').disabled = false;
+  document.getElementById('btnDetain').disabled = false;
+}
+
+function renderDocHTML(doc, person) {
+  switch (doc.type) {
+    case 'license': return `
+      <div class="doc-watermark">${doc.watermark || ''}</div>
+      <div class="doc-header">${doc.state} Driver's License</div>
+      <div class="doc-photo" id="photoHolder">${drawFaceHTML(doc.photo)}</div>
+      <div class="doc-field"><div class="doc-label">Name</div><div class="doc-val">${doc.name}</div></div>
+      <div class="doc-field"><div class="doc-label">State</div><div class="doc-val">${doc.state} (${doc.abbr})</div></div>
+      <div class="doc-field"><div class="doc-label">Expires</div><div class="doc-val">${doc.expiry}</div></div>
+      <div class="doc-seal">${doc.abbr}</div>`;
+    case 'registration': return `
+      <div class="doc-header">Vehicle Registration</div>
+      <div class="doc-field"><div class="doc-label">Owner</div><div class="doc-val">${doc.name}</div></div>
+      <div class="doc-field"><div class="doc-label">Vehicle</div><div class="doc-val">${doc.carType}</div></div>
+      <div class="doc-field"><div class="doc-label">Plate</div><div class="doc-val">${doc.plate}</div></div>
+      <div class="doc-field"><div class="doc-label">VIN</div><div class="doc-val">${doc.vin}</div></div>
+      <div class="doc-field"><div class="doc-label">State</div><div class="doc-val">${doc.state}</div></div>
+      <div class="doc-seal">DMV</div>`;
+    case 'visa': return `
+      <div class="doc-watermark">TRAVEL VISA</div>
+      <div class="doc-header">U.S. Travel Visa</div>
+      <div class="doc-field"><div class="doc-label">Name</div><div class="doc-val">${doc.name}</div></div>
+      <div class="doc-field"><div class="doc-label">Country of Origin</div><div class="doc-val">${doc.country}</div></div>
+      <div class="doc-field"><div class="doc-label">Issuing Office</div><div class="doc-val">${doc.office}</div></div>
+      <div class="doc-field"><div class="doc-label">Expires</div><div class="doc-val">${doc.expiry}</div></div>
+      <div class="doc-seal">DHS</div>`;
+    case 'work_permit': return `
+      <div class="doc-watermark">WORK PERMIT</div>
+      <div class="doc-header">Employment Authorization</div>
+      <div class="doc-field"><div class="doc-label">Name</div><div class="doc-val">${doc.name}</div></div>
+      <div class="doc-field"><div class="doc-label">Employer</div><div class="doc-val">${doc.employer}</div></div>
+      <div class="doc-field"><div class="doc-label">Expires</div><div class="doc-val">${doc.expiry}</div></div>
+      <div class="doc-seal">USCIS</div>`;
+    default: return '';
+  }
+}
+
+function drawFaceHTML(face) {
+  // Simple SVG face
+  const h = face.hairStyle;
+  let hairSVG = '';
+  if (h === 'short') hairSVG = `<rect x="8" y="4" width="20" height="6" rx="3" fill="${face.hair}"/>`;
+  else if (h === 'long') hairSVG = `<rect x="6" y="4" width="24" height="14" rx="4" fill="${face.hair}"/>`;
+  else if (h === 'medium') hairSVG = `<rect x="7" y="4" width="22" height="9" rx="3" fill="${face.hair}"/>`;
+  
+  return `<svg viewBox="0 0 36 44" width="36" height="44">
+    <rect x="0" y="0" width="36" height="44" fill="#eee"/>
+    ${hairSVG}
+    <ellipse cx="18" cy="22" rx="11" ry="14" fill="${face.skin}"/>
+    <circle cx="13" cy="${19 + face.eyeY}" r="1.8" fill="#1a1a1a"/>
+    <circle cx="23" cy="${19 + face.eyeY}" r="1.8" fill="#1a1a1a"/>
+    <ellipse cx="18" cy="${25 + face.noseH * 0.3}" rx="2" ry="${face.noseH * 0.5}" fill="rgba(0,0,0,0.1)"/>
+    <line x1="${18 - face.mouthW/2}" y1="30" x2="${18 + face.mouthW/2}" y2="30" stroke="#4a2a1a" stroke-width="1.2" stroke-linecap="round"/>
+  </svg>`;
+}
+
+function toggleZoom(el) {
+  const backdrop = document.getElementById('zoomBackdrop');
+  if (zoomedDoc === el) {
+    el.classList.remove('zoomed');
+    backdrop.style.display = 'none';
+    zoomedDoc = null;
+  } else {
+    if (zoomedDoc) zoomedDoc.classList.remove('zoomed');
+    el.classList.add('zoomed');
+    backdrop.style.display = 'block';
+    zoomedDoc = el;
+  }
+}
+
+document.getElementById('zoomBackdrop').addEventListener('click', () => {
+  if (zoomedDoc) {
+    zoomedDoc.classList.remove('zoomed');
+    zoomedDoc = null;
+  }
+  document.getElementById('zoomBackdrop').style.display = 'none';
+});
+
+// ─── DRAW SCENE ───
+function drawScene() {
+  sc.clearRect(0, 0, SW, SH);
+
+  // Sky
+  const skyGrad = sc.createLinearGradient(0, 0, 0, SH * 0.4);
+  skyGrad.addColorStop(0, '#87CEEB');
+  skyGrad.addColorStop(1, '#b8e0f0');
+  sc.fillStyle = skyGrad;
+  sc.fillRect(0, 0, SW, SH * 0.4);
+
+  // Sun
+  sc.fillStyle = '#fff4aa';
+  sc.beginPath(); sc.arc(SW * 0.8, SH * 0.15, 20, 0, Math.PI * 2); sc.fill();
+  sc.fillStyle = 'rgba(255,244,170,0.15)';
+  sc.beginPath(); sc.arc(SW * 0.8, SH * 0.15, 35, 0, Math.PI * 2); sc.fill();
+
+  // Mountains
+  sc.fillStyle = '#7a9a6a';
+  sc.beginPath();
+  sc.moveTo(0, SH * 0.4);
+  sc.lineTo(SW * 0.15, SH * 0.2);
+  sc.lineTo(SW * 0.3, SH * 0.35);
+  sc.lineTo(SW * 0.5, SH * 0.18);
+  sc.lineTo(SW * 0.7, SH * 0.3);
+  sc.lineTo(SW * 0.85, SH * 0.22);
+  sc.lineTo(SW, SH * 0.35);
+  sc.lineTo(SW, SH * 0.4);
+  sc.closePath();
+  sc.fill();
+
+  // Ground
+  sc.fillStyle = '#c8b888';
+  sc.fillRect(0, SH * 0.4, SW, SH * 0.6);
+
+  // Road
+  const roadY = SH * 0.55;
+  const roadH = SH * 0.3;
+  sc.fillStyle = '#555';
+  sc.fillRect(0, roadY, SW, roadH);
+  // Center line
+  sc.setLineDash([12, 8]);
+  sc.strokeStyle = '#cc0';
+  sc.lineWidth = 2;
+  sc.beginPath();
+  sc.moveTo(0, roadY + roadH / 2);
+  sc.lineTo(SW, roadY + roadH / 2);
+  sc.stroke();
+  sc.setLineDash([]);
+
+  // Checkpoint booth
+  const boothX = SW * 0.45;
+  const boothW = SW * 0.12;
+  const boothH = SH * 0.35;
+  const boothY = roadY - boothH + 10;
+  // Booth body
+  sc.fillStyle = '#ddd';
+  sc.fillRect(boothX, boothY, boothW, boothH);
+  sc.fillStyle = '#bbb';
+  sc.fillRect(boothX, boothY, boothW, 6);
+  // Booth window
+  sc.fillStyle = 'rgba(100,180,220,0.4)';
+  sc.fillRect(boothX + 6, boothY + 12, boothW - 12, boothH * 0.35);
+  // Sign
+  sc.fillStyle = '#1a4a8a';
+  sc.fillRect(boothX - 4, boothY - 18, boothW + 8, 16);
+  sc.fillStyle = '#fff';
+  sc.font = `700 ${Math.max(8, SW * 0.018)}px Oswald,sans-serif`;
+  sc.textAlign = 'center';
+  sc.fillText('ICE CHECKPOINT', boothX + boothW / 2, boothY - 5);
+
+  // Barrier arm
+  sc.fillStyle = '#e44';
+  sc.fillRect(boothX + boothW - 2, roadY + 4, SW * 0.35, 4);
+  // Barrier stripes
+  sc.fillStyle = '#fff';
+  for (let x = boothX + boothW + 10; x < boothX + boothW + SW * 0.35; x += 20) {
+    sc.fillRect(x, roadY + 4, 8, 4);
+  }
+
+  // Cones
+  for (let i = 0; i < 4; i++) {
+    const cx_ = boothX - 20 - i * 14;
+    const cy_ = roadY + roadH - 8;
+    sc.fillStyle = '#f60';
+    sc.beginPath();
+    sc.moveTo(cx_, cy_);
+    sc.lineTo(cx_ - 4, cy_ + 8);
+    sc.lineTo(cx_ + 4, cy_ + 8);
+    sc.closePath();
+    sc.fill();
+    sc.fillStyle = '#fff';
+    sc.fillRect(cx_ - 2.5, cy_ + 3, 5, 2);
+  }
+
+  // Car
+  if (currentPerson && animState !== 'idle') {
+    drawCar(carX, roadY + roadH * 0.65);
+  }
+
+  // ICE Van (parked on right)
+  drawICEVan(SW * 0.82, roadY + roadH * 0.25);
+}
+
+function drawCar(x, y) {
+  const col = currentPerson.carColor;
+  const w = 50, h = 26;
+  sc.save();
+  sc.translate(x, y);
+  // Shadow
+  sc.fillStyle = 'rgba(0,0,0,0.15)';
+  sc.beginPath(); sc.ellipse(0, h/2 + 2, w/2 + 4, 6, 0, 0, Math.PI * 2); sc.fill();
+  // Body
+  sc.fillStyle = col;
+  sc.beginPath();
+  sc.roundRect(-w/2, -h/2, w, h, 4);
+  sc.fill();
+  // Roof
+  sc.fillStyle = shadeColor(col, -20);
+  sc.beginPath();
+  sc.roundRect(-w/2 + 10, -h/2 + 3, w - 28, h - 6, 3);
+  sc.fill();
+  // Windshield
+  sc.fillStyle = 'rgba(140,200,240,0.4)';
+  sc.fillRect(w/2 - 12, -h/2 + 4, 8, h - 8);
+  // Rear window
+  sc.fillStyle = 'rgba(140,200,240,0.3)';
+  sc.fillRect(-w/2 + 3, -h/2 + 5, 7, h - 10);
+  // Wheels
+  sc.fillStyle = '#222';
+  sc.beginPath(); sc.ellipse(-w/2 + 10, -h/2, 5, 4, 0, 0, Math.PI * 2); sc.fill();
+  sc.beginPath(); sc.ellipse(-w/2 + 10, h/2, 5, 4, 0, 0, Math.PI * 2); sc.fill();
+  sc.beginPath(); sc.ellipse(w/2 - 10, -h/2, 5, 4, 0, 0, Math.PI * 2); sc.fill();
+  sc.beginPath(); sc.ellipse(w/2 - 10, h/2, 5, 4, 0, 0, Math.PI * 2); sc.fill();
+  // Plate
+  sc.fillStyle = '#fff';
+  sc.fillRect(-w/2 - 1, -4, 3, 8);
+  sc.fillStyle = '#333';
+  sc.font = '4px monospace';
+  sc.textAlign = 'center';
+  sc.save();
+  sc.translate(-w/2 - 2, 0);
+  sc.rotate(-Math.PI/2);
+  sc.fillText(currentPerson.plate, 0, 0);
+  sc.restore();
+  // Headlights
+  sc.fillStyle = '#ffe';
+  sc.fillRect(w/2 - 1, -h/2 + 3, 2, 4);
+  sc.fillRect(w/2 - 1, h/2 - 7, 2, 4);
+  sc.restore();
+}
+
+function drawICEVan(x, y) {
+  sc.save();
+  sc.translate(x, y);
+  // Van body
+  sc.fillStyle = '#2862b5';
+  sc.beginPath(); sc.roundRect(-28, -14, 56, 28, 3); sc.fill();
+  sc.fillStyle = '#1e4a8a';
+  sc.beginPath(); sc.roundRect(-20, -10, 30, 20, 2); sc.fill();
+  // Windshield
+  sc.fillStyle = 'rgba(140,200,255,0.35)';
+  sc.fillRect(16, -9, 8, 18);
+  // ICE text
+  sc.fillStyle = 'rgba(255,255,255,0.6)';
+  sc.font = '700 7px Oswald,sans-serif';
+  sc.textAlign = 'center';
+  sc.fillText('ICE', 0, 3);
+  // Wheels
+  sc.fillStyle = '#222';
+  sc.beginPath(); sc.ellipse(-18, -14, 5, 4, 0, 0, Math.PI * 2); sc.fill();
+  sc.beginPath(); sc.ellipse(-18, 14, 5, 4, 0, 0, Math.PI * 2); sc.fill();
+  sc.beginPath(); sc.ellipse(18, -14, 5, 4, 0, 0, Math.PI * 2); sc.fill();
+  sc.beginPath(); sc.ellipse(18, 14, 5, 4, 0, 0, Math.PI * 2); sc.fill();
+  // Light bar
+  const f = Math.sin(Date.now() * 0.012);
+  sc.fillStyle = f > 0 ? 'rgba(255,50,50,0.8)' : 'rgba(50,50,255,0.8)';
+  sc.fillRect(-10, -16, 8, 3);
+  sc.fillStyle = f > 0 ? 'rgba(50,50,255,0.8)' : 'rgba(255,50,50,0.8)';
+  sc.fillRect(2, -16, 8, 3);
+  sc.restore();
+}
+
+function shadeColor(hex, amt) {
+  let r = parseInt(hex.slice(1,3),16) + amt;
+  let g = parseInt(hex.slice(3,5),16) + amt;
+  let b = parseInt(hex.slice(5,7),16) + amt;
+  r = Math.max(0,Math.min(255,r)); g = Math.max(0,Math.min(255,g)); b = Math.max(0,Math.min(255,b));
+  return '#' + [r,g,b].map(c => c.toString(16).padStart(2,'0')).join('');
+}
+
+// ─── ANIMATION LOOP ───
+function sceneLoop() {
+  if (!gameRunning) return;
+  resizeScene();
+  
+  // Animate car
+  if (animState === 'driving-in') {
+    carX += (carTargetX - carX) * 0.08;
+    if (Math.abs(carX - carTargetX) < 2) {
+      carX = carTargetX;
+      animState = 'waiting';
+      renderDocs(currentPerson);
+    }
+  } else if (animState === 'driving-out') {
+    carX += 6;
+    if (carX > SW + 60) {
+      animState = 'idle';
+      nextCar();
+    }
+  } else if (animState === 'detained') {
+    // Car moves toward ICE van
+    carX += 3;
+    if (carX > SW * 0.7) {
+      animState = 'idle';
+      nextCar();
+    }
+  }
+
+  drawScene();
+  sceneFrame = requestAnimationFrame(sceneLoop);
+}
+
+// ─── GAME FLOW ───
+function startGame() {
+  day = 0; score = 0; strikes = 0; streak = 0;
+  totalCorrect = 0; totalWrong = 0;
+  allRules = [];
+  document.getElementById('startScreen').classList.add('hidden');
+  document.getElementById('gameOverScreen').classList.add('hidden');
+  document.getElementById('gameArea').style.display = 'flex';
+  document.getElementById('hud').style.display = 'flex';
+  document.getElementById('ruleToggle').style.display = 'flex';
+  gameRunning = true;
+  resizeScene();
+  nextDay();
+  sceneLoop();
+}
+
+function nextDay() {
+  day++;
+  const cfg = getDayConfig();
+  carsToday = cfg.cars;
+  carsProcessed = 0;
+
+  // Add new rules
+  cfg.newRules.forEach(r => allRules.push(r));
+  
+  // Show briefing
+  document.getElementById('briefLabel').textContent = 'Day ' + day;
+  document.getElementById('briefTitle').textContent = cfg.title;
+  document.getElementById('briefSub').textContent = cfg.sub;
+  
+  const rulesList = document.getElementById('briefRules');
+  rulesList.innerHTML = '';
+  allRules.forEach((r, i) => {
+    const li = document.createElement('li');
+    li.textContent = r;
+    if (i >= allRules.length - cfg.newRules.length) li.className = 'new-rule';
+    rulesList.appendChild(li);
+  });
+
+  updateRulebook();
+  document.getElementById('briefScreen').classList.remove('hidden');
+  updateHUD();
+}
+
+function updateRulebook() {
+  const list = document.getElementById('ruleList');
+  list.innerHTML = '';
+  const cfg = getDayConfig();
+  allRules.forEach((r, i) => {
+    const div = document.createElement('div');
+    div.className = 'rule-item' + (i >= allRules.length - cfg.newRules.length ? ' rule-new' : '');
+    div.textContent = r;
+    list.appendChild(div);
+  });
+}
+
+function beginShift() {
+  document.getElementById('briefScreen').classList.add('hidden');
+  nextCar();
+}
+
+function nextCar() {
+  if (carsProcessed >= carsToday) {
+    // Day complete
+    nextDay();
+    return;
+  }
+  
+  const desk = document.getElementById('desk');
+  desk.innerHTML = '<div style="color:rgba(255,255,255,.3);font-size:.8rem;padding:20px;text-align:center">Vehicle approaching...</div>';
+  document.getElementById('btnAdmit').disabled = true;
+  document.getElementById('btnDetain').disabled = true;
+
+  currentPerson = genPerson();
+  carX = -60;
+  carTargetX = SW * 0.32;
+  animState = 'driving-in';
+  updateHUD();
+}
+
+function makeDecision(admit) {
+  if (!currentPerson || animState !== 'waiting') return;
+  
+  const isFake = currentPerson.forgeries.length > 0;
+  const correct = (admit && !isFake) || (!admit && isFake);
+
+  document.getElementById('btnAdmit').disabled = true;
+  document.getElementById('btnDetain').disabled = true;
+
+  // Close zoom
+  if (zoomedDoc) {
+    zoomedDoc.classList.remove('zoomed');
+    zoomedDoc = null;
+    document.getElementById('zoomBackdrop').style.display = 'none';
+  }
+
+  carsProcessed++;
+
+  if (correct) {
+    totalCorrect++;
+    streak++;
+    const pts = (admit ? 10 : 25) + (streak > 2 ? streak * 5 : 0);
+    score += pts;
+    showFlash(admit ? 'ADMITTED' : 'DETAINED', '#4CAF50', '+' + pts);
+  } else {
+    totalWrong++;
+    streak = 0;
+    strikes++;
+    const penalty = admit ? -50 : -20;
+    score = Math.max(0, score + penalty);
+    
+    // Show what was wrong
+    let reason = '';
+    if (admit && isFake) {
+      reason = 'FORGERY: ' + currentPerson.forgeries.map(describeForgery).join(', ');
+    } else {
+      reason = 'Documents were legitimate!';
+    }
+    showFlash('WRONG', '#f44', penalty + ' pts | ' + reason);
+  }
+
+  updateHUD();
+
+  if (strikes >= 3) {
+    setTimeout(() => endGame(), 1200);
+    animState = 'idle';
+    return;
+  }
+
+  // Animate car out
+  animState = admit ? 'driving-out' : 'detained';
+}
+
+function describeForgery(type) {
+  const map = {
+    expired_license: 'Expired license',
+    wrong_plate: 'Plate mismatch',
+    name_mismatch: 'Name mismatch',
+    wrong_photo: 'Photo doesn\'t match',
+    expired_visa: 'Expired visa',
+    fake_office: 'Fake issuing office',
+    missing_watermark: 'Missing watermark',
+    wrong_state_abbr: 'Wrong state abbreviation',
+    expired_work_permit: 'Expired work permit',
+    fake_employer: 'Fake employer',
+    bad_vin: 'Invalid VIN',
+    wrong_date_format: 'Wrong date format',
+  };
+  return map[type] || type;
+}
+
+function showFlash(text, color, sub) {
+  const el = document.createElement('div');
+  el.className = 'result-flash';
+  el.style.color = color;
+  el.innerHTML = text + (sub ? `<div style="font-size:.8rem;color:rgba(255,255,255,.5);margin-top:4px">${sub}</div>` : '');
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 800);
+}
+
+function updateHUD() {
+  document.getElementById('hudScore').textContent = score;
+  document.getElementById('hudDay').textContent = day;
+  document.getElementById('hudStrikes').textContent = strikes + '/3';
+  document.getElementById('hudStrikes').style.color = strikes >= 2 ? '#f44' : strikes >= 1 ? '#fa4' : '#fff';
+  document.getElementById('hudQueue').textContent = Math.max(0, carsToday - carsProcessed);
+}
+
+function endGame() {
+  gameRunning = false;
+  cancelAnimationFrame(sceneFrame);
+  
+  const dayWord = day === 1 ? '1 day' : day + ' days';
+  document.getElementById('goTitle').textContent = strikes >= 3 ? 'Fired' : 'Shift Over';
+  document.getElementById('goTitle').style.color = strikes >= 3 ? '#D32F2F' : 'var(--gold)';
+  document.getElementById('goSub').textContent = `You lasted ${dayWord} and processed ${totalCorrect + totalWrong} vehicles.`;
+  document.getElementById('goStats').innerHTML = `
+    <div class="stat-row"><span class="stat-label">Score</span><span class="stat-val">${score}</span></div>
+    <div class="stat-row"><span class="stat-label">Days Survived</span><span class="stat-val">${day}</span></div>
+    <div class="stat-row"><span class="stat-label">Correct Calls</span><span class="stat-val">${totalCorrect}</span></div>
+    <div class="stat-row"><span class="stat-label">Wrong Calls</span><span class="stat-val">${totalWrong}</span></div>
+    <div class="stat-row"><span class="stat-label">Best Streak</span><span class="stat-val">${streak}</span></div>`;
+  document.getElementById('gameOverScreen').classList.remove('hidden');
+}
+
+function shareText() {
+  return `ICE CHECKPOINT\n\nDay ${day} | Score: ${score}\nCorrect: ${totalCorrect} | Wrong: ${totalWrong}\n\nCan you survive longer?\nufcr.online/ice-checkpoint/`;
+}
+
+// ─── EVENT LISTENERS ───
+document.getElementById('startBtn').addEventListener('click', startGame);
+document.getElementById('briefBtn').addEventListener('click', beginShift);
+document.getElementById('restartBtn').addEventListener('click', startGame);
+document.getElementById('btnAdmit').addEventListener('click', () => makeDecision(true));
+document.getElementById('btnDetain').addEventListener('click', () => makeDecision(false));
+
+document.getElementById('ruleToggle').addEventListener('click', () => {
+  document.getElementById('rulebook').classList.toggle('open');
+});
+
+document.getElementById('shareBtn').addEventListener('click', () => {
+  window.open('https://x.com/intent/tweet?text=' + encodeURIComponent(shareText()), '_blank');
+});
+document.getElementById('copyBtn').addEventListener('click', () => {
+  navigator.clipboard.writeText(shareText()).then(() => {
+    document.getElementById('copyBtn').innerHTML = '<i class="fas fa-check"></i> Copied!';
+    setTimeout(() => { document.getElementById('copyBtn').innerHTML = '<i class="fas fa-copy"></i> Copy'; }, 2000);
+  });
+});
+
+// Close rulebook on tap outside
+document.addEventListener('click', (e) => {
+  const rb = document.getElementById('rulebook');
+  const rt = document.getElementById('ruleToggle');
+  if (rb.classList.contains('open') && !rb.contains(e.target) && !rt.contains(e.target)) {
+    rb.classList.remove('open');
+  }
+});
+</script>
+</body>
+</html>
