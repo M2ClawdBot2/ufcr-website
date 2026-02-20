@@ -730,6 +730,23 @@
         continue;
       }
 
+      // Check if next path tile has a wall — stop and attack it
+      const nextPath = path[e.pathIdx + 1];
+      if (nextPath) {
+        const wallAheadKey = nextPath.x + ',' + nextPath.y;
+        const wallAhead = towerGrid[wallAheadKey];
+        if (wallAhead && wallAhead.type === 'wall' && wallAhead.alive) {
+          // Stop moving and attack the wall
+          wallAhead.hp -= 0.03;
+          if (wallAhead.hp <= 0) {
+            wallAhead.alive = false;
+            delete towerGrid[wallAheadKey];
+            spawnParticles(wallAhead.gx * GRID + GRID / 2, wallAhead.gy * GRID + GRID / 2, '#c8874a', 8);
+          }
+          continue; // don't move this frame
+        }
+      }
+
       const tx = target.x * GRID + GRID / 2;
       const ty = target.y * GRID + GRID / 2;
       const dx = tx - e.x, dy = ty - e.y;
@@ -741,19 +758,6 @@
       } else {
         e.x += (dx / dist) * spd;
         e.y += (dy / dist) * spd;
-      }
-
-      const gx = Math.floor(e.x / GRID), gy = Math.floor(e.y / GRID);
-      const wallKey = gx + ',' + gy;
-      const wall = towerGrid[wallKey];
-      if (wall && wall.type === 'wall' && wall.alive) {
-        wall.hp -= 0.02;
-        spd = Math.max(spd * 0.3, 0.1);
-        if (wall.hp <= 0) {
-          wall.alive = false;
-          delete towerGrid[wallKey];
-          spawnParticles(wall.gx * GRID + GRID / 2, wall.gy * GRID + GRID / 2, '#c8874a', 8);
-        }
       }
     }
     enemies = enemies.filter(e => e.alive);
