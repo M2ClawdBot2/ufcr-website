@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>DEPORT — Tower Defense | UFCR</title>
+  <link rel="icon" href="../assets/images/shield-logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <style>
+    :root {
+      --navy: #001845;
+      --dark: #0A0E1A;
+      --orange: #FA4616;
+      --gold: #F0A830;
+      --white: #FFFFFF;
+      --blue: #0021A5;
+      --font-body: 'Inter', -apple-system, sans-serif;
+      --font-heading: 'Oswald', 'Inter', sans-serif;
+    }
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; overflow: hidden; }
+    body { font-family: var(--font-body); background: var(--dark); color: var(--white); }
+    a { text-decoration: none; color: inherit; }
+
+    /* NAV */
+    .nav { position: fixed; top: 0; left: 0; right: 0; height: 56px; background: var(--navy); display: flex; align-items: center; justify-content: space-between; padding: 0 20px; z-index: 1000; border-bottom: 2px solid var(--orange); }
+    .nav-logo { display: flex; align-items: center; gap: 10px; font-family: var(--font-heading); font-size: 1.2rem; font-weight: 700; letter-spacing: 1px; }
+    .nav-logo img { height: 32px; }
+    .nav-back { font-family: var(--font-heading); font-size: 0.85rem; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--gold); transition: color 0.2s; }
+    .nav-back:hover { color: var(--orange); }
+    .nav-back i { margin-right: 6px; }
+
+    /* GAME WRAPPER */
+    #game-wrapper { position: fixed; top: 56px; left: 0; right: 0; bottom: 0; display: flex; flex-direction: column; background: var(--dark); }
+
+    /* TOP HUD */
+    #hud-top { height: 44px; background: rgba(0,24,69,0.95); display: flex; align-items: center; justify-content: center; gap: 30px; padding: 0 16px; border-bottom: 1px solid rgba(250,70,22,0.3); font-family: var(--font-heading); font-size: 0.9rem; letter-spacing: 1px; flex-shrink: 0; }
+    .hud-item { display: flex; align-items: center; gap: 6px; }
+    .hud-item i { color: var(--gold); font-size: 0.85rem; }
+    .hud-item span { color: var(--white); font-weight: 600; }
+    .hud-val { color: var(--orange) !important; }
+
+    /* CANVAS */
+    #game-canvas { flex: 1; display: block; cursor: crosshair; }
+
+    /* BOTTOM BAR */
+    #hud-bottom { height: 72px; background: rgba(0,24,69,0.95); display: flex; align-items: center; justify-content: center; gap: 8px; padding: 0 12px; border-top: 1px solid rgba(250,70,22,0.3); flex-shrink: 0; overflow-x: auto; }
+    .unit-btn { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 72px; height: 60px; background: rgba(255,255,255,0.05); border: 2px solid rgba(255,255,255,0.15); cursor: pointer; font-family: var(--font-heading); transition: all 0.15s; position: relative; user-select: none; -webkit-tap-highlight-color: transparent; }
+    .unit-btn:hover { border-color: var(--gold); background: rgba(240,168,48,0.1); }
+    .unit-btn.selected { border-color: var(--orange); background: rgba(250,70,22,0.2); }
+    .unit-btn.disabled { opacity: 0.35; pointer-events: none; }
+    .unit-btn i { font-size: 1.1rem; margin-bottom: 2px; }
+    .unit-btn .unit-name { font-size: 0.55rem; letter-spacing: 0.5px; text-transform: uppercase; }
+    .unit-btn .unit-cost { font-size: 0.6rem; color: var(--gold); font-weight: 700; }
+
+    /* MENU OVERLAYS */
+    .overlay { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(10,14,26,0.95); z-index: 100; }
+    .overlay.hidden { display: none; }
+    .menu-title { font-family: var(--font-heading); font-size: 4rem; font-weight: 700; letter-spacing: 6px; color: var(--orange); text-transform: uppercase; line-height: 1; }
+    .menu-subtitle { font-family: var(--font-heading); font-size: 1.2rem; letter-spacing: 4px; color: var(--gold); text-transform: uppercase; margin-top: 8px; }
+    .menu-btn { font-family: var(--font-heading); font-size: 1rem; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; padding: 14px 40px; border: 2px solid var(--orange); background: transparent; color: var(--white); cursor: pointer; margin-top: 16px; transition: all 0.2s; }
+    .menu-btn:hover { background: var(--orange); color: var(--dark); }
+    .menu-btn.primary { background: var(--orange); color: var(--white); }
+    .menu-btn.primary:hover { background: #ff5a2e; }
+    .menu-btn i { margin-right: 8px; }
+    .menu-section { margin-top: 24px; text-align: center; }
+    .menu-section h3 { font-family: var(--font-heading); font-size: 1rem; letter-spacing: 2px; color: var(--gold); margin-bottom: 10px; text-transform: uppercase; }
+    .menu-section p { font-size: 0.8rem; color: rgba(255,255,255,0.7); line-height: 1.6; max-width: 400px; }
+    .score-list { list-style: none; }
+    .score-list li { font-family: var(--font-heading); font-size: 0.85rem; letter-spacing: 1px; padding: 4px 0; color: rgba(255,255,255,0.8); }
+    .score-list li:first-child { color: var(--gold); }
+
+    /* WAVE BANNER */
+    #wave-banner { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-family: var(--font-heading); font-size: 2rem; letter-spacing: 4px; color: var(--gold); text-transform: uppercase; pointer-events: none; opacity: 0; z-index: 50; text-shadow: 0 2px 20px rgba(0,0,0,0.8); }
+
+    /* GAME OVER */
+    #gameover-overlay .stat-row { font-family: var(--font-heading); font-size: 1rem; letter-spacing: 1px; margin: 6px 0; }
+    #gameover-overlay .stat-val { color: var(--orange); font-weight: 700; }
+
+    /* HOW TO PLAY */
+    .howto-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; max-width: 420px; margin-top: 16px; }
+    .howto-item { display: flex; align-items: flex-start; gap: 8px; font-size: 0.75rem; color: rgba(255,255,255,0.8); line-height: 1.4; }
+    .howto-item i { color: var(--orange); margin-top: 2px; min-width: 16px; }
+
+    @media (max-width: 600px) {
+      .menu-title { font-size: 2.5rem; letter-spacing: 3px; }
+      .menu-subtitle { font-size: 0.9rem; }
+      #hud-top { gap: 12px; font-size: 0.75rem; }
+      .unit-btn { width: 60px; height: 52px; }
+      .howto-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav class="nav">
+    <a href="../" class="nav-logo">
+      <img src="../assets/images/shield-logo.png" alt="UFCR">
+      <span>UFCR</span>
+    </a>
+    <a href="../games/" class="nav-back"><i class="fas fa-arrow-left"></i> Back to Games</a>
+  </nav>
+
+  <div id="game-wrapper">
+    <!-- TOP HUD -->
+    <div id="hud-top" style="display:none;">
+      <div class="hud-item"><i class="fas fa-flag"></i> <span>WAVE</span> <span class="hud-val" id="hud-wave">1</span></div>
+      <div class="hud-item"><i class="fas fa-dollar-sign"></i> <span class="hud-val" id="hud-money">500</span></div>
+      <div class="hud-item"><i class="fas fa-heart"></i> <span>LIVES</span> <span class="hud-val" id="hud-lives">10</span></div>
+      <div class="hud-item"><i class="fas fa-star"></i> <span>SCORE</span> <span class="hud-val" id="hud-score">0</span></div>
+    </div>
+
+    <!-- CANVAS -->
+    <canvas id="game-canvas"></canvas>
+
+    <!-- BOTTOM BAR -->
+    <div id="hud-bottom" style="display:none;">
+      <div class="unit-btn" data-unit="ice" title="ICE Agent — $50">
+        <i class="fas fa-shield-halved" style="color:#4a9eff"></i>
+        <span class="unit-name">ICE</span>
+        <span class="unit-cost">$50</span>
+      </div>
+      <div class="unit-btn" data-unit="wall" title="Wall Segment — $75">
+        <i class="fas fa-cube" style="color:#c8874a"></i>
+        <span class="unit-name">Wall</span>
+        <span class="unit-cost">$75</span>
+      </div>
+      <div class="unit-btn" data-unit="drone" title="Drone — $100">
+        <i class="fas fa-jet-fighter" style="color:#aaa"></i>
+        <span class="unit-name">Drone</span>
+        <span class="unit-cost">$100</span>
+      </div>
+      <div class="unit-btn" data-unit="tower" title="Watchtower — $150">
+        <i class="fas fa-tower-observation" style="color:#F0A830"></i>
+        <span class="unit-name">Tower</span>
+        <span class="unit-cost">$150</span>
+      </div>
+      <div class="unit-btn" data-unit="bus" title="Deportation Bus — $200">
+        <i class="fas fa-bus" style="color:#4a9eff"></i>
+        <span class="unit-name">Bus</span>
+        <span class="unit-cost">$200</span>
+      </div>
+    </div>
+
+    <!-- WAVE BANNER -->
+    <div id="wave-banner"></div>
+
+    <!-- TITLE SCREEN -->
+    <div class="overlay" id="title-overlay">
+      <div class="menu-title" id="title-text">DEPORT</div>
+      <div class="menu-subtitle" id="title-sub">Defend the Border</div>
+      <button class="menu-btn primary" id="btn-play" style="margin-top:30px;"><i class="fas fa-play"></i> Play</button>
+      <button class="menu-btn" id="btn-howto"><i class="fas fa-question-circle"></i> How to Play</button>
+      <button class="menu-btn" id="btn-scores"><i class="fas fa-trophy"></i> High Scores</button>
+    </div>
+
+    <!-- HOW TO PLAY -->
+    <div class="overlay hidden" id="howto-overlay">
+      <div class="menu-title" style="font-size:2rem;">How to Play</div>
+      <div class="howto-grid">
+        <div class="howto-item"><i class="fas fa-mouse-pointer"></i> Select a defense unit from the bottom bar, then click on the map to place it.</div>
+        <div class="howto-item"><i class="fas fa-route"></i> Enemies walk from left to right along the path. Stop them before they cross!</div>
+        <div class="howto-item"><i class="fas fa-shield-halved"></i> ICE Agents catch enemies one at a time. Drones slow groups. Walls block paths.</div>
+        <div class="howto-item"><i class="fas fa-bus"></i> The Deportation Bus removes multiple enemies at once but has a long cooldown.</div>
+        <div class="howto-item"><i class="fas fa-tower-observation"></i> Watchtowers reveal tunnel paths and boost nearby ICE Agents.</div>
+        <div class="howto-item"><i class="fas fa-heart-crack"></i> If 10 enemies get through, it's game over. Earn money for each catch.</div>
+      </div>
+      <button class="menu-btn" id="btn-howto-back" style="margin-top:24px;"><i class="fas fa-arrow-left"></i> Back</button>
+    </div>
+
+    <!-- HIGH SCORES -->
+    <div class="overlay hidden" id="scores-overlay">
+      <div class="menu-title" style="font-size:2rem;">High Scores</div>
+      <ul class="score-list" id="score-list"></ul>
+      <button class="menu-btn" id="btn-scores-back" style="margin-top:24px;"><i class="fas fa-arrow-left"></i> Back</button>
+    </div>
+
+    <!-- GAME OVER -->
+    <div class="overlay hidden" id="gameover-overlay">
+      <div class="menu-title" style="font-size:2.5rem;">Game Over</div>
+      <div style="margin-top:20px;">
+        <div class="stat-row"><i class="fas fa-star" style="color:var(--gold);margin-right:8px;"></i> Score: <span class="stat-val" id="go-score">0</span></div>
+        <div class="stat-row"><i class="fas fa-flag" style="color:var(--gold);margin-right:8px;"></i> Waves: <span class="stat-val" id="go-waves">0</span></div>
+        <div class="stat-row"><i class="fas fa-handcuffs" style="color:var(--gold);margin-right:8px;"></i> Deportations: <span class="stat-val" id="go-deports">0</span></div>
+      </div>
+      <button class="menu-btn primary" id="btn-restart" style="margin-top:24px;"><i class="fas fa-redo"></i> Play Again</button>
+      <button class="menu-btn" id="btn-share" style="margin-top:8px;"><i class="fas fa-share-alt"></i> Share Score</button>
+      <button class="menu-btn" id="btn-menu" style="margin-top:8px;"><i class="fas fa-home"></i> Menu</button>
+    </div>
+  </div>
+
+<script>
+(function() {
+  'use strict';
+
+  // === CONSTANTS ===
+  const GRID = 40;
+  const COLORS = {
+    sand1: '#E8D5A3', sand2: '#D4BC82', sand3: '#C4A86B',
+    path: '#C8A96E', pathDark: '#B8955A',
+    border: '#FA4616', usSide: 'rgba(0,24,69,0.15)',
+    grid: 'rgba(255,255,255,0.06)',
+    navy: '#001845', dark: '#0A0E1A', orange: '#FA4616', gold: '#F0A830'
+  };
+
+  const UNIT_DEFS = {
+    ice:   { cost: 50,  range: 120, rate: 60,  color: '#4a9eff', icon: 'shield', shape: 'circle', dmg: 1, aoe: false },
+    drone: { cost: 100, range: 200, rate: 90,  color: '#888',    icon: 'tri',    shape: 'tri',    dmg: 0.3, aoe: true, slow: 0.5 },
+    wall:  { cost: 75,  range: 0,   rate: 0,   color: '#c8874a', icon: 'wall',   shape: 'rect',   hp: 10, blocks: true },
+    bus:   { cost: 200, range: 140, rate: 180, color: '#4a9eff', icon: 'bus',    shape: 'bigrect', dmg: 3, aoe: true },
+    tower: { cost: 150, range: 160, rate: 120, color: '#F0A830', icon: 'tower',  shape: 'diamond', dmg: 0.5, boost: true, reveals: true }
+  };
+
+  // === STATE ===
+  const canvas = document.getElementById('game-canvas');
+  const ctx = canvas.getContext('2d');
+  let W, H, cols, rows;
+  let gameState = 'menu'; // menu, playing, wavepause, gameover
+  let money, lives, score, wave, deportations;
+  let enemies = [], towers = [], projectiles = [], particles = [];
+  let selectedUnit = null;
+  let path = []; // array of {x,y} grid coords
+  let pathSet = new Set();
+  let towerGrid = {}; // "col,row" -> tower
+  let waveTimer = 0, waveEnemiesLeft = 0, waveSpawnTimer = 0;
+  let wavePauseTimer = 0;
+  let mouseGX = -1, mouseGY = -1;
+  let animFrame = 0;
+
+  // === RESIZE ===
+  function resize() {
+    const wrapper = document.getElementById('game-wrapper');
+    const hudTop = document.getElementById('hud-top');
+    const hudBot = document.getElementById('hud-bottom');
+    const topH = hudTop.style.display === 'none' ? 0 : 44;
+    const botH = hudBot.style.display === 'none' ? 0 : 72;
+    W = wrapper.clientWidth;
+    H = wrapper.clientHeight - topH - botH;
+    canvas.width = W;
+    canvas.height = H;
+    cols = Math.floor(W / GRID);
+    rows = Math.floor(H / GRID);
+    buildPath();
+  }
+
+  // === PATH BUILDING ===
+  function buildPath() {
+    path = [];
+    pathSet = new Set();
+    if (rows < 3 || cols < 5) return;
+
+    // Winding path from left to right
+    let y = Math.floor(rows / 2);
+    let segments = [];
+    let x = 0;
+    const segCount = Math.max(3, Math.floor(cols / 6));
+    const segWidth = Math.floor(cols / segCount);
+
+    for (let s = 0; s < segCount; s++) {
+      const startX = s * segWidth;
+      const endX = s === segCount - 1 ? cols - 1 : (s + 1) * segWidth;
+      const targetY = s % 2 === 0 ? Math.max(1, Math.floor(rows * 0.25)) : Math.min(rows - 2, Math.floor(rows * 0.75));
+
+      // Horizontal to midpoint
+      const midX = Math.floor((startX + endX) / 2);
+      for (let px = startX; px <= midX; px++) {
+        path.push({ x: px, y: y });
+      }
+      // Vertical
+      const dir = targetY > y ? 1 : -1;
+      for (let py = y + dir; py !== targetY + dir; py += dir) {
+        path.push({ x: midX, y: py });
+      }
+      y = targetY;
+      // Horizontal rest
+      for (let px = midX + 1; px <= endX; px++) {
+        path.push({ x: px, y: y });
+      }
+    }
+    // Extend to right edge
+    for (let px = path[path.length - 1].x + 1; px < cols; px++) {
+      path.push({ x: px, y: y });
+    }
+
+    // Dedupe
+    const seen = new Set();
+    path = path.filter(p => {
+      const k = p.x + ',' + p.y;
+      if (seen.has(k)) return false;
+      seen.add(k);
+      return true;
+    });
+
+    pathSet = new Set(path.map(p => p.x + ',' + p.y));
+  }
+
+  // === DRAWING ===
+  function drawBackground() {
+    // Desert gradient
+    const grd = ctx.createLinearGradient(0, 0, W, 0);
+    grd.addColorStop(0, COLORS.sand1);
+    grd.addColorStop(0.45, COLORS.sand2);
+    grd.addColorStop(0.55, COLORS.sand3);
+    grd.addColorStop(1, COLORS.sand2);
+    ctx.fillStyle = grd;
+    ctx.fillRect(0, 0, W, H);
+
+    // US side tint (right half)
+    ctx.fillStyle = COLORS.usSide;
+    ctx.fillRect(W * 0.5, 0, W * 0.5, H);
+
+    // Grid
+    ctx.strokeStyle = COLORS.grid;
+    ctx.lineWidth = 0.5;
+    for (let x = 0; x < W; x += GRID) {
+      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
+    }
+    for (let y = 0; y < H; y += GRID) {
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+    }
+
+    // Border dashed line (middle)
+    ctx.save();
+    ctx.setLineDash([12, 8]);
+    ctx.strokeStyle = COLORS.border;
+    ctx.lineWidth = 2;
+    ctx.globalAlpha = 0.6;
+    ctx.beginPath();
+    ctx.moveTo(W * 0.5, 0);
+    ctx.lineTo(W * 0.5, H);
+    ctx.stroke();
+    ctx.restore();
+
+    // Cacti decorations
+    drawCacti();
+  }
+
+  function drawCacti() {
+    ctx.fillStyle = '#5a7a3a';
+    // Deterministic cacti based on grid size
+    const seed = cols * 7 + rows * 13;
+    for (let i = 0; i < 8; i++) {
+      const cx = ((seed * (i + 1) * 37) % (cols - 2) + 1) * GRID + GRID / 2;
+      const cy = ((seed * (i + 1) * 53) % (rows - 2) + 1) * GRID + GRID / 2;
+      const gk = Math.floor(cx / GRID) + ',' + Math.floor(cy / GRID);
+      if (pathSet.has(gk)) continue;
+      ctx.globalAlpha = 0.4;
+      // Simple cactus
+      ctx.fillRect(cx - 2, cy - 12, 4, 16);
+      ctx.fillRect(cx - 8, cy - 8, 6, 3);
+      ctx.fillRect(cx + 2, cy - 5, 6, 3);
+      ctx.globalAlpha = 1;
+    }
+  }
+
+  function drawPath() {
+    ctx.fillStyle = COLORS.path;
+    for (const p of path) {
+      ctx.fillRect(p.x * GRID, p.y * GRID, GRID, GRID);
+    }
+    // Path outline
+    ctx.strokeStyle = COLORS.pathDark;
+    ctx.lineWidth = 1;
+    for (const p of path) {
+      const x = p.x * GRID, y = p.y * GRID;
+      // Only draw edges that aren't adjacent to another path tile
+      if (!pathSet.has((p.x) + ',' + (p.y - 1))) { ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + GRID, y); ctx.stroke(); }
+      if (!pathSet.has((p.x) + ',' + (p.y + 1))) { ctx.beginPath(); ctx.moveTo(x, y + GRID); ctx.lineTo(x + GRID, y + GRID); ctx.stroke(); }
+    }
+  }
+
+  function drawPlacementPreview() {
+    if (!selectedUnit || mouseGX < 0 || mouseGY < 0) return;
+    const key = mouseGX + ',' + mouseGY;
+    const onPath = pathSet.has(key);
+    const occupied = towerGrid[key];
+    const def = UNIT_DEFS[selectedUnit];
+    const canPlace = !occupied && (def.blocks ? onPath : !onPath) && money >= def.cost;
+
+    ctx.globalAlpha = 0.4;
+    ctx.fillStyle = canPlace ? '#00ff00' : '#ff0000';
+    ctx.fillRect(mouseGX * GRID, mouseGY * GRID, GRID, GRID);
+
+    if (canPlace && def.range > 0) {
+      ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.arc(mouseGX * GRID + GRID / 2, mouseGY * GRID + GRID / 2, def.range, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  function drawTower(t) {
+    const cx = t.gx * GRID + GRID / 2;
+    const cy = t.gy * GRID + GRID / 2;
+    const def = UNIT_DEFS[t.type];
+    const r = GRID * 0.4;
+
+    ctx.fillStyle = def.color;
+    ctx.strokeStyle = 'rgba(0,0,0,0.3)';
+    ctx.lineWidth = 2;
+
+    switch (def.shape) {
+      case 'circle':
+        ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+        // Badge lines
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(cx - 4, cy - 2); ctx.lineTo(cx, cy - 7); ctx.lineTo(cx + 4, cy - 2); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(cx - 5, cy + 1); ctx.lineTo(cx + 5, cy + 1); ctx.stroke();
+        break;
+      case 'tri':
+        ctx.beginPath(); ctx.moveTo(cx, cy - r); ctx.lineTo(cx - r, cy + r * 0.7); ctx.lineTo(cx + r, cy + r * 0.7); ctx.closePath(); ctx.fill(); ctx.stroke();
+        // Propeller lines
+        ctx.strokeStyle = '#ddd'; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(cx - 6, cy - 2); ctx.lineTo(cx + 6, cy - 2); ctx.stroke();
+        break;
+      case 'rect':
+        ctx.fillRect(t.gx * GRID + 2, t.gy * GRID + 2, GRID - 4, GRID - 4);
+        ctx.strokeRect(t.gx * GRID + 2, t.gy * GRID + 2, GRID - 4, GRID - 4);
+        // HP bar
+        if (def.hp) {
+          const hpPct = t.hp / def.hp;
+          ctx.fillStyle = '#333'; ctx.fillRect(t.gx * GRID + 4, t.gy * GRID + GRID - 8, GRID - 8, 4);
+          ctx.fillStyle = hpPct > 0.5 ? '#4caf50' : hpPct > 0.25 ? '#ff9800' : '#f44336';
+          ctx.fillRect(t.gx * GRID + 4, t.gy * GRID + GRID - 8, (GRID - 8) * hpPct, 4);
+        }
+        // Cross pattern
+        ctx.strokeStyle = 'rgba(0,0,0,0.2)'; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(t.gx * GRID + 4, t.gy * GRID + GRID / 2); ctx.lineTo(t.gx * GRID + GRID - 4, t.gy * GRID + GRID / 2); ctx.stroke();
+        break;
+      case 'bigrect':
+        const bx = t.gx * GRID + 3, by = t.gy * GRID + 6;
+        ctx.fillRect(bx, by, GRID - 6, GRID - 12);
+        ctx.strokeRect(bx, by, GRID - 6, GRID - 12);
+        // Windows
+        ctx.fillStyle = '#fff'; ctx.globalAlpha = 0.5;
+        ctx.fillRect(bx + 4, by + 3, 6, 5);
+        ctx.fillRect(bx + GRID - 16, by + 3, 6, 5);
+        ctx.globalAlpha = 1;
+        // Cooldown indicator
+        if (t.cooldown > 0) {
+          const pct = t.cooldown / def.rate;
+          ctx.fillStyle = 'rgba(0,0,0,0.5)';
+          ctx.fillRect(t.gx * GRID, t.gy * GRID, GRID * pct, GRID);
+        }
+        break;
+      case 'diamond':
+        ctx.beginPath();
+        ctx.moveTo(cx, cy - r); ctx.lineTo(cx + r, cy); ctx.lineTo(cx, cy + r); ctx.lineTo(cx - r, cy);
+        ctx.closePath(); ctx.fill(); ctx.stroke();
+        // Eye symbol
+        ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.arc(cx, cy, 4, 0, Math.PI * 2); ctx.stroke();
+        ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(cx, cy, 1.5, 0, Math.PI * 2); ctx.fill();
+        // Reveal aura
+        if (def.reveals) {
+          ctx.strokeStyle = 'rgba(240,168,48,0.15)'; ctx.lineWidth = 1;
+          ctx.beginPath(); ctx.arc(cx, cy, def.range, 0, Math.PI * 2); ctx.stroke();
+        }
+        break;
+    }
+
+    // Firing flash
+    if (t.firing > 0) {
+      ctx.fillStyle = 'rgba(255,200,50,' + (t.firing / 8) + ')';
+      ctx.beginPath(); ctx.arc(cx, cy, r + 4, 0, Math.PI * 2); ctx.fill();
+      t.firing--;
+    }
+  }
+
+  function drawEnemy(e) {
+    const x = e.x, y = e.y;
+    const sz = e.isCoyote ? 10 : 7;
+
+    // Shadow
+    ctx.fillStyle = 'rgba(0,0,0,0.2)';
+    ctx.beginPath(); ctx.ellipse(x, y + sz + 2, sz * 0.7, 3, 0, 0, Math.PI * 2); ctx.fill();
+
+    // Body
+    ctx.fillStyle = e.isCoyote ? '#8B0000' : '#4a2020';
+    ctx.beginPath(); ctx.arc(x, y, sz, 0, Math.PI * 2); ctx.fill();
+
+    // Head
+    ctx.fillStyle = e.isCoyote ? '#a03030' : '#6a3a3a';
+    ctx.beginPath(); ctx.arc(x, y - sz - 3, sz * 0.5, 0, Math.PI * 2); ctx.fill();
+
+    // Tunnel indicator
+    if (e.inTunnel) {
+      ctx.globalAlpha = 0.3 + Math.sin(animFrame * 0.1) * 0.2;
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 1;
+      ctx.setLineDash([3, 3]);
+      ctx.beginPath(); ctx.arc(x, y, sz + 4, 0, Math.PI * 2); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.globalAlpha = 1;
+    }
+
+    // Slow effect
+    if (e.slowTimer > 0) {
+      ctx.strokeStyle = 'rgba(100,150,255,0.6)';
+      ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(x, y, sz + 3, 0, Math.PI * 2); ctx.stroke();
+    }
+
+    // HP bar
+    if (e.hp < e.maxHp) {
+      const bw = sz * 2.5;
+      ctx.fillStyle = '#333';
+      ctx.fillRect(x - bw / 2, y - sz - 10, bw, 3);
+      ctx.fillStyle = '#f44336';
+      ctx.fillRect(x - bw / 2, y - sz - 10, bw * (e.hp / e.maxHp), 3);
+    }
+  }
+
+  function drawProjectiles() {
+    for (const p of projectiles) {
+      ctx.fillStyle = p.color || '#ffcc00';
+      ctx.beginPath(); ctx.arc(p.x, p.y, 3, 0, Math.PI * 2); ctx.fill();
+    }
+  }
+
+  function drawParticles() {
+    for (const p of particles) {
+      ctx.globalAlpha = p.life;
+      ctx.fillStyle = p.color;
+      ctx.fillRect(p.x - p.size / 2, p.y - p.size / 2, p.size, p.size);
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  // === ENEMIES ===
+  function spawnEnemy(isCoyote, usesTunnel) {
+    const start = path[0];
+    const baseHp = 2 + wave * 0.5;
+    enemies.push({
+      x: start.x * GRID + GRID / 2,
+      y: start.y * GRID + GRID / 2,
+      pathIdx: 0,
+      speed: (0.8 + wave * 0.05 + Math.random() * 0.3) * (isCoyote ? 0.7 : 1),
+      hp: isCoyote ? baseHp * 3 : baseHp,
+      maxHp: isCoyote ? baseHp * 3 : baseHp,
+      isCoyote: isCoyote,
+      inTunnel: usesTunnel,
+      tunnelRevealed: false,
+      slowTimer: 0,
+      reward: isCoyote ? 30 : 10,
+      alive: true
+    });
+  }
+
+  function updateEnemies() {
+    for (const e of enemies) {
+      if (!e.alive) continue;
+
+      // Move along path
+      let spd = e.speed;
+      if (e.slowTimer > 0) { spd *= 0.4; e.slowTimer--; }
+
+      const target = path[e.pathIdx + 1];
+      if (!target) {
+        // Reached the end
+        e.alive = false;
+        lives--;
+        updateHUD();
+        spawnParticles(e.x, e.y, '#ff0000', 5);
+        if (lives <= 0) endGame();
+        continue;
+      }
+
+      const tx = target.x * GRID + GRID / 2;
+      const ty = target.y * GRID + GRID / 2;
+      const dx = tx - e.x, dy = ty - e.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+
+      if (dist < spd * 2) {
+        e.pathIdx++;
+        e.x = tx; e.y = ty;
+      } else {
+        e.x += (dx / dist) * spd;
+        e.y += (dy / dist) * spd;
+      }
+
+      // Wall collision
+      const gx = Math.floor(e.x / GRID), gy = Math.floor(e.y / GRID);
+      const wallKey = gx + ',' + gy;
+      const wall = towerGrid[wallKey];
+      if (wall && wall.type === 'wall' && wall.alive) {
+        wall.hp -= 0.02;
+        e.speed *= 0.3; // very slow near wall
+        if (wall.hp <= 0) {
+          wall.alive = false;
+          delete towerGrid[wallKey];
+          spawnParticles(wall.gx * GRID + GRID / 2, wall.gy * GRID + GRID / 2, '#c8874a', 8);
+        }
+      }
+    }
+    enemies = enemies.filter(e => e.alive);
+  }
+
+  // === TOWERS ===
+  function updateTowers() {
+    for (const key in towerGrid) {
+      const t = towerGrid[key];
+      if (!t.alive) continue;
+      const def = UNIT_DEFS[t.type];
+      if (def.range === 0) continue; // walls don't shoot
+
+      t.cooldown = Math.max(0, t.cooldown - 1);
+      if (t.cooldown > 0) continue;
+
+      const cx = t.gx * GRID + GRID / 2;
+      const cy = t.gy * GRID + GRID / 2;
+      let range = def.range;
+
+      // Tower boost
+      if (def.boost) {
+        for (const k2 in towerGrid) {
+          const t2 = towerGrid[k2];
+          if (t2.type === 'ice' && t2.alive) {
+            const d = Math.sqrt((t.gx - t2.gx) ** 2 + (t.gy - t2.gy) ** 2) * GRID;
+            if (d < def.range) t2.boosted = true;
+          }
+        }
+      }
+
+      // Find target
+      let targets = [];
+      for (const e of enemies) {
+        if (!e.alive) continue;
+        if (e.inTunnel && !e.tunnelRevealed) {
+          // Only towers can reveal
+          if (def.reveals) {
+            const d = Math.sqrt((cx - e.x) ** 2 + (cy - e.y) ** 2);
+            if (d < range) { e.tunnelRevealed = true; e.inTunnel = false; }
+          }
+          continue;
+        }
+        const d = Math.sqrt((cx - e.x) ** 2 + (cy - e.y) ** 2);
+        if (d < range) targets.push({ e, d });
+      }
+
+      if (targets.length === 0) continue;
+      targets.sort((a, b) => a.d - b.d);
+
+      let effectiveRate = def.rate;
+      if (t.boosted) { effectiveRate = Math.floor(effectiveRate * 0.7); t.boosted = false; }
+
+      t.cooldown = effectiveRate;
+      t.firing = 8;
+
+      if (def.aoe) {
+        // Hit multiple
+        const count = Math.min(targets.length, def.type === 'bus' ? 5 : 3);
+        for (let i = 0; i < count; i++) {
+          const e = targets[i].e;
+          e.hp -= def.dmg;
+          if (def.slow) e.slowTimer = 60;
+          projectiles.push({ x: cx, y: cy, tx: e.x, ty: e.y, life: 8, color: def.color });
+          if (e.hp <= 0) killEnemy(e);
+        }
+      } else {
+        const e = targets[0].e;
+        e.hp -= def.dmg;
+        if (def.slow) e.slowTimer = 60;
+        projectiles.push({ x: cx, y: cy, tx: e.x, ty: e.y, life: 8, color: def.color });
+        if (e.hp <= 0) killEnemy(e);
+      }
+    }
+  }
+
+  function killEnemy(e) {
+    if (!e.alive) return;
+    e.alive = false;
+    money += e.reward;
+    score += e.reward;
+    deportations++;
+    spawnParticles(e.x, e.y, COLORS.gold, 6);
+    updateHUD();
+  }
+
+  // === PROJECTILES & PARTICLES ===
+  function updateProjectiles() {
+    for (const p of projectiles) {
+      const dx = p.tx - p.x, dy = p.ty - p.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist < 5 || p.life <= 0) { p.dead = true; continue; }
+      const spd = Math.min(dist, 12);
+      p.x += (dx / dist) * spd;
+      p.y += (dy / dist) * spd;
+      p.life--;
+    }
+    projectiles = projectiles.filter(p => !p.dead);
+  }
+
+  function spawnParticles(x, y, color, count) {
+    for (let i = 0; i < count; i++) {
+      particles.push({
+        x, y,
+        vx: (Math.random() - 0.5) * 4,
+        vy: (Math.random() - 0.5) * 4,
+        life: 1,
+        decay: 0.02 + Math.random() * 0.03,
+        size: 2 + Math.random() * 3,
+        color
+      });
+    }
+  }
+
+  function updateParticles() {
+    for (const p of particles) {
+      p.x += p.vx; p.y += p.vy;
+      p.life -= p.decay;
+    }
+    particles = particles.filter(p => p.life > 0);
+  }
+
+  // === WAVES ===
+  function startWave() {
+    wave++;
+    waveEnemiesLeft = 5 + wave * 3;
+    waveSpawnTimer = 0;
+    gameState = 'playing';
+    updateHUD();
+    showBanner('Wave ' + wave);
+  }
+
+  function updateWaveSpawning() {
+    if (waveEnemiesLeft <= 0) {
+      if (enemies.length === 0) {
+        // Wave complete
+        money += 25 + wave * 5;
+        score += 50 * wave;
+        updateHUD();
+        gameState = 'wavepause';
+        wavePauseTimer = 120;
+        showBanner('Wave ' + wave + ' Complete');
+      }
+      return;
+    }
+    waveSpawnTimer--;
+    if (waveSpawnTimer <= 0) {
+      const isCoyote = wave >= 3 && Math.random() < 0.1 + wave * 0.02;
+      const usesTunnel = wave >= 5 && Math.random() < 0.08 + wave * 0.01;
+      spawnEnemy(isCoyote, usesTunnel);
+      waveEnemiesLeft--;
+      waveSpawnTimer = Math.max(15, 50 - wave * 2);
+    }
+  }
+
+  // === HUD ===
+  function updateHUD() {
+    document.getElementById('hud-wave').textContent = wave;
+    document.getElementById('hud-money').textContent = '$' + money;
+    document.getElementById('hud-lives').textContent = lives;
+    document.getElementById('hud-score').textContent = score;
+
+    // Update unit button states
+    document.querySelectorAll('.unit-btn').forEach(btn => {
+      const type = btn.dataset.unit;
+      if (UNIT_DEFS[type]) {
+        btn.classList.toggle('disabled', money < UNIT_DEFS[type].cost);
+      }
+    });
+  }
+
+  function showBanner(text) {
+    const el = document.getElementById('wave-banner');
+    el.textContent = text;
+    gsap.fromTo(el, { opacity: 0, scale: 0.5 }, { opacity: 1, scale: 1, duration: 0.4, ease: 'back.out' });
+    gsap.to(el, { opacity: 0, delay: 1.5, duration: 0.5 });
+  }
+
+  // === GAME LOOP ===
+  function gameLoop() {
+    animFrame++;
+    if (gameState === 'playing') {
+      updateWaveSpawning();
+      updateEnemies();
+      updateTowers();
+      updateProjectiles();
+      updateParticles();
+    } else if (gameState === 'wavepause') {
+      wavePauseTimer--;
+      updateParticles();
+      if (wavePauseTimer <= 0) startWave();
+    }
+
+    // Draw
+    drawBackground();
+    drawPath();
+    if (gameState === 'playing' || gameState === 'wavepause') {
+      drawPlacementPreview();
+      for (const key in towerGrid) {
+        if (towerGrid[key].alive) drawTower(towerGrid[key]);
+      }
+      for (const e of enemies) if (e.alive) drawEnemy(e);
+      drawProjectiles();
+      drawParticles();
+    }
+
+    requestAnimationFrame(gameLoop);
+  }
+
+  // === GAME MANAGEMENT ===
+  function startGame() {
+    money = 500; lives = 10; score = 0; wave = 0; deportations = 0;
+    enemies = []; towers = []; projectiles = []; particles = [];
+    towerGrid = {};
+    selectedUnit = null;
+    document.querySelectorAll('.unit-btn').forEach(b => b.classList.remove('selected'));
+    document.getElementById('hud-top').style.display = 'flex';
+    document.getElementById('hud-bottom').style.display = 'flex';
+    resize();
+    updateHUD();
+    hideAllOverlays();
+    gameState = 'wavepause';
+    wavePauseTimer = 90;
+    showBanner('Get Ready!');
+  }
+
+  function endGame() {
+    gameState = 'gameover';
+    saveScore(score, wave, deportations);
+    document.getElementById('go-score').textContent = score;
+    document.getElementById('go-waves').textContent = wave;
+    document.getElementById('go-deports').textContent = deportations;
+    document.getElementById('gameover-overlay').classList.remove('hidden');
+    gsap.fromTo('#gameover-overlay', { opacity: 0 }, { opacity: 1, duration: 0.5 });
+  }
+
+  function showMenu() {
+    gameState = 'menu';
+    document.getElementById('hud-top').style.display = 'none';
+    document.getElementById('hud-bottom').style.display = 'none';
+    resize();
+    hideAllOverlays();
+    document.getElementById('title-overlay').classList.remove('hidden');
+    gsap.fromTo('#title-text', { opacity: 0, y: -30 }, { opacity: 1, y: 0, duration: 0.6, ease: 'power3.out' });
+    gsap.fromTo('#title-sub', { opacity: 0 }, { opacity: 1, duration: 0.6, delay: 0.2 });
+  }
+
+  function hideAllOverlays() {
+    document.querySelectorAll('.overlay').forEach(o => o.classList.add('hidden'));
+  }
+
+  // === SCORES ===
+  function getScores() {
+    try { return JSON.parse(localStorage.getItem('deport_scores') || '[]'); } catch { return []; }
+  }
+
+  function saveScore(s, w, d) {
+    const scores = getScores();
+    scores.push({ score: s, waves: w, deportations: d, date: Date.now() });
+    scores.sort((a, b) => b.score - a.score);
+    localStorage.setItem('deport_scores', JSON.stringify(scores.slice(0, 10)));
+  }
+
+  function showScores() {
+    hideAllOverlays();
+    const list = document.getElementById('score-list');
+    const scores = getScores();
+    list.innerHTML = scores.length === 0 ? '<li style="color:rgba(255,255,255,0.5)">No scores yet</li>' :
+      scores.map((s, i) => `<li>${i + 1}. ${s.score} pts — Wave ${s.waves} — ${s.deportations} deported</li>`).join('');
+    document.getElementById('scores-overlay').classList.remove('hidden');
+    gsap.fromTo('#scores-overlay', { opacity: 0 }, { opacity: 1, duration: 0.3 });
+  }
+
+  // === INPUT ===
+  function getGridPos(e) {
+    const rect = canvas.getBoundingClientRect();
+    const x = (e.clientX || e.touches[0].clientX) - rect.left;
+    const y = (e.clientY || e.touches[0].clientY) - rect.top;
+    return { gx: Math.floor(x / GRID), gy: Math.floor(y / GRID) };
+  }
+
+  canvas.addEventListener('mousemove', (e) => {
+    const { gx, gy } = getGridPos(e);
+    mouseGX = gx; mouseGY = gy;
+  });
+
+  canvas.addEventListener('mouseleave', () => { mouseGX = -1; mouseGY = -1; });
+
+  canvas.addEventListener('click', handlePlace);
+  canvas.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    const { gx, gy } = getGridPos(e);
+    mouseGX = gx; mouseGY = gy;
+    handlePlace(e);
+  }, { passive: false });
+
+  function handlePlace(e) {
+    if (gameState !== 'playing' && gameState !== 'wavepause') return;
+    if (!selectedUnit) return;
+
+    const gx = mouseGX, gy = mouseGY;
+    if (gx < 0 || gy < 0 || gx >= cols || gy >= rows) return;
+
+    const key = gx + ',' + gy;
+    const def = UNIT_DEFS[selectedUnit];
+    const onPath = pathSet.has(key);
+    const occupied = towerGrid[key];
+
+    if (occupied) return;
+    if (def.blocks && !onPath) return; // walls go ON path
+    if (!def.blocks && onPath) return; // others go OFF path
+    if (money < def.cost) return;
+
+    money -= def.cost;
+    towerGrid[key] = {
+      type: selectedUnit, gx, gy, alive: true,
+      cooldown: 0, firing: 0, boosted: false,
+      hp: def.hp || 0
+    };
+    updateHUD();
+    spawnParticles(gx * GRID + GRID / 2, gy * GRID + GRID / 2, '#ffffff', 4);
+  }
+
+  // Unit selection
+  document.querySelectorAll('.unit-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const type = btn.dataset.unit;
+      if (selectedUnit === type) {
+        selectedUnit = null;
+        btn.classList.remove('selected');
+      } else {
+        document.querySelectorAll('.unit-btn').forEach(b => b.classList.remove('selected'));
+        selectedUnit = type;
+        btn.classList.add('selected');
+      }
+    });
+  });
+
+  // Keyboard shortcuts
+  document.addEventListener('keydown', (e) => {
+    const map = { '1': 'ice', '2': 'wall', '3': 'drone', '4': 'tower', '5': 'bus' };
+    if (map[e.key]) {
+      selectedUnit = map[e.key];
+      document.querySelectorAll('.unit-btn').forEach(b => b.classList.toggle('selected', b.dataset.unit === selectedUnit));
+    }
+    if (e.key === 'Escape') {
+      selectedUnit = null;
+      document.querySelectorAll('.unit-btn').forEach(b => b.classList.remove('selected'));
+    }
+  });
+
+  // Menu buttons
+  document.getElementById('btn-play').addEventListener('click', startGame);
+  document.getElementById('btn-howto').addEventListener('click', () => {
+    hideAllOverlays();
+    document.getElementById('howto-overlay').classList.remove('hidden');
+    gsap.fromTo('#howto-overlay', { opacity: 0 }, { opacity: 1, duration: 0.3 });
+  });
+  document.getElementById('btn-scores').addEventListener('click', showScores);
+  document.getElementById('btn-howto-back').addEventListener('click', showMenu);
+  document.getElementById('btn-scores-back').addEventListener('click', showMenu);
+  document.getElementById('btn-restart').addEventListener('click', startGame);
+  document.getElementById('btn-menu').addEventListener('click', showMenu);
+  document.getElementById('btn-share').addEventListener('click', () => {
+    const text = `I scored ${score} points in DEPORT! Survived ${wave} waves with ${deportations} deportations. Play at ${location.href}`;
+    if (navigator.share) {
+      navigator.share({ title: 'DEPORT — Tower Defense', text });
+    } else {
+      navigator.clipboard.writeText(text).then(() => {
+        showBanner('Copied to clipboard!');
+      });
+    }
+  });
+
+  // === INIT ===
+  window.addEventListener('resize', resize);
+  resize();
+  showMenu();
+  gameLoop();
+
+})();
+</script>
+</body>
+</html>
