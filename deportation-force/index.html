@@ -170,6 +170,7 @@ const TDEFS = [
   { id: 'sensor', name: 'Sensor', cost: 75, range: 3.2, color: C.sensor, desc: 'Reveals stealth crossers' },
   { id: 'k9', name: 'K-9', cost: 100, range: 2.2, color: C.k9, desc: 'Dog chases and holds one' },
   { id: 'drone', name: 'Drone', cost: 125, range: 3.5, color: C.drone, desc: 'Tags for truck pickup' },
+  { id: 'wall', name: 'Wall', cost: 40, range: 0, color: '#888', desc: 'Blocks path — illegals break through over time', hp: 8, onPath: true },
   { id: 'depot', name: 'ICE Depot', cost: 150, range: 4, color: C.depot, desc: 'Trucks collect detainees' },
 ];
 const TMAP = {}; TDEFS.forEach(t => TMAP[t.id] = t);
@@ -241,6 +242,24 @@ function drawTowerIcon(ctx, id, x, y, sz) {
     [[-7,-7],[7,-7],[-7,7],[7,7]].forEach(([rx,ry]) => { ctx.beginPath(); ctx.arc(rx*s, ry*s, 4*s, 0, Math.PI * 2); ctx.fill(); });
     ctx.fillStyle = '#444'; ctx.beginPath(); ctx.arc(0, 0, 3*s, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = '#f44'; ctx.beginPath(); ctx.arc(0, 0, 1.5*s, 0, Math.PI * 2); ctx.fill();
+  } else if (id === 'wall') {
+    // Steel wall panel
+    ctx.fillStyle = '#777';
+    ctx.beginPath(); ctx.roundRect(-8*s, -6*s, 16*s, 12*s, 1*s); ctx.fill();
+    ctx.fillStyle = '#888';
+    ctx.fillRect(-7*s, -5*s, 14*s, 2*s);
+    ctx.fillRect(-7*s, -1*s, 14*s, 2*s);
+    ctx.fillRect(-7*s, 3*s, 14*s, 2*s);
+    // Bolts
+    ctx.fillStyle = '#999';
+    [[-6,-4],[6,-4],[-6,4],[6,4]].forEach(([bx,by]) => {
+      ctx.beginPath(); ctx.arc(bx*s, by*s, 1*s, 0, Math.PI * 2); ctx.fill();
+    });
+    // Razor wire on top
+    ctx.strokeStyle = '#aaa'; ctx.lineWidth = 0.8*s;
+    ctx.beginPath();
+    for (let i = -8; i <= 8; i += 2) ctx.lineTo(i*s, -7*s + Math.sin(i) * 1.5*s);
+    ctx.stroke();
   } else if (id === 'depot') {
     ctx.fillStyle = C.depot;
     ctx.beginPath(); ctx.roundRect(-9*s, -5*s, 18*s, 12*s, 2*s); ctx.fill();
@@ -286,14 +305,28 @@ CV.addEventListener('click', e => {
   const gc = Math.floor((e.clientX - gridX) / CELL);
   const gr = Math.floor((e.clientY - gridY) / CELL);
   if (gc < 0 || gc >= COLS || gr < 0 || gr >= ROWS) { hideTooltip(); return; }
-  if (grid[gr][gc] === 'path') return;
-  if (grid[gr][gc] && grid[gr][gc] !== 'path') { showTooltip(gr, gc, e.clientX, e.clientY); return; }
+
+  const cell = grid[gr][gc];
+  const def = selectedTower ? TMAP[selectedTower] : null;
+
+  // Clicking existing tower/wall → show tooltip
+  if (cell && cell.id) { showTooltip(gr, gc, e.clientX, e.clientY); return; }
+
   hideTooltip();
-  if (!selectedTower) return;
-  const def = TMAP[selectedTower];
-  if (money < def.cost) return;
+  if (!selectedTower || !def || money < def.cost) return;
+
+  // Walls go ON path, other towers go OFF path
+  if (def.onPath) {
+    if (cell !== 'path') return; // walls must be on path
+  } else {
+    if (cell === 'path') return; // non-walls can't go on path
+    if (cell) return; // occupied
+  }
+
   const t = { id: def.id, r: gr, c: gc, level: 1, range: def.range, color: def.color, cooldown: 0,
     x: gridX + gc * CELL + CELL / 2, y: gridY + gr * CELL + CELL / 2 };
+  if (def.hp) t.hp = def.hp; // wall HP
+  if (def.hp) t.maxHp = def.hp;
   grid[gr][gc] = t; towers.push(t);
   money -= def.cost; updateTowerBar(); updateHUD();
 });
@@ -305,10 +338,11 @@ function showTooltip(r, c, mx, my) {
   const sell = Math.floor(def.cost * 0.6 * t.level);
   const upg = Math.floor(def.cost * 1.5 * t.level);
   const tip = document.getElementById('tooltip');
-  tip.innerHTML = `<div style="font-family:var(--font-heading);font-size:.7rem;font-weight:700;color:var(--gold);margin-bottom:3px">${def.name} Lv${t.level}</div>` +
-    `<div style="color:rgba(255,255,255,.4);margin-bottom:4px;font-size:.6rem">${def.desc}</div>` +
+  const hpInfo = t.id === 'wall' ? `<div style="color:rgba(255,255,255,.3);font-size:.55rem;margin-bottom:3px">HP: ${Math.ceil(t.hp)}/${t.maxHp}</div>` : '';
+  tip.innerHTML = `<div style="font-family:var(--font-heading);font-size:.7rem;font-weight:700;color:var(--gold);margin-bottom:3px">${def.name}${t.id !== 'wall' ? ' Lv'+t.level : ''}</div>` +
+    `<div style="color:rgba(255,255,255,.4);margin-bottom:4px;font-size:.6rem">${def.desc}</div>` + hpInfo +
     `<button class="sell-btn" onclick="sellT(${r},${c})">Sell $${sell}</button>` +
-    (t.level < 3 ? `<button class="upgrade-btn" onclick="upgT(${r},${c})">Upgrade $${upg}</button>` : '');
+    (t.level < 3 && t.id !== 'wall' ? `<button class="upgrade-btn" onclick="upgT(${r},${c})">Upgrade $${upg}</button>` : '');
   tip.style.display = 'block';
   tip.style.left = Math.min(mx, W - 170) + 'px';
   tip.style.top = Math.max(38, my - 70) + 'px';
@@ -316,10 +350,13 @@ function showTooltip(r, c, mx, my) {
 function hideTooltip() { document.getElementById('tooltip').style.display = 'none'; }
 
 window.sellT = (r, c) => {
-  const t = grid[r][c]; if (!t) return;
+  const t = grid[r][c]; if (!t || !t.id) return;
   money += Math.floor(TMAP[t.id].cost * 0.6 * t.level);
   towers = towers.filter(tw => tw !== t);
-  grid[r][c] = null; hideTooltip(); updateTowerBar(); updateHUD();
+  // Restore 'path' if this was a wall on the path
+  const isOnPath = mainPath.some(([pr, pc]) => pr === r && pc === c);
+  grid[r][c] = isOnPath ? 'path' : null;
+  hideTooltip(); updateTowerBar(); updateHUD();
 };
 window.upgT = (r, c) => {
   const t = grid[r][c]; if (!t || t.level >= 3) return;
@@ -426,6 +463,26 @@ function update(dt) {
     }
     let spd = e.speed;
     if (e.slowTimer > 0) { spd *= 0.3; e.slowTimer -= dt; }
+
+    // Check if next path cell has a wall — if so, bash it
+    if (e.pathIdx < mainPath.length - 1) {
+      const [nr, nc] = mainPath[e.pathIdx + 1];
+      const wallCell = grid[nr] && grid[nr][nc];
+      if (wallCell && wallCell.id === 'wall') {
+        // Bash the wall
+        wallCell.hp -= dt * 1.2; // damage per second
+        // Shake effect on wall
+        wallCell.shakeTimer = 0.15;
+        if (wallCell.hp <= 0) {
+          // Wall destroyed
+          towers = towers.filter(tw => tw !== wallCell);
+          grid[nr][nc] = 'path';
+          effects.push({ x: wallCell.x, y: wallCell.y - 6, text: 'WALL DOWN!', color: '#f84', life: 1 });
+        }
+        return; // don't move while bashing
+      }
+    }
+
     if (e.pathIdx < mainPath.length - 1) {
       const [cr, cc] = mainPath[e.pathIdx];
       const [nr, nc] = mainPath[e.pathIdx + 1];
@@ -445,6 +502,9 @@ function update(dt) {
       if (lives <= 0) endGame(false);
     }
   });
+
+  // Update wall shake timers
+  towers.forEach(t => { if (t.id === 'wall' && t.shakeTimer > 0) t.shakeTimer -= dt; });
 
   effects.forEach(e => e.life -= dt * 0.7);
   effects = effects.filter(e => e.life > 0);
@@ -519,14 +579,27 @@ function draw() {
   // Towers
   towers.forEach(t => {
     const range = t.range * CELL;
-    if (selectedTower === t.id) {
+    if (selectedTower === t.id && range > 0) {
       cx.strokeStyle = `rgba(${t.id === 'spotlight' ? '232,200,64' : t.id === 'sensor' ? '64,184,216' : t.id === 'depot' ? '40,98,181' : '200,144,64'},0.2)`;
       cx.lineWidth = 1; cx.beginPath(); cx.arc(t.x, t.y, range, 0, Math.PI * 2); cx.stroke();
     }
+    // Shake offset for walls being bashed
+    const shake = (t.id === 'wall' && t.shakeTimer > 0) ? (Math.random() - 0.5) * 3 : 0;
     cx.fillStyle = 'rgba(0,0,0,0.2)';
     cx.beginPath(); cx.ellipse(t.x + 1, t.y + 2, CELL * 0.4, CELL * 0.25, 0, 0, Math.PI * 2); cx.fill();
-    drawTowerIcon(cx, t.id, t.x, t.y, CELL * 0.38);
-    if (t.level > 1) {
+    drawTowerIcon(cx, t.id, t.x + shake, t.y, CELL * 0.38);
+    // Wall HP bar
+    if (t.id === 'wall' && t.hp < t.maxHp) {
+      const barW = CELL * 0.7, barH = 3;
+      const barX = t.x - barW / 2, barY = t.y + CELL * 0.42;
+      cx.fillStyle = 'rgba(0,0,0,0.5)';
+      cx.fillRect(barX, barY, barW, barH);
+      const pct = Math.max(0, t.hp / t.maxHp);
+      cx.fillStyle = pct > 0.5 ? '#5c5' : pct > 0.25 ? '#fa4' : '#f44';
+      cx.fillRect(barX, barY, barW * pct, barH);
+    }
+    // Level pips (non-wall)
+    if (t.level > 1 && t.id !== 'wall') {
       for (let i = 0; i < t.level; i++) {
         cx.fillStyle = '#fff'; cx.beginPath(); cx.arc(t.x - (t.level-1)*2.5 + i*5, t.y + CELL * 0.4, 1.5, 0, Math.PI*2); cx.fill();
       }
