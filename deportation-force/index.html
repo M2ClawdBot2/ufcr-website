@@ -56,10 +56,10 @@
   <p class="overlay-sub">Build a border security operation. Detect, detain, and deport. Don't let anyone reach the border.</p>
   <ul class="how-to">
     <li>Tap the field to place towers</li>
-    <li>Crossers rush straight north toward the border</li>
+    <li>Crossers follow the dirt path toward the border</li>
     <li>Spotlights slow, K-9s hold, Drones tag</li>
     <li>ICE Depots send trucks to collect and deport</li>
-    <li>Walls block movement and force detours</li>
+    <li>Place towers next to the path to intercept</li>
     <li>Survive 10 waves to secure the border</li>
   </ul>
   <button class="btn" id="startBtn">Deploy</button>
@@ -132,7 +132,7 @@ const TDEFS = [
   { id: 'sensor', name: 'Sensor', cost: 75, range: 3.2, color: C.sensor, desc: 'Reveals stealth crossers' },
   { id: 'k9', name: 'K-9', cost: 100, range: 2.2, color: C.k9, desc: 'Dog chases and holds one' },
   { id: 'drone', name: 'Drone', cost: 125, range: 3.5, color: C.drone, desc: 'Tags for truck pickup' },
-  { id: 'wall', name: 'Wall', cost: 25, range: 0, color: C.wallT, desc: 'Blocks movement' },
+  // Wall removed — enemies follow fixed path
   { id: 'depot', name: 'ICE Depot', cost: 150, range: 4, color: C.depot, desc: 'Trucks collect detainees' },
 ];
 const TMAP = {}; TDEFS.forEach(t => TMAP[t.id] = t);
@@ -142,6 +142,7 @@ let gameRunning = false, lastTime = 0;
 let money, lives, wave, totalDeported, totalThrough;
 let grid, towers, enemies, trucks, dogs, effects;
 let selectedTower = null, waveActive = false, spawnTimer, spawnIdx, waveCfg;
+let mainPath = []; // array of [r, c] path cells from entry to exit
 
 // Waves: count, speed, hp, reward, delay, stealth%, fast%
 const WAVES = [
@@ -157,12 +158,31 @@ const WAVES = [
   { count: 80, speed: 40, hp: 4, reward: 25, delay: 0.1, stealth: 0.3, fast: 0.3 },
 ];
 
+function generatePath() {
+  // Winding S-shaped path from bottom to top
+  const ENTRY_COL = Math.floor(COLS / 2);
+  const pts = [];
+  let c = ENTRY_COL;
+  for (let r = ROWS - 1; r >= 0; r--) {
+    pts.push([r, c]);
+    if (r === ROWS - 3) { const t = 2; const d = t > c ? 1 : -1; while (c !== t) { c += d; pts.push([r, c]); } }
+    else if (r === ROWS - 6) { const t = COLS - 3; const d = t > c ? 1 : -1; while (c !== t) { c += d; pts.push([r, c]); } }
+    else if (r === ROWS - 9) { const t = 4; const d = t > c ? 1 : -1; while (c !== t) { c += d; pts.push([r, c]); } }
+    else if (r === 2) { const t = Math.floor(COLS / 2); const d = t > c ? 1 : -1; while (c !== t) { c += d; pts.push([r, c]); } }
+  }
+  return pts;
+}
+
 function initGrid() {
   grid = [];
   for (let r = 0; r < ROWS; r++) {
     grid[r] = [];
     for (let c = 0; c < COLS; c++) grid[r][c] = null; // null = empty
   }
+  // Generate and mark path
+  mainPath = generatePath();
+  // Mark path cells in grid as 'path' string so towers can't be placed on them
+  mainPath.forEach(([r, c]) => { grid[r][c] = 'path'; });
 }
 
 function cellCenter(r, c) {
@@ -315,7 +335,8 @@ CV.addEventListener('click', e => {
   const gr = Math.floor((e.clientY - gridY) / CELL);
   if (gc < 0 || gc >= COLS || gr < 0 || gr >= ROWS) { hideTooltip(); return; }
 
-  if (grid[gr][gc]) { showTooltip(gr, gc, e.clientX, e.clientY); return; }
+  if (grid[gr][gc] === 'path') return; // can't build on path
+  if (grid[gr][gc] && grid[gr][gc] !== 'path') { showTooltip(gr, gc, e.clientX, e.clientY); return; }
   hideTooltip();
   if (!selectedTower) return;
   const def = TMAP[selectedTower];
@@ -372,13 +393,13 @@ window.upgT = (r, c) => {
 function spawnEnemy(cfg, idx) {
   const isFast = cfg.fast && Math.random() < cfg.fast;
   const isStealth = cfg.stealth && Math.random() < cfg.stealth;
-  // Spawn across bottom row at random x
-  const sx = gridX + (Math.random() * 0.8 + 0.1) * COLS * CELL;
-  const sy = gridY + ROWS * CELL + 10;
+  // Start at first path cell (entry)
+  const startCell = mainPath[0];
+  const [sx, sy] = cellCenter(startCell[0], startCell[1]);
   return {
-    x: sx, y: sy,
-    // Slight random target x offset (drift)
-    driftX: (Math.random() - 0.5) * CELL * 2,
+    x: sx, y: sy + CELL, // start just below the path entry
+    pathIdx: 0, // index along mainPath
+    pathProgress: 0, // 0-1 between current and next path cell
     speed: isFast ? cfg.speed * 1.5 : cfg.speed,
     hp: cfg.hp, maxHp: cfg.hp,
     reward: cfg.reward,
@@ -489,7 +510,7 @@ function update(dt) {
   });
   trucks = trucks.filter(t => !t.done);
 
-  // Enemy movement: walk straight north, avoid walls
+  // Enemy movement: follow the path
   enemies.forEach(e => {
     if (e.pickedUp || e.detained) {
       if (e.detained && !e.pickedUp) {
@@ -501,31 +522,30 @@ function update(dt) {
     let spd = e.speed;
     if (e.slowTimer > 0) { spd *= 0.3; e.slowTimer -= dt; }
 
-    // Check for wall directly ahead
-    const nextY = e.y - spd * dt;
-    const gr = Math.floor((nextY - gridY) / CELL);
-    const gc = Math.floor((e.x - gridX) / CELL);
-    if (gr >= 0 && gr < ROWS && gc >= 0 && gc < COLS && grid[gr][gc] && grid[gr][gc].id === 'wall') {
-      // Move sideways to find gap
-      const tryLeft = gc > 0 && (!grid[gr][gc-1] || grid[gr][gc-1].id !== 'wall');
-      const tryRight = gc < COLS-1 && (!grid[gr][gc+1] || grid[gr][gc+1].id !== 'wall');
-      if (tryLeft && !tryRight) e.x -= spd * dt * 0.7;
-      else if (tryRight && !tryLeft) e.x += spd * dt * 0.7;
-      else if (tryLeft && tryRight) e.x += (e.driftX > 0 ? 1 : -1) * spd * dt * 0.7;
-      // Don't move north (blocked)
-    } else {
-      e.y -= spd * dt;
-      e.x += e.driftX * dt * 0.3;
+    // Move along path
+    if (e.pathIdx < mainPath.length - 1) {
+      const [cr, cc] = mainPath[e.pathIdx];
+      const [nr, nc] = mainPath[e.pathIdx + 1];
+      const [cx_, cy_] = cellCenter(cr, cc);
+      const [nx, ny] = cellCenter(nr, nc);
+      const dx = nx - cx_, dy = ny - cy_;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      e.pathProgress += (spd * dt) / dist;
+      if (e.pathProgress >= 1) {
+        e.pathIdx++;
+        e.pathProgress = 0;
+      }
+      // Interpolate position
+      const prog = Math.min(e.pathProgress, 1);
+      e.x = cx_ + dx * prog;
+      e.y = cy_ + dy * prog;
     }
 
-    // Clamp x
-    e.x = Math.max(gridX + 4, Math.min(gridX + COLS * CELL - 4, e.x));
-
-    // Reached border?
-    if (e.y < gridY) {
+    // Reached end of path (border)?
+    if (e.pathIdx >= mainPath.length - 1) {
       enemies = enemies.filter(en => en !== e);
       lives--; totalThrough++;
-      effects.push({ x: e.x, y: gridY + 10, text: 'GOT THROUGH!', color: '#f44', life: 1.2 });
+      effects.push({ x: e.x, y: e.y, text: 'GOT THROUGH!', color: '#f44', life: 1.2 });
       if (lives <= 0) endGame(false);
     }
   });
@@ -559,6 +579,17 @@ function draw() {
       cx.strokeRect(x, y, CELL, CELL);
     }
   }
+
+  // ─── Path (dirt trail) ───
+  mainPath.forEach(([r, c]) => {
+    const x = gridX + c * CELL, y = gridY + r * CELL;
+    cx.fillStyle = C.path;
+    cx.fillRect(x, y, CELL, CELL);
+    // Darken edges slightly
+    cx.strokeStyle = 'rgba(0,0,0,0.12)';
+    cx.lineWidth = 0.5;
+    cx.strokeRect(x + 0.5, y + 0.5, CELL - 1, CELL - 1);
+  });
 
   // Border wall at top (the line they're trying to reach)
   cx.fillStyle = '#667';
