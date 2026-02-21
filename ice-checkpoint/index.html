@@ -1163,11 +1163,14 @@ function sceneLoop() {
       animTimer = 0;
     }
   } else if (animState === 'driving-out') {
-    // Admitted: car drives AWAY from us (shrinks) and veers right
+    // Admitted: car drives TOWARD us (grows bigger), veers right, exits off screen
     animTimer++;
-    carY -= 3.5; // move toward horizon (gets smaller)
-    carXOff += 2.5; // drift right
-    if (carY < SH * 0.2) {
+    carY += 4; // drive toward camera (gets bigger)
+    if (animTimer > 15) {
+      carXOff += 5 + animTimer * 0.3; // start veering right
+      carAngle -= 0.015; // slight turn
+    }
+    if (carXOff > SW * 0.6 || carY > SH + 50) {
       animState = 'barrier-down';
     }
   } else if (animState === 'driving-detained') {
