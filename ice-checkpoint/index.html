@@ -30,7 +30,7 @@
     #gameArea{position:fixed;top:0;left:0;right:0;bottom:0;display:none;flex-direction:column}
     
     /* Scene - top portion showing booth — front-facing view */
-    #scene{flex:0 0 45%;min-height:220px;background:#87CEEB;position:relative;overflow:hidden;border-bottom:3px solid #444}
+    #scene{flex:0 0 38%;min-height:180px;max-height:300px;background:#87CEEB;position:relative;overflow:hidden;border-bottom:3px solid #444}
     
     /* Document inspection area */
     #deskArea{flex:1;background:#3a2a1a;position:relative;overflow:hidden;display:flex;flex-direction:column}
@@ -725,8 +725,8 @@ function drawScene() {
   }
 
   // ─── Booth (left side, substantial) ───
-  const boothW = Math.min(100, SW * 0.22);
-  const boothH = SH * 0.55;
+  const boothW = Math.min(80, SW * 0.18);
+  const boothH = SH * 0.48;
   const boothX = cx - roadBotW * 0.33;
   const boothY = SH - boothH;
 
@@ -836,7 +836,7 @@ function drawScene() {
   }
 
   // ─── ICE Van ───
-  drawICEVan(cx + roadBotW * 0.36, SH * 0.58);
+  drawICEVan(cx + roadBotW * 0.38, SH * 0.48);
 }
 
 function drawCone(x, y, s) {
@@ -858,9 +858,9 @@ function drawCarFront(x, animY, angle) {
   const face = currentPerson.face;
 
   // Perspective scale
-  const minY = SH * 0.32, maxY = SH * 0.75;
+  const minY = SH * 0.32, maxY = SH * 0.65;
   const t = Math.max(0, Math.min(1, (animY - minY) / (maxY - minY)));
-  const scale = 0.35 + t * 0.7;
+  const scale = 0.3 + t * 0.55;
   const w = 120 * scale;
   const h = 145 * scale;
 
@@ -1073,7 +1073,7 @@ function drawCarFront(x, animY, angle) {
 }
 
 function drawICEVan(x, y) {
-  const s = 0.75;
+  const s = 0.55;
   sc.save();
   sc.translate(x, y);
   sc.scale(s, s);
@@ -1267,7 +1267,7 @@ function nextCar() {
 
   currentPerson = genPerson();
   carY = SH * 0.15; // start far away (small)
-  carTargetY = SH * 0.68; // stop at booth (big, close)
+  carTargetY = SH * 0.58; // stop at booth
   carXOff = 0;
   carAngle = 0;
   animState = 'driving-in';
