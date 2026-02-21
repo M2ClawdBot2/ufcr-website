@@ -222,13 +222,19 @@ let day = 0, score = 0, strikes = 0, streak = 0;
 let totalCorrect = 0, totalWrong = 0;
 let carsToday = 0, carsProcessed = 0;
 let currentPerson = null;
-let animState = 'idle'; // idle, driving-in, waiting, driving-out, detained
-let carX = 0, carTargetX = 0;
+// Animation states: idle, driving-in, barrier-up, waiting, barrier-up-out, driving-out, u-turn, driving-away
+let animState = 'idle';
+let carY = 0, carTargetY = 0; // Y position (distance from viewer)
+let carXOff = 0; // X offset for turning
+let carAngle = 0; // rotation for u-turn
+let barrierAngle = 0; // 0 = down, 1 = up
+let animTimer = 0;
 let allRules = [];
 let zoomedDoc = null;
 
 // Scene animation
 let sceneFrame = 0;
+let lastDecision = 'admit'; // track for animation
 
 // ─── RULES SYSTEM ───
 const DAY_CONFIGS = [
@@ -622,391 +628,506 @@ function drawScene() {
   const cx = SW / 2;
 
   // Sky gradient
-  const skyGrad = sc.createLinearGradient(0, 0, 0, SH * 0.35);
-  skyGrad.addColorStop(0, '#5BA3D9');
-  skyGrad.addColorStop(1, '#A8D8EA');
+  const skyGrad = sc.createLinearGradient(0, 0, 0, SH * 0.32);
+  skyGrad.addColorStop(0, '#4A90D4');
+  skyGrad.addColorStop(1, '#8EC5E8');
   sc.fillStyle = skyGrad;
-  sc.fillRect(0, 0, SW, SH * 0.35);
+  sc.fillRect(0, 0, SW, SH * 0.32);
+
+  // Clouds
+  sc.fillStyle = 'rgba(255,255,255,0.5)';
+  [[SW*0.2, SH*0.08, 35], [SW*0.6, SH*0.12, 25], [SW*0.85, SH*0.06, 20]].forEach(([x,y,r]) => {
+    sc.beginPath(); sc.ellipse(x, y, r, r*0.4, 0, 0, Math.PI*2); sc.fill();
+    sc.beginPath(); sc.ellipse(x-r*0.5, y+2, r*0.6, r*0.3, 0, 0, Math.PI*2); sc.fill();
+    sc.beginPath(); sc.ellipse(x+r*0.6, y+1, r*0.5, r*0.3, 0, 0, Math.PI*2); sc.fill();
+  });
 
   // Sun
-  sc.fillStyle = 'rgba(255,250,200,0.5)';
-  sc.beginPath(); sc.arc(SW * 0.82, SH * 0.1, 30, 0, Math.PI * 2); sc.fill();
+  sc.fillStyle = 'rgba(255,250,200,0.4)';
+  sc.beginPath(); sc.arc(SW * 0.85, SH * 0.08, 28, 0, Math.PI * 2); sc.fill();
   sc.fillStyle = '#fff8cc';
-  sc.beginPath(); sc.arc(SW * 0.82, SH * 0.1, 18, 0, Math.PI * 2); sc.fill();
+  sc.beginPath(); sc.arc(SW * 0.85, SH * 0.08, 16, 0, Math.PI * 2); sc.fill();
 
-  // Distant mountains
-  sc.fillStyle = '#8aaa78';
+  // Mountains (layered)
+  sc.fillStyle = '#7a9a6a';
   sc.beginPath();
-  sc.moveTo(0, SH * 0.35);
-  sc.lineTo(SW * 0.1, SH * 0.2); sc.lineTo(SW * 0.25, SH * 0.3);
-  sc.lineTo(SW * 0.4, SH * 0.15); sc.lineTo(SW * 0.55, SH * 0.28);
-  sc.lineTo(SW * 0.7, SH * 0.18); sc.lineTo(SW * 0.85, SH * 0.25);
-  sc.lineTo(SW, SH * 0.2); sc.lineTo(SW, SH * 0.35);
-  sc.closePath(); sc.fill();
+  sc.moveTo(0, SH * 0.32);
+  sc.lineTo(SW*0.08, SH*0.18); sc.lineTo(SW*0.2, SH*0.28);
+  sc.lineTo(SW*0.35, SH*0.13); sc.lineTo(SW*0.5, SH*0.26);
+  sc.lineTo(SW*0.65, SH*0.16); sc.lineTo(SW*0.8, SH*0.24);
+  sc.lineTo(SW*0.92, SH*0.19); sc.lineTo(SW, SH*0.22);
+  sc.lineTo(SW, SH*0.32); sc.closePath(); sc.fill();
+  // Closer hills
+  sc.fillStyle = '#8ab07a';
+  sc.beginPath();
+  sc.moveTo(0, SH*0.32); sc.lineTo(SW*0.15, SH*0.26);
+  sc.lineTo(SW*0.4, SH*0.3); sc.lineTo(SW*0.6, SH*0.25);
+  sc.lineTo(SW*0.85, SH*0.3); sc.lineTo(SW, SH*0.28);
+  sc.lineTo(SW, SH*0.32); sc.closePath(); sc.fill();
 
   // Desert ground
-  const groundY = SH * 0.35;
-  sc.fillStyle = '#d4c49a';
+  const groundY = SH * 0.32;
+  const grdGrad = sc.createLinearGradient(0, groundY, 0, SH);
+  grdGrad.addColorStop(0, '#d8c898');
+  grdGrad.addColorStop(1, '#c4b080');
+  sc.fillStyle = grdGrad;
   sc.fillRect(0, groundY, SW, SH - groundY);
 
-  // Scattered desert details
-  sc.fillStyle = '#c4b48a';
-  for (let i = 0; i < 8; i++) {
-    const bx = (i * SW / 7 + 20) % SW;
-    sc.beginPath(); sc.ellipse(bx, groundY + 15 + (i % 3) * 10, 12 + i * 2, 3, 0, 0, Math.PI * 2); sc.fill();
-  }
+  // Small desert bushes
+  sc.fillStyle = '#7a9055';
+  [[SW*0.08, groundY+20], [SW*0.92, groundY+25], [SW*0.05, SH*0.7], [SW*0.95, SH*0.6]].forEach(([x,y]) => {
+    sc.beginPath(); sc.ellipse(x, y, 8, 5, 0, 0, Math.PI*2); sc.fill();
+  });
 
-  // ─── Road (perspective — wider at bottom, narrower at top) ───
-  const roadTopW = SW * 0.25;
-  const roadBotW = SW * 0.7;
+  // ─── Road (perspective) ───
+  const roadTopW = SW * 0.22;
+  const roadBotW = SW * 0.65;
   const roadTop = groundY;
   const roadBot = SH;
-  
-  // Road surface
-  sc.fillStyle = '#4a4a4a';
+
+  // Road shadow
+  sc.fillStyle = 'rgba(0,0,0,0.06)';
   sc.beginPath();
-  sc.moveTo(cx - roadTopW / 2, roadTop);
-  sc.lineTo(cx + roadTopW / 2, roadTop);
-  sc.lineTo(cx + roadBotW / 2, roadBot);
-  sc.lineTo(cx - roadBotW / 2, roadBot);
+  sc.moveTo(cx - roadTopW/2 - 8, roadTop);
+  sc.lineTo(cx + roadTopW/2 + 8, roadTop);
+  sc.lineTo(cx + roadBotW/2 + 12, roadBot);
+  sc.lineTo(cx - roadBotW/2 - 12, roadBot);
   sc.closePath(); sc.fill();
 
-  // Road edge lines (white)
-  sc.strokeStyle = '#ddd';
-  sc.lineWidth = 2;
+  // Road surface
+  const roadGrad = sc.createLinearGradient(0, roadTop, 0, roadBot);
+  roadGrad.addColorStop(0, '#505050');
+  roadGrad.addColorStop(1, '#3a3a3a');
+  sc.fillStyle = roadGrad;
   sc.beginPath();
-  sc.moveTo(cx - roadTopW / 2 + 3, roadTop);
-  sc.lineTo(cx - roadBotW / 2 + 6, roadBot);
-  sc.stroke();
-  sc.beginPath();
-  sc.moveTo(cx + roadTopW / 2 - 3, roadTop);
-  sc.lineTo(cx + roadBotW / 2 - 6, roadBot);
-  sc.stroke();
+  sc.moveTo(cx - roadTopW/2, roadTop);
+  sc.lineTo(cx + roadTopW/2, roadTop);
+  sc.lineTo(cx + roadBotW/2, roadBot);
+  sc.lineTo(cx - roadBotW/2, roadBot);
+  sc.closePath(); sc.fill();
 
-  // Center dashed line (perspective)
-  sc.strokeStyle = '#cc0';
+  // Edge lines
+  sc.strokeStyle = 'rgba(255,255,255,0.6)';
   sc.lineWidth = 2;
-  const dashCount = 8;
-  for (let i = 0; i < dashCount; i++) {
-    const t1 = i / dashCount;
-    const t2 = (i + 0.4) / dashCount;
-    const y1 = roadTop + (roadBot - roadTop) * t1;
-    const y2 = roadTop + (roadBot - roadTop) * t2;
+  sc.beginPath(); sc.moveTo(cx - roadTopW/2 + 2, roadTop); sc.lineTo(cx - roadBotW/2 + 4, roadBot); sc.stroke();
+  sc.beginPath(); sc.moveTo(cx + roadTopW/2 - 2, roadTop); sc.lineTo(cx + roadBotW/2 - 4, roadBot); sc.stroke();
+
+  // Center dashes (perspective sized)
+  sc.strokeStyle = '#cc0';
+  for (let i = 0; i < 10; i++) {
+    const t1 = i / 10;
+    const t2 = (i + 0.35) / 10;
+    sc.lineWidth = 1.5 + t1 * 1.5;
     sc.beginPath();
-    sc.moveTo(cx, y1);
-    sc.lineTo(cx, y2);
+    sc.moveTo(cx, roadTop + (roadBot - roadTop) * t1);
+    sc.lineTo(cx, roadTop + (roadBot - roadTop) * t2);
     sc.stroke();
   }
 
-  // ─── Booth structure (left side) ───
-  const boothW = Math.min(90, SW * 0.2);
+  // ─── Booth (left side, substantial) ───
+  const boothW = Math.min(100, SW * 0.22);
   const boothH = SH * 0.55;
-  const boothX = cx - roadBotW * 0.32;
+  const boothX = cx - roadBotW * 0.33;
   const boothY = SH - boothH;
 
   // Booth shadow
-  sc.fillStyle = 'rgba(0,0,0,0.1)';
-  sc.fillRect(boothX - 2, boothY + 4, boothW + 4, boothH);
+  sc.fillStyle = 'rgba(0,0,0,0.12)';
+  sc.beginPath(); sc.roundRect(boothX + 3, boothY + 3, boothW, boothH, 2); sc.fill();
 
   // Booth body
-  sc.fillStyle = '#e0ddd5';
-  sc.fillRect(boothX, boothY, boothW, boothH);
-  // Booth roof
-  sc.fillStyle = '#555';
-  sc.fillRect(boothX - 6, boothY - 4, boothW + 12, 8);
-  // Booth darker panel
-  sc.fillStyle = '#ccc8be';
-  sc.fillRect(boothX + 4, boothY + 8, boothW - 8, boothH * 0.3);
+  const boothGrad = sc.createLinearGradient(boothX, boothY, boothX + boothW, boothY);
+  boothGrad.addColorStop(0, '#e8e4dc');
+  boothGrad.addColorStop(0.5, '#f0ece4');
+  boothGrad.addColorStop(1, '#ddd8d0');
+  sc.fillStyle = boothGrad;
+  sc.beginPath(); sc.roundRect(boothX, boothY, boothW, boothH, [3,3,0,0]); sc.fill();
 
-  // Booth window (facing us)
-  sc.fillStyle = 'rgba(80,160,210,0.45)';
-  sc.fillRect(boothX + 8, boothY + 12, boothW - 16, boothH * 0.25);
-  // Window frame
-  sc.strokeStyle = '#888';
-  sc.lineWidth = 1.5;
-  sc.strokeRect(boothX + 8, boothY + 12, boothW - 16, boothH * 0.25);
-  // Window divider
+  // Booth roof (overhang)
+  sc.fillStyle = '#4a4a4a';
+  sc.beginPath(); sc.roundRect(boothX - 8, boothY - 6, boothW + 16, 10, 2); sc.fill();
+  sc.fillStyle = '#5a5a5a';
+  sc.fillRect(boothX - 6, boothY - 3, boothW + 12, 3);
+
+  // Window
+  const winX = boothX + 8, winY = boothY + 14;
+  const winW = boothW - 16, winH = boothH * 0.28;
+  sc.fillStyle = 'rgba(70,150,200,0.5)';
+  sc.beginPath(); sc.roundRect(winX, winY, winW, winH, 2); sc.fill();
+  // Window reflection
+  sc.fillStyle = 'rgba(255,255,255,0.1)';
   sc.beginPath();
-  sc.moveTo(boothX + boothW / 2, boothY + 12);
-  sc.lineTo(boothX + boothW / 2, boothY + 12 + boothH * 0.25);
-  sc.stroke();
+  sc.moveTo(winX + 2, winY + 2);
+  sc.lineTo(winX + winW * 0.3, winY + 2);
+  sc.lineTo(winX + 2, winY + winH * 0.5);
+  sc.closePath(); sc.fill();
+  // Window frame
+  sc.strokeStyle = '#777';
+  sc.lineWidth = 2;
+  sc.strokeRect(winX, winY, winW, winH);
+  sc.beginPath(); sc.moveTo(winX + winW/2, winY); sc.lineTo(winX + winW/2, winY + winH); sc.stroke();
 
-  // Sign above booth
-  const signW = boothW + 20;
-  sc.fillStyle = '#1a3a7a';
-  sc.beginPath(); sc.roundRect(boothX - 10, boothY - 26, signW, 20, 3); sc.fill();
-  sc.fillStyle = '#fff';
-  sc.font = `700 ${Math.max(9, Math.min(13, boothW * 0.14))}px Oswald,sans-serif`;
-  sc.textAlign = 'center';
-  sc.fillText('ICE CHECKPOINT', boothX + boothW / 2, boothY - 12);
+  // Counter/ledge below window
+  sc.fillStyle = '#bbb5a8';
+  sc.fillRect(boothX + 4, winY + winH, boothW - 8, 6);
 
-  // ─── Barrier gate ───
-  const gateY = SH * 0.58;
-  const gateStartX = boothX + boothW;
-  const gateEndX = cx + roadBotW * 0.28;
-  // Gate post
+  // Door hint
+  sc.fillStyle = '#ccc8bc';
+  sc.beginPath(); sc.roundRect(boothX + boothW * 0.3, boothY + boothH * 0.55, boothW * 0.4, boothH * 0.4, 2); sc.fill();
+  sc.strokeStyle = '#aaa8a0';
+  sc.lineWidth = 1;
+  sc.strokeRect(boothX + boothW * 0.3, boothY + boothH * 0.55, boothW * 0.4, boothH * 0.4);
+  // Door handle
   sc.fillStyle = '#888';
-  sc.fillRect(gateStartX - 3, gateY - 40, 6, 44);
-  // Gate arm
-  sc.fillStyle = '#e44';
-  const armH = 5;
-  sc.fillRect(gateStartX, gateY - 38, gateEndX - gateStartX, armH);
-  // Stripes on arm
+  sc.fillRect(boothX + boothW * 0.62, boothY + boothH * 0.73, 5, 2);
+
+  // Sign
+  const signW = boothW + 24;
+  sc.fillStyle = '#152d6b';
+  sc.beginPath(); sc.roundRect(boothX - 12, boothY - 30, signW, 22, 3); sc.fill();
+  // Sign border
+  sc.strokeStyle = '#fff';
+  sc.lineWidth = 1;
+  sc.beginPath(); sc.roundRect(boothX - 10, boothY - 28, signW - 4, 18, 2); sc.stroke();
   sc.fillStyle = '#fff';
-  for (let x = gateStartX + 10; x < gateEndX - 5; x += 16) {
-    sc.fillRect(x, gateY - 38, 6, armH);
+  sc.font = `700 ${Math.max(9, Math.min(13, boothW * 0.13))}px Oswald,sans-serif`;
+  sc.textAlign = 'center';
+  sc.fillText('ICE CHECKPOINT', boothX + boothW / 2, boothY - 15);
+
+  // ─── Barrier gate (animated) ───
+  const gatePostX = boothX + boothW + 2;
+  const gateBaseY = SH * 0.6;
+  const gateArmLen = cx + roadBotW * 0.25 - gatePostX;
+  // Post
+  sc.fillStyle = '#777';
+  sc.fillRect(gatePostX - 3, gateBaseY - 45, 6, 50);
+  sc.fillStyle = '#888';
+  sc.beginPath(); sc.arc(gatePostX, gateBaseY - 45, 5, 0, Math.PI * 2); sc.fill();
+  // Arm (rotates around post top)
+  sc.save();
+  sc.translate(gatePostX, gateBaseY - 43);
+  sc.rotate(-barrierAngle * Math.PI / 2); // 0=horizontal, 1=vertical (up)
+  sc.fillStyle = '#e44';
+  sc.beginPath(); sc.roundRect(0, -3, gateArmLen, 6, 2); sc.fill();
+  sc.fillStyle = '#fff';
+  for (let i = 12; i < gateArmLen - 5; i += 18) {
+    sc.fillRect(i, -3, 8, 6);
   }
+  // Counterweight
+  sc.fillStyle = '#666';
+  sc.beginPath(); sc.roundRect(-15, -5, 16, 10, 3); sc.fill();
+  sc.restore();
 
   // ─── Traffic cones ───
-  for (let i = 0; i < 3; i++) {
-    const t = 0.6 + i * 0.12;
-    const coneY = roadTop + (roadBot - roadTop) * t;
+  for (let i = 0; i < 4; i++) {
+    const t = 0.45 + i * 0.13;
+    const cy_ = roadTop + (roadBot - roadTop) * t;
     const spread = (roadTopW / 2) + (roadBotW / 2 - roadTopW / 2) * t;
-    // Left cone
-    drawCone(cx - spread + 10, coneY);
-    // Right cone
-    drawCone(cx + spread - 10, coneY);
+    const coneScale = 0.5 + t * 0.6;
+    drawCone(cx - spread + 8, cy_, coneScale);
+    drawCone(cx + spread - 8, cy_, coneScale);
   }
 
-  // ─── Car (front-facing, big) ───
-  if (currentPerson && animState !== 'idle') {
-    drawCarFront(cx + roadBotW * 0.08, carX);
+  // ─── Car ───
+  if (currentPerson && animState !== 'idle' && animState !== 'barrier-down') {
+    drawCarFront(cx + roadBotW * 0.06 + carXOff, carY, carAngle);
   }
 
-  // ─── ICE Van (parked right side, angled) ───
-  drawICEVan(cx + roadBotW * 0.35, SH * 0.65);
+  // ─── ICE Van ───
+  drawICEVan(cx + roadBotW * 0.36, SH * 0.58);
 }
 
-function drawCone(x, y) {
-  sc.fillStyle = '#f60';
+function drawCone(x, y, s) {
+  s = s || 1;
+  sc.fillStyle = '#ff6600';
   sc.beginPath();
-  sc.moveTo(x, y - 8);
-  sc.lineTo(x - 5, y + 2);
-  sc.lineTo(x + 5, y + 2);
+  sc.moveTo(x, y - 10*s);
+  sc.lineTo(x - 6*s, y + 3*s);
+  sc.lineTo(x + 6*s, y + 3*s);
   sc.closePath(); sc.fill();
   sc.fillStyle = '#fff';
-  sc.fillRect(x - 3.5, y - 3, 7, 2);
-  // Base
-  sc.fillStyle = '#e55';
-  sc.fillRect(x - 6, y + 2, 12, 3);
+  sc.fillRect(x - 4*s, y - 3*s, 8*s, 2.5*s);
+  sc.fillStyle = '#dd5500';
+  sc.beginPath(); sc.roundRect(x - 7*s, y + 2*s, 14*s, 3*s, 1); sc.fill();
 }
 
-function drawCarFront(x, animY) {
-  // animY goes from SH+100 → target Y (larger = further from viewer)
-  // The car is drawn front-facing — you see the grille, headlights, windshield, driver
+function drawCarFront(x, animY, angle) {
   const col = currentPerson.carColor;
   const face = currentPerson.face;
-  
-  // Scale based on position (perspective)
-  const targetY = SH * 0.72;
-  const scale = 0.6 + 0.4 * Math.max(0, Math.min(1, (animY - SH * 0.35) / (SH * 0.5)));
-  const w = 110 * scale;
-  const h = 130 * scale;
+
+  // Perspective scale
+  const minY = SH * 0.32, maxY = SH * 0.75;
+  const t = Math.max(0, Math.min(1, (animY - minY) / (maxY - minY)));
+  const scale = 0.35 + t * 0.7;
+  const w = 120 * scale;
+  const h = 145 * scale;
 
   sc.save();
   sc.translate(x, animY);
+  if (angle) sc.rotate(angle);
 
-  // Shadow under car
-  sc.fillStyle = 'rgba(0,0,0,0.2)';
-  sc.beginPath(); sc.ellipse(0, h * 0.48, w * 0.55, h * 0.06, 0, 0, Math.PI * 2); sc.fill();
+  // Shadow
+  sc.fillStyle = 'rgba(0,0,0,0.18)';
+  sc.beginPath(); sc.ellipse(3, h*0.49, w*0.52, h*0.05, 0, 0, Math.PI*2); sc.fill();
 
-  // ─── Car body ───
-  // Main body
+  // ─── Lower body ───
   sc.fillStyle = col;
-  sc.beginPath();
-  sc.roundRect(-w/2, -h * 0.15, w, h * 0.65, 6 * scale);
-  sc.fill();
+  sc.beginPath(); sc.roundRect(-w/2, -h*0.08, w, h*0.58, [0,0, 6*scale, 6*scale]); sc.fill();
 
-  // Hood (top of body)
-  sc.fillStyle = shadeColor(col, 15);
+  // ─── Hood (sloped panel on top of lower body) ───
+  sc.fillStyle = shadeColor(col, 18);
   sc.beginPath();
-  sc.roundRect(-w/2 + 4*scale, -h * 0.15, w - 8*scale, h * 0.18, [4*scale, 4*scale, 0, 0]);
-  sc.fill();
+  sc.moveTo(-w*0.46, -h*0.08);
+  sc.lineTo(-w*0.38, -h*0.2);
+  sc.lineTo(w*0.38, -h*0.2);
+  sc.lineTo(w*0.46, -h*0.08);
+  sc.closePath(); sc.fill();
+  // Hood highlight
+  sc.fillStyle = 'rgba(255,255,255,0.06)';
+  sc.beginPath();
+  sc.moveTo(-w*0.2, -h*0.18);
+  sc.lineTo(w*0.2, -h*0.18);
+  sc.lineTo(w*0.15, -h*0.09);
+  sc.lineTo(-w*0.15, -h*0.09);
+  sc.closePath(); sc.fill();
 
-  // Hood lines
-  sc.strokeStyle = shadeColor(col, -15);
+  // ─── Grille ───
+  sc.fillStyle = '#282828';
+  sc.beginPath(); sc.roundRect(-w*0.34, -h*0.09, w*0.68, h*0.06, 3*scale); sc.fill();
+  // Chrome trim
+  sc.strokeStyle = 'rgba(200,200,200,0.3)';
   sc.lineWidth = 1;
-  sc.beginPath();
-  sc.moveTo(-w * 0.15, -h * 0.14);
-  sc.lineTo(-w * 0.15, h * 0.02);
-  sc.stroke();
-  sc.beginPath();
-  sc.moveTo(w * 0.15, -h * 0.14);
-  sc.lineTo(w * 0.15, h * 0.02);
-  sc.stroke();
-
-  // Grille
-  sc.fillStyle = '#333';
-  sc.beginPath();
-  sc.roundRect(-w * 0.3, -h * 0.16, w * 0.6, h * 0.06, 2 * scale);
-  sc.fill();
-  // Grille slats
-  sc.fillStyle = '#555';
-  for (let i = 0; i < 5; i++) {
-    sc.fillRect(-w * 0.27 + i * w * 0.12, -h * 0.155, w * 0.08, 1.5 * scale);
+  sc.beginPath(); sc.roundRect(-w*0.34, -h*0.09, w*0.68, h*0.06, 3*scale); sc.stroke();
+  // Slats
+  sc.fillStyle = '#3a3a3a';
+  for (let i = 0; i < 6; i++) {
+    const sx = -w*0.3 + i * w*0.105;
+    sc.fillRect(sx, -h*0.085, w*0.07, h*0.045);
   }
 
-  // Headlights
-  sc.fillStyle = '#fff8cc';
-  sc.beginPath(); sc.roundRect(-w/2 + 3*scale, -h * 0.15, w * 0.16, h * 0.055, 2*scale); sc.fill();
-  sc.beginPath(); sc.roundRect(w/2 - 3*scale - w * 0.16, -h * 0.15, w * 0.16, h * 0.055, 2*scale); sc.fill();
-  // Headlight inner
-  sc.fillStyle = '#fffde0';
-  sc.beginPath(); sc.arc(-w/2 + 3*scale + w * 0.08, -h * 0.125, 3*scale, 0, Math.PI * 2); sc.fill();
-  sc.beginPath(); sc.arc(w/2 - 3*scale - w * 0.08, -h * 0.125, 3*scale, 0, Math.PI * 2); sc.fill();
+  // ─── Headlights (more detailed) ───
+  // Housing
+  sc.fillStyle = '#e8e0cc';
+  sc.beginPath(); sc.roundRect(-w/2 + 2*scale, -h*0.13, w*0.18, h*0.08, [4*scale, 2*scale, 2*scale, 4*scale]); sc.fill();
+  sc.beginPath(); sc.roundRect(w/2 - 2*scale - w*0.18, -h*0.13, w*0.18, h*0.08, [2*scale, 4*scale, 4*scale, 2*scale]); sc.fill();
+  // Bulb glow
+  sc.fillStyle = '#fff8dd';
+  sc.beginPath(); sc.arc(-w/2 + 2*scale + w*0.09, -h*0.09, 4*scale, 0, Math.PI*2); sc.fill();
+  sc.beginPath(); sc.arc(w/2 - 2*scale - w*0.09, -h*0.09, 4*scale, 0, Math.PI*2); sc.fill();
+  // Reflector
+  sc.fillStyle = 'rgba(255,255,230,0.3)';
+  sc.beginPath(); sc.arc(-w/2 + 2*scale + w*0.09, -h*0.09, 2.5*scale, 0, Math.PI*2); sc.fill();
+  sc.beginPath(); sc.arc(w/2 - 2*scale - w*0.09, -h*0.09, 2.5*scale, 0, Math.PI*2); sc.fill();
+
+  // ─── Fog lights ───
+  sc.fillStyle = 'rgba(255,255,200,0.25)';
+  sc.beginPath(); sc.arc(-w*0.28, -h*0.015, 2.5*scale, 0, Math.PI*2); sc.fill();
+  sc.beginPath(); sc.arc(w*0.28, -h*0.015, 2.5*scale, 0, Math.PI*2); sc.fill();
 
   // ─── Windshield ───
-  sc.fillStyle = 'rgba(120,180,220,0.55)';
+  const wsGrad = sc.createLinearGradient(0, -h*0.38, 0, -h*0.15);
+  wsGrad.addColorStop(0, 'rgba(100,170,220,0.65)');
+  wsGrad.addColorStop(1, 'rgba(130,190,230,0.4)');
+  sc.fillStyle = wsGrad;
   sc.beginPath();
-  sc.moveTo(-w * 0.38, h * 0.03);
-  sc.lineTo(-w * 0.32, -h * 0.22);
-  sc.lineTo(w * 0.32, -h * 0.22);
-  sc.lineTo(w * 0.38, h * 0.03);
+  sc.moveTo(-w*0.4, -h*0.18);
+  sc.lineTo(-w*0.33, -h*0.38);
+  sc.lineTo(w*0.33, -h*0.38);
+  sc.lineTo(w*0.4, -h*0.18);
   sc.closePath(); sc.fill();
-
-  // Windshield frame
-  sc.strokeStyle = shadeColor(col, -30);
-  sc.lineWidth = 1.5 * scale;
-  sc.stroke();
-
+  // Windshield reflection
+  sc.fillStyle = 'rgba(255,255,255,0.08)';
+  sc.beginPath();
+  sc.moveTo(-w*0.35, -h*0.35);
+  sc.lineTo(-w*0.15, -h*0.35);
+  sc.lineTo(-w*0.25, -h*0.2);
+  sc.lineTo(-w*0.38, -h*0.2);
+  sc.closePath(); sc.fill();
   // A-pillars
-  sc.strokeStyle = shadeColor(col, -20);
-  sc.lineWidth = 3 * scale;
-  sc.beginPath(); sc.moveTo(-w * 0.37, h * 0.02); sc.lineTo(-w * 0.31, -h * 0.21); sc.stroke();
-  sc.beginPath(); sc.moveTo(w * 0.37, h * 0.02); sc.lineTo(w * 0.31, -h * 0.21); sc.stroke();
+  sc.strokeStyle = shadeColor(col, -25);
+  sc.lineWidth = 3.5 * scale;
+  sc.lineCap = 'round';
+  sc.beginPath(); sc.moveTo(-w*0.39, -h*0.19); sc.lineTo(-w*0.32, -h*0.37); sc.stroke();
+  sc.beginPath(); sc.moveTo(w*0.39, -h*0.19); sc.lineTo(w*0.32, -h*0.37); sc.stroke();
 
-  // ─── Driver visible through windshield ───
-  const driverScale = scale * 0.9;
-  sc.save();
-  sc.translate(w * 0.08, -h * 0.08);
-
-  // Driver head
-  sc.fillStyle = face.skin;
-  sc.beginPath(); sc.ellipse(0, 0, 10 * driverScale, 12 * driverScale, 0, 0, Math.PI * 2); sc.fill();
-
-  // Hair
-  if (face.hairStyle !== 'bald') {
-    sc.fillStyle = face.hair;
-    const hTop = face.hairStyle === 'long' ? -14 : face.hairStyle === 'medium' ? -13 : -12;
-    const hW = face.hairStyle === 'long' ? 12 : 10;
-    const hH = face.hairStyle === 'long' ? 10 : face.hairStyle === 'medium' ? 7 : 5;
-    sc.beginPath(); sc.ellipse(0, hTop * driverScale + hH * driverScale / 2, hW * driverScale, hH * driverScale, 0, 0, Math.PI * 2); sc.fill();
+  // ─── Driver ───
+  if (scale > 0.5) {
+    const ds = scale * 0.85;
+    sc.save();
+    sc.translate(w * 0.06, -h * 0.26);
+    // Shoulders/shirt
+    sc.fillStyle = ['#445566','#554433','#335544','#553344','#444444'][Math.floor(face.mouthW) % 5];
+    sc.beginPath(); sc.ellipse(0, 14*ds, 15*ds, 9*ds, 0, -Math.PI, 0); sc.fill();
+    // Neck
+    sc.fillStyle = face.skin;
+    sc.fillRect(-3*ds, 5*ds, 6*ds, 8*ds);
+    // Head
+    sc.beginPath(); sc.ellipse(0, 0, 10*ds, 13*ds, 0, 0, Math.PI*2); sc.fill();
+    // Ears
+    sc.beginPath(); sc.ellipse(-10*ds, 0, 2.5*ds, 4*ds, 0, 0, Math.PI*2); sc.fill();
+    sc.beginPath(); sc.ellipse(10*ds, 0, 2.5*ds, 4*ds, 0, 0, Math.PI*2); sc.fill();
+    // Hair
+    if (face.hairStyle !== 'bald') {
+      sc.fillStyle = face.hair;
+      if (face.hairStyle === 'long') {
+        sc.beginPath(); sc.ellipse(0, -7*ds, 12*ds, 9*ds, 0, 0, Math.PI*2); sc.fill();
+        sc.fillRect(-11*ds, -4*ds, 22*ds, 8*ds);
+      } else if (face.hairStyle === 'medium') {
+        sc.beginPath(); sc.ellipse(0, -8*ds, 11*ds, 7*ds, 0, 0, Math.PI*2); sc.fill();
+      } else {
+        sc.beginPath(); sc.ellipse(0, -9*ds, 10*ds, 5*ds, 0, 0, Math.PI*2); sc.fill();
+      }
+    }
+    // Eyes
+    sc.fillStyle = '#fff';
+    sc.beginPath(); sc.ellipse(-4*ds, (-1+face.eyeY)*ds, 2.5*ds, 2*ds, 0, 0, Math.PI*2); sc.fill();
+    sc.beginPath(); sc.ellipse(4*ds, (-1+face.eyeY)*ds, 2.5*ds, 2*ds, 0, 0, Math.PI*2); sc.fill();
+    sc.fillStyle = '#1a1a1a';
+    sc.beginPath(); sc.arc(-4*ds, (-1+face.eyeY)*ds, 1.3*ds, 0, Math.PI*2); sc.fill();
+    sc.beginPath(); sc.arc(4*ds, (-1+face.eyeY)*ds, 1.3*ds, 0, Math.PI*2); sc.fill();
+    // Nose
+    sc.fillStyle = shadeColor(face.skin, -15);
+    sc.beginPath(); sc.ellipse(0, 3*ds, 2*ds, face.noseH*0.5*ds, 0, 0, Math.PI*2); sc.fill();
+    // Mouth
+    sc.strokeStyle = shadeColor(face.skin, -40);
+    sc.lineWidth = 1.2*ds;
+    sc.lineCap = 'round';
+    sc.beginPath();
+    sc.moveTo(-face.mouthW/2*ds, 7*ds);
+    sc.quadraticCurveTo(0, 8.5*ds, face.mouthW/2*ds, 7*ds);
+    sc.stroke();
+    sc.restore();
   }
 
-  // Eyes
-  sc.fillStyle = '#1a1a1a';
-  sc.beginPath(); sc.arc(-4 * driverScale, (-2 + face.eyeY) * driverScale, 1.5 * driverScale, 0, Math.PI * 2); sc.fill();
-  sc.beginPath(); sc.arc(4 * driverScale, (-2 + face.eyeY) * driverScale, 1.5 * driverScale, 0, Math.PI * 2); sc.fill();
-
-  // Mouth
-  sc.strokeStyle = '#4a2a1a';
-  sc.lineWidth = 1 * driverScale;
-  sc.lineCap = 'round';
-  sc.beginPath();
-  sc.moveTo(-face.mouthW / 2 * driverScale, 5 * driverScale);
-  sc.lineTo(face.mouthW / 2 * driverScale, 5 * driverScale);
-  sc.stroke();
-
-  // Shoulders/body hint
-  sc.fillStyle = '#555';
-  sc.beginPath();
-  sc.ellipse(0, 18 * driverScale, 14 * driverScale, 8 * driverScale, 0, 0, Math.PI);
-  sc.fill();
-
-  sc.restore();
-
   // ─── Roof ───
-  sc.fillStyle = shadeColor(col, -25);
+  sc.fillStyle = shadeColor(col, -28);
   sc.beginPath();
-  sc.moveTo(-w * 0.32, -h * 0.22);
-  sc.lineTo(-w * 0.28, -h * 0.35);
-  sc.lineTo(w * 0.28, -h * 0.35);
-  sc.lineTo(w * 0.32, -h * 0.22);
+  sc.moveTo(-w*0.33, -h*0.38);
+  sc.lineTo(-w*0.28, -h*0.47);
+  sc.lineTo(w*0.28, -h*0.47);
+  sc.lineTo(w*0.33, -h*0.38);
   sc.closePath(); sc.fill();
+  // Roof highlight
+  sc.fillStyle = 'rgba(255,255,255,0.04)';
+  sc.fillRect(-w*0.15, -h*0.46, w*0.3, h*0.07);
 
   // ─── Side mirrors ───
-  sc.fillStyle = shadeColor(col, -10);
-  sc.fillRect(-w/2 - 6*scale, -h * 0.05, 8*scale, 5*scale);
-  sc.fillRect(w/2 - 2*scale, -h * 0.05, 8*scale, 5*scale);
+  sc.fillStyle = shadeColor(col, -12);
+  sc.beginPath();
+  sc.moveTo(-w/2, -h*0.14);
+  sc.lineTo(-w/2 - 7*scale, -h*0.1);
+  sc.lineTo(-w/2 - 7*scale, -h*0.04);
+  sc.lineTo(-w/2, -h*0.02);
+  sc.closePath(); sc.fill();
+  sc.beginPath();
+  sc.moveTo(w/2, -h*0.14);
+  sc.lineTo(w/2 + 7*scale, -h*0.1);
+  sc.lineTo(w/2 + 7*scale, -h*0.04);
+  sc.lineTo(w/2, -h*0.02);
+  sc.closePath(); sc.fill();
+  // Mirror glass
+  sc.fillStyle = 'rgba(100,160,200,0.4)';
+  sc.fillRect(-w/2 - 6*scale, -h*0.1, 5*scale, 5*scale);
+  sc.fillRect(w/2 + 1*scale, -h*0.1, 5*scale, 5*scale);
 
   // ─── Bumper ───
-  sc.fillStyle = '#444';
-  sc.beginPath();
-  sc.roundRect(-w/2 + 2*scale, h * 0.45, w - 4*scale, h * 0.05, 2*scale);
-  sc.fill();
+  sc.fillStyle = '#3a3a3a';
+  sc.beginPath(); sc.roundRect(-w/2 + 1*scale, h*0.44, w - 2*scale, h*0.06, [0,0, 4*scale, 4*scale]); sc.fill();
+  // Bumper chrome strip
+  sc.fillStyle = 'rgba(200,200,200,0.15)';
+  sc.fillRect(-w*0.4, h*0.455, w*0.8, 1.5*scale);
 
   // ─── License plate ───
-  sc.fillStyle = '#fff';
-  sc.beginPath(); sc.roundRect(-w * 0.18, h * 0.38, w * 0.36, h * 0.09, 2*scale); sc.fill();
-  sc.strokeStyle = '#999';
+  sc.fillStyle = '#f8f8f0';
+  sc.beginPath(); sc.roundRect(-w*0.17, h*0.37, w*0.34, h*0.08, 2*scale); sc.fill();
+  sc.strokeStyle = '#aaa';
   sc.lineWidth = 0.8;
-  sc.strokeRect(-w * 0.18, h * 0.38, w * 0.36, h * 0.09);
-  sc.fillStyle = '#222';
-  sc.font = `700 ${Math.max(7, 9 * scale)}px monospace`;
+  sc.strokeRect(-w*0.17, h*0.37, w*0.34, h*0.08);
+  // Plate text
+  sc.fillStyle = '#1a1a1a';
+  sc.font = `700 ${Math.max(7, 10 * scale)}px monospace`;
   sc.textAlign = 'center';
-  sc.fillText(currentPerson.plate, 0, h * 0.45);
+  sc.fillText(currentPerson.plate, 0, h * 0.44);
 
-  // ─── Wheels (bottom corners, partially visible) ───
-  sc.fillStyle = '#222';
-  sc.beginPath();
-  sc.ellipse(-w/2 + 8*scale, h * 0.48, 10*scale, 6*scale, 0, 0, Math.PI * 2);
-  sc.fill();
-  sc.beginPath();
-  sc.ellipse(w/2 - 8*scale, h * 0.48, 10*scale, 6*scale, 0, 0, Math.PI * 2);
-  sc.fill();
+  // ─── Wheels ───
+  // Wheel wells (dark)
+  sc.fillStyle = '#1a1a1a';
+  sc.beginPath(); sc.ellipse(-w/2 + 6*scale, h*0.47, 12*scale, 6*scale, 0, 0, Math.PI*2); sc.fill();
+  sc.beginPath(); sc.ellipse(w/2 - 6*scale, h*0.47, 12*scale, 6*scale, 0, 0, Math.PI*2); sc.fill();
+  // Tires
+  sc.fillStyle = '#2a2a2a';
+  sc.beginPath(); sc.ellipse(-w/2 + 6*scale, h*0.47, 10*scale, 5*scale, 0, 0, Math.PI*2); sc.fill();
+  sc.beginPath(); sc.ellipse(w/2 - 6*scale, h*0.47, 10*scale, 5*scale, 0, 0, Math.PI*2); sc.fill();
   // Hubcaps
-  sc.fillStyle = '#666';
-  sc.beginPath(); sc.arc(-w/2 + 8*scale, h * 0.48, 4*scale, 0, Math.PI * 2); sc.fill();
-  sc.beginPath(); sc.arc(w/2 - 8*scale, h * 0.48, 4*scale, 0, Math.PI * 2); sc.fill();
+  sc.fillStyle = '#888';
+  sc.beginPath(); sc.arc(-w/2 + 6*scale, h*0.47, 4.5*scale, 0, Math.PI*2); sc.fill();
+  sc.beginPath(); sc.arc(w/2 - 6*scale, h*0.47, 4.5*scale, 0, Math.PI*2); sc.fill();
+  // Hubcap detail
+  sc.fillStyle = '#aaa';
+  sc.beginPath(); sc.arc(-w/2 + 6*scale, h*0.47, 2*scale, 0, Math.PI*2); sc.fill();
+  sc.beginPath(); sc.arc(w/2 - 6*scale, h*0.47, 2*scale, 0, Math.PI*2); sc.fill();
 
   sc.restore();
 }
 
 function drawICEVan(x, y) {
-  const s = 0.8;
+  const s = 0.75;
   sc.save();
   sc.translate(x, y);
   sc.scale(s, s);
-  // Van body (front-ish angled view)
+
+  // Shadow
+  sc.fillStyle = 'rgba(0,0,0,0.15)';
+  sc.beginPath(); sc.ellipse(2, 38, 32, 6, 0, 0, Math.PI*2); sc.fill();
+
+  // Van body
   sc.fillStyle = '#2862b5';
-  sc.beginPath(); sc.roundRect(-30, -35, 60, 70, 5); sc.fill();
-  // Darker lower body
+  sc.beginPath(); sc.roundRect(-32, -30, 64, 68, 4); sc.fill();
+  // Lower darker
   sc.fillStyle = '#1e4a8a';
-  sc.fillRect(-28, 5, 56, 28);
+  sc.beginPath(); sc.roundRect(-30, 10, 60, 26, [0,0,3,3]); sc.fill();
+  // Body line
+  sc.strokeStyle = 'rgba(255,255,255,0.1)';
+  sc.lineWidth = 1;
+  sc.beginPath(); sc.moveTo(-30, 8); sc.lineTo(30, 8); sc.stroke();
+
   // Windshield
-  sc.fillStyle = 'rgba(120,180,240,0.45)';
+  const wsG = sc.createLinearGradient(0, -28, 0, -14);
+  wsG.addColorStop(0, 'rgba(100,170,230,0.6)');
+  wsG.addColorStop(1, 'rgba(120,180,240,0.4)');
+  sc.fillStyle = wsG;
   sc.beginPath();
-  sc.moveTo(-22, -20);
-  sc.lineTo(-18, -32);
-  sc.lineTo(18, -32);
-  sc.lineTo(22, -20);
+  sc.moveTo(-24, -16); sc.lineTo(-20, -28); sc.lineTo(20, -28); sc.lineTo(24, -16);
   sc.closePath(); sc.fill();
+
   // Grille
   sc.fillStyle = '#333';
-  sc.beginPath(); sc.roundRect(-20, 20, 40, 8, 2); sc.fill();
+  sc.beginPath(); sc.roundRect(-22, 24, 44, 8, 2); sc.fill();
   // Headlights
   sc.fillStyle = '#fff8cc';
-  sc.beginPath(); sc.roundRect(-28, 18, 10, 6, 2); sc.fill();
-  sc.beginPath(); sc.roundRect(18, 18, 10, 6, 2); sc.fill();
-  // ICE text on body
-  sc.fillStyle = 'rgba(255,255,255,0.7)';
-  sc.font = '700 11px Oswald,sans-serif';
+  sc.beginPath(); sc.roundRect(-30, 22, 10, 6, 2); sc.fill();
+  sc.beginPath(); sc.roundRect(20, 22, 10, 6, 2); sc.fill();
+
+  // ICE text
+  sc.fillStyle = 'rgba(255,255,255,0.8)';
+  sc.font = '700 12px Oswald,sans-serif';
   sc.textAlign = 'center';
-  sc.fillText('ICE', 0, 0);
-  // Light bar on roof
+  sc.fillText('ICE', 0, 4);
+
+  // Light bar
+  sc.fillStyle = '#3a3a3a';
+  sc.beginPath(); sc.roundRect(-15, -34, 30, 6, 2); sc.fill();
   const f = Math.sin(Date.now() * 0.012);
-  sc.fillStyle = '#444';
-  sc.beginPath(); sc.roundRect(-14, -38, 28, 6, 2); sc.fill();
-  sc.fillStyle = f > 0 ? '#ff3333' : '#3355ff';
-  sc.beginPath(); sc.roundRect(-12, -37, 10, 4, 1); sc.fill();
-  sc.fillStyle = f > 0 ? '#3355ff' : '#ff3333';
-  sc.beginPath(); sc.roundRect(2, -37, 10, 4, 1); sc.fill();
+  sc.fillStyle = f > 0 ? '#ff2222' : '#2244ff';
+  sc.beginPath(); sc.roundRect(-13, -33, 11, 4, 1); sc.fill();
+  sc.fillStyle = f > 0 ? '#2244ff' : '#ff2222';
+  sc.beginPath(); sc.roundRect(2, -33, 11, 4, 1); sc.fill();
   // Glow
-  sc.fillStyle = f > 0 ? 'rgba(255,50,50,0.1)' : 'rgba(50,80,255,0.1)';
-  sc.beginPath(); sc.arc(0, -35, 25, 0, Math.PI * 2); sc.fill();
+  sc.fillStyle = f > 0 ? 'rgba(255,30,30,0.08)' : 'rgba(30,60,255,0.08)';
+  sc.beginPath(); sc.arc(0, -31, 28, 0, Math.PI*2); sc.fill();
+
   // Bumper
-  sc.fillStyle = '#444';
-  sc.beginPath(); sc.roundRect(-26, 30, 52, 5, 2); sc.fill();
+  sc.fillStyle = '#3a3a3a';
+  sc.beginPath(); sc.roundRect(-28, 34, 56, 4, 2); sc.fill();
   sc.restore();
 }
 
@@ -1023,23 +1144,52 @@ function sceneLoop() {
   if (!gameRunning) return;
   resizeScene();
   
-  // Animate car (Y-axis: drives toward you)
+  // Animate car + barrier
   if (animState === 'driving-in') {
-    carX += (carTargetX - carX) * 0.06;
-    if (Math.abs(carX - carTargetX) < 1.5) {
-      carX = carTargetX;
+    carY += (carTargetY - carY) * 0.06;
+    if (Math.abs(carY - carTargetY) < 1.5) {
+      carY = carTargetY;
       animState = 'waiting';
       renderDocs(currentPerson);
     }
-  } else if (animState === 'driving-out') {
-    carX -= 8;
-    if (carX < SH * 0.2) {
-      animState = 'idle';
-      nextCar();
+  } else if (animState === 'barrier-up-out') {
+    barrierAngle = Math.min(1, barrierAngle + 0.04);
+    if (barrierAngle >= 1) {
+      animState = lastDecision === 'admit' ? 'driving-out' : 'driving-forward';
+      animTimer = 0;
     }
-  } else if (animState === 'detained') {
-    carX -= 5;
-    if (carX < SH * 0.25) {
+  } else if (animState === 'driving-out') {
+    // Admitted: drive forward and veer right
+    carY -= 4;
+    carXOff += 3;
+    if (carY < SH * 0.15) {
+      animState = 'barrier-down';
+    }
+  } else if (animState === 'driving-forward') {
+    // Detained: drive forward a bit
+    carY -= 3;
+    animTimer++;
+    if (animTimer > 25) {
+      animState = 'u-turn';
+      animTimer = 0;
+    }
+  } else if (animState === 'u-turn') {
+    // Rotate 180 degrees
+    carAngle += 0.08;
+    animTimer++;
+    if (carAngle >= Math.PI) {
+      carAngle = Math.PI;
+      animState = 'driving-away';
+    }
+  } else if (animState === 'driving-away') {
+    // Drive back out (now facing away, so increase Y)
+    carY += 5;
+    if (carY > SH + 80) {
+      animState = 'barrier-down';
+    }
+  } else if (animState === 'barrier-down') {
+    barrierAngle = Math.max(0, barrierAngle - 0.04);
+    if (barrierAngle <= 0) {
       animState = 'idle';
       nextCar();
     }
@@ -1123,8 +1273,10 @@ function nextCar() {
   document.getElementById('btnDetain').disabled = true;
 
   currentPerson = genPerson();
-  carX = SH * 0.2; // start far away (small)
-  carTargetX = SH * 0.72; // stop at booth (big, close)
+  carY = SH * 0.15; // start far away (small)
+  carTargetY = SH * 0.68; // stop at booth (big, close)
+  carXOff = 0;
+  carAngle = 0;
   animState = 'driving-in';
   updateHUD();
 }
@@ -1178,8 +1330,9 @@ function makeDecision(admit) {
     return;
   }
 
-  // Animate car out
-  animState = admit ? 'driving-out' : 'detained';
+  // Barrier up, then car drives out
+  lastDecision = admit ? 'admit' : 'detain';
+  animState = 'barrier-up-out';
 }
 
 function describeForgery(type) {
