@@ -8,43 +8,33 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <style>
-    :root{--orange:#FA4616;--gold:#F0A830;--navy:#001845;--dark:#0A0E1A;--red:#D32F2F;--green:#43A047;--blue:#2558a0;--font-body:'Inter',sans-serif;--font-heading:'Oswald',sans-serif}
+    :root{--orange:#FA4616;--gold:#F0A830;--navy:#001845;--dark:#0A0E1A;--red:#D32F2F;--green:#43A047;--blue:#2862b5;--font-body:'Inter',sans-serif;--font-heading:'Oswald',sans-serif}
     *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
-    html,body{width:100%;height:100%;overflow:hidden;font-family:var(--font-body);background:var(--dark);color:#fff;-webkit-tap-highlight-color:transparent;user-select:none;touch-action:none}
+    html,body{width:100%;height:100%;overflow:hidden;font-family:var(--font-body);background:#2a2215;color:#fff;-webkit-tap-highlight-color:transparent;user-select:none;touch-action:none}
     canvas{display:block;position:fixed;top:0;left:0;width:100%;height:100%}
-
-    /* HUD */
-    .hud{position:fixed;top:0;left:0;right:0;z-index:50;height:36px;background:rgba(0,24,69,.92);backdrop-filter:blur(10px);display:none;align-items:center;justify-content:space-between;padding:0 10px;border-bottom:1px solid rgba(255,255,255,.06)}
-    .hud-left,.hud-right{display:flex;align-items:center;gap:14px}
-    .hud-stat{font-family:var(--font-heading);font-size:.75rem;font-weight:600;letter-spacing:.08em}
+    .hud{position:fixed;top:0;left:0;right:0;z-index:50;height:34px;background:rgba(0,24,69,.94);display:none;align-items:center;justify-content:space-between;padding:0 10px;border-bottom:2px solid rgba(255,255,255,.06)}
+    .hud-left,.hud-right{display:flex;align-items:center;gap:12px}
+    .hud-stat{font-family:var(--font-heading);font-size:.7rem;font-weight:600;letter-spacing:.06em}
     .hud-stat span{color:var(--gold)}
-    .hud-stat.money span{color:#5cdb5c}
-    .hud-stat.lives span{color:var(--red)}
-    .hud-wave{font-family:var(--font-heading);font-size:.7rem;color:rgba(255,255,255,.4);letter-spacing:.12em;text-transform:uppercase}
-
-    /* Tower bar */
-    .tower-bar{position:fixed;bottom:0;left:0;right:0;z-index:50;background:rgba(0,24,69,.94);backdrop-filter:blur(10px);border-top:1px solid rgba(255,255,255,.06);display:none;padding:6px 8px;gap:6px;justify-content:center;flex-wrap:nowrap;overflow-x:auto}
-    .tower-btn{display:flex;flex-direction:column;align-items:center;padding:6px 10px;border:2px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03);cursor:pointer;min-width:60px;transition:all .15s;-webkit-tap-highlight-color:transparent}
-    .tower-btn.selected{border-color:var(--orange);background:rgba(250,70,22,.12)}
-    .tower-btn.disabled{opacity:.3;pointer-events:none}
-    .tower-btn .icon{font-size:1.1rem;margin-bottom:2px}
-    .tower-btn .name{font-family:var(--font-heading);font-size:.5rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.6)}
-    .tower-btn .cost{font-family:var(--font-heading);font-size:.55rem;font-weight:700;color:#5cdb5c}
-
-    /* Wave button */
-    .wave-btn{position:fixed;bottom:70px;right:10px;z-index:55;background:var(--orange);border:none;color:#fff;font-family:var(--font-heading);font-size:.8rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:10px 18px;cursor:pointer;display:none;box-shadow:0 2px 12px rgba(250,70,22,.3);transition:all .2s}
-    .wave-btn:hover{background:#e03a0e;transform:translateY(-2px)}
-
-    /* Overlays */
+    .hud-stat.money span{color:#5c5}
+    .hud-stat.lives span{color:#f66}
+    .tower-bar{position:fixed;bottom:0;left:0;right:0;z-index:50;background:rgba(0,24,69,.96);border-top:2px solid rgba(255,255,255,.06);display:none;padding:5px 6px;gap:5px;justify-content:center;overflow-x:auto}
+    .tower-btn{display:flex;flex-direction:column;align-items:center;padding:5px 8px;border:2px solid rgba(255,255,255,.06);background:rgba(255,255,255,.02);cursor:pointer;min-width:56px;transition:all .12s}
+    .tower-btn.selected{border-color:var(--orange);background:rgba(250,70,22,.15)}
+    .tower-btn.disabled{opacity:.25;pointer-events:none}
+    .tower-btn canvas{width:28px;height:28px;margin-bottom:1px}
+    .tower-btn .name{font-family:var(--font-heading);font-size:.45rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.5)}
+    .tower-btn .cost{font-family:var(--font-heading);font-size:.5rem;font-weight:700;color:#5c5}
+    .wave-btn{position:fixed;bottom:68px;right:8px;z-index:55;background:var(--orange);border:none;color:#fff;font-family:var(--font-heading);font-size:.75rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:9px 16px;cursor:pointer;display:none;box-shadow:0 2px 10px rgba(250,70,22,.3)}
+    .wave-btn:active{background:#d03a0e}
     .overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(5,8,18,.94);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:200;padding:24px;text-align:center}
     .overlay.hidden{display:none}
     .overlay-label{font-family:var(--font-heading);font-size:.7rem;font-weight:600;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);margin-bottom:8px}
     .overlay-title{font-family:var(--font-heading);font-size:clamp(2rem,7vw,3.5rem);font-weight:700;text-transform:uppercase;margin-bottom:8px;letter-spacing:.03em}
     .overlay-sub{font-size:.85rem;color:rgba(255,255,255,.4);margin-bottom:20px;max-width:420px;line-height:1.6}
-    .btn{font-family:var(--font-heading);font-size:1rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;background:var(--orange);color:#fff;border:none;padding:12px 32px;cursor:pointer;transition:all .3s}
-    .btn:hover{background:#e03a0e}
+    .btn{font-family:var(--font-heading);font-size:1rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;background:var(--orange);color:#fff;border:none;padding:12px 32px;cursor:pointer}
+    .btn:active{background:#d03a0e}
     .how-to{max-width:400px;margin-bottom:20px;text-align:left}
     .how-to li{font-size:.8rem;color:rgba(255,255,255,.5);margin-bottom:5px;line-height:1.5;list-style:none;padding-left:16px;position:relative}
     .how-to li::before{content:'';position:absolute;left:0;top:7px;width:5px;height:5px;background:var(--orange);border-radius:50%}
@@ -53,13 +43,9 @@
     .stat-label{color:rgba(255,255,255,.35)}.stat-val{font-weight:700;color:var(--gold)}
     .share-btns{display:flex;gap:10px;margin-top:12px}
     .share-btn{font-family:var(--font-heading);font-size:.65rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;padding:8px 14px;border:1px solid rgba(255,255,255,.12);background:transparent;color:#fff;cursor:pointer;display:flex;align-items:center;gap:5px}
-    .share-btn:hover{background:rgba(255,255,255,.06)}
-
-    /* Sell/upgrade tooltip */
-    .tooltip{position:fixed;z-index:60;background:rgba(0,24,69,.95);border:1px solid rgba(255,255,255,.1);padding:8px 12px;display:none;font-size:.7rem;pointer-events:auto}
-    .tooltip button{font-family:var(--font-heading);font-size:.6rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;padding:4px 10px;border:none;cursor:pointer;margin-top:4px;margin-right:4px}
-    .tooltip .sell-btn{background:var(--red);color:#fff}
-    .tooltip .upgrade-btn{background:var(--green);color:#fff}
+    .tooltip{position:fixed;z-index:60;background:rgba(0,24,69,.96);border:1px solid rgba(255,255,255,.1);padding:8px 12px;display:none;font-size:.7rem;pointer-events:auto}
+    .tooltip button{font-family:var(--font-heading);font-size:.55rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;padding:4px 10px;border:none;cursor:pointer;margin-top:4px;margin-right:4px;color:#fff}
+    .tooltip .sell-btn{background:var(--red)}.tooltip .upgrade-btn{background:var(--green)}
   </style>
 </head>
 <body>
@@ -67,14 +53,14 @@
 <div class="overlay" id="startScreen">
   <div class="overlay-label">UFCR Games</div>
   <div class="overlay-title" style="color:var(--orange)">DEPORTATION FORCE</div>
-  <p class="overlay-sub">Build a border security operation. Detect, detain, and deport. Don't let anyone through.</p>
+  <p class="overlay-sub">Build a border security operation. Detect, detain, and deport. Don't let anyone reach the border.</p>
   <ul class="how-to">
-    <li>Tap the map to place towers</li>
-    <li>Towers detect, slow, and detain crossers</li>
-    <li>ICE trucks auto-collect detained crossers</li>
-    <li>Walls block paths and force rerouting</li>
-    <li>Don't let crossers reach the north side</li>
-    <li>Survive 10 waves to win</li>
+    <li>Tap the field to place towers</li>
+    <li>Crossers rush straight north toward the border</li>
+    <li>Spotlights slow, K-9s hold, Drones tag</li>
+    <li>ICE Depots send trucks to collect and deport</li>
+    <li>Walls block movement and force detours</li>
+    <li>Survive 10 waves to secure the border</li>
   </ul>
   <button class="btn" id="startBtn">Deploy</button>
 </div>
@@ -86,8 +72,8 @@
   <div class="stats-grid" id="goStats"></div>
   <button class="btn" id="restartBtn">Redeploy</button>
   <div class="share-btns">
-    <button class="share-btn" id="shareBtn"><i class="fab fa-x-twitter"></i> Share</button>
-    <button class="share-btn" id="copyBtn"><i class="fas fa-copy"></i> Copy</button>
+    <button class="share-btn" id="shareBtn">Share on X</button>
+    <button class="share-btn" id="copyBtn">Copy</button>
   </div>
 </div>
 
@@ -96,17 +82,16 @@
 <div class="hud" id="hud">
   <div class="hud-left">
     <div class="hud-stat money">$<span id="hudMoney">500</span></div>
-    <div class="hud-stat lives">LIVES: <span id="hudLives">20</span></div>
+    <div class="hud-stat lives">LIVES <span id="hudLives">20</span></div>
   </div>
   <div class="hud-right">
-    <div class="hud-stat">DEPORTED: <span id="hudDeported">0</span></div>
-    <div class="hud-wave" id="hudWave">WAVE 1/10</div>
+    <div class="hud-stat">DEPORTED <span id="hudDeported">0</span></div>
+    <div class="hud-stat" id="hudWave">WAVE 1/10</div>
   </div>
 </div>
 
 <div class="tower-bar" id="towerBar"></div>
 <button class="wave-btn" id="waveBtn">Send Wave</button>
-
 <div class="tooltip" id="tooltip"></div>
 
 <script>
@@ -114,10 +99,9 @@ const CV = document.getElementById('game');
 const cx = CV.getContext('2d');
 let W, H, dpr;
 
-// ─── GRID ───
-const COLS = 18, ROWS = 12;
-let CELL;
-let gridOffX, gridOffY;
+// Grid
+const COLS = 16, ROWS = 10;
+let CELL, gridX, gridY;
 
 function resize() {
   dpr = window.devicePixelRatio || 1;
@@ -125,664 +109,584 @@ function resize() {
   CV.width = W * dpr; CV.height = H * dpr;
   CV.style.width = W + 'px'; CV.style.height = H + 'px';
   cx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  // Fit grid
-  const hudTop = 36, barBot = 66;
-  const availW = W - 8, availH = H - hudTop - barBot - 8;
-  CELL = Math.floor(Math.min(availW / COLS, availH / ROWS));
-  gridOffX = Math.floor((W - COLS * CELL) / 2);
-  gridOffY = hudTop + Math.floor((availH - ROWS * CELL) / 2) + 4;
+  const topH = 34, botH = 62;
+  const aW = W - 4, aH = H - topH - botH - 4;
+  CELL = Math.floor(Math.min(aW / COLS, aH / ROWS));
+  gridX = Math.floor((W - COLS * CELL) / 2);
+  gridY = topH + Math.floor((aH - ROWS * CELL) / 2) + 2;
 }
 resize();
 window.addEventListener('resize', resize);
 
-// ─── MAP ───
-// 0=empty, 1=path, 2=entry(south), 3=exit(north), 9=blocked(decor)
-let grid = [];
-const ENTRY_COL = 9;
-const EXIT_COL = 9;
+// Colors
+const C = {
+  sand: '#d4c49a', sandDark: '#c4b080', sandLight: '#e0d4a8',
+  path: '#b8a878', border: '#556', wall: '#78736a',
+  spotlight: '#e8c840', sensor: '#40b8d8', k9: '#c89040',
+  drone: '#6888cc', depot: '#2862b5', wallT: '#908878',
+};
+
+// ─── TOWER DEFS ───
+const TDEFS = [
+  { id: 'spotlight', name: 'Spotlight', cost: 50, range: 2.8, color: C.spotlight, desc: 'Slows all crossers in range' },
+  { id: 'sensor', name: 'Sensor', cost: 75, range: 3.2, color: C.sensor, desc: 'Reveals stealth crossers' },
+  { id: 'k9', name: 'K-9', cost: 100, range: 2.2, color: C.k9, desc: 'Dog chases and holds one' },
+  { id: 'drone', name: 'Drone', cost: 125, range: 3.5, color: C.drone, desc: 'Tags for truck pickup' },
+  { id: 'wall', name: 'Wall', cost: 25, range: 0, color: C.wallT, desc: 'Blocks movement' },
+  { id: 'depot', name: 'ICE Depot', cost: 150, range: 4, color: C.depot, desc: 'Trucks collect detainees' },
+];
+const TMAP = {}; TDEFS.forEach(t => TMAP[t.id] = t);
+
+// ─── STATE ───
+let gameRunning = false, lastTime = 0;
+let money, lives, wave, totalDeported, totalThrough;
+let grid, towers, enemies, trucks, dogs, effects;
+let selectedTower = null, waveActive = false, spawnTimer, spawnIdx, waveCfg;
+
+// Waves: count, speed, hp, reward, delay, stealth%, fast%
+const WAVES = [
+  { count: 20, speed: 28, hp: 1, reward: 8, delay: 0.3 },
+  { count: 30, speed: 30, hp: 1, reward: 8, delay: 0.25 },
+  { count: 35, speed: 32, hp: 1, reward: 10, delay: 0.22, fast: 0.2 },
+  { count: 40, speed: 30, hp: 2, reward: 12, delay: 0.2 },
+  { count: 45, speed: 34, hp: 2, reward: 12, delay: 0.18, fast: 0.25, stealth: 0.1 },
+  { count: 50, speed: 32, hp: 2, reward: 15, delay: 0.16, stealth: 0.2 },
+  { count: 55, speed: 36, hp: 3, reward: 18, delay: 0.15, fast: 0.3 },
+  { count: 60, speed: 35, hp: 3, reward: 20, delay: 0.13, stealth: 0.2, fast: 0.2 },
+  { count: 70, speed: 38, hp: 3, reward: 22, delay: 0.12, stealth: 0.25, fast: 0.25 },
+  { count: 80, speed: 40, hp: 4, reward: 25, delay: 0.1, stealth: 0.3, fast: 0.3 },
+];
 
 function initGrid() {
   grid = [];
   for (let r = 0; r < ROWS; r++) {
     grid[r] = [];
-    for (let c = 0; c < COLS; c++) {
-      grid[r][c] = { type: 0, tower: null };
-    }
+    for (let c = 0; c < COLS; c++) grid[r][c] = null; // null = empty
   }
-  // Create a winding path
-  const path = generatePath();
-  path.forEach(([r, c]) => grid[r][c].type = 1);
-  // Entry and exit
-  grid[ROWS - 1][ENTRY_COL].type = 2;
-  grid[0][EXIT_COL].type = 3;
 }
 
-function generatePath() {
-  // Create a winding S-shaped path from bottom to top
-  const pts = [];
-  let c = ENTRY_COL;
-  for (let r = ROWS - 1; r >= 0; r--) {
-    pts.push([r, c]);
-    // Horizontal segments at certain rows
-    if (r === ROWS - 3) { const target = 3; const dir = target > c ? 1 : -1; while (c !== target) { c += dir; pts.push([r, c]); } }
-    else if (r === ROWS - 6) { const target = 14; const dir = target > c ? 1 : -1; while (c !== target) { c += dir; pts.push([r, c]); } }
-    else if (r === ROWS - 9) { const target = 5; const dir = target > c ? 1 : -1; while (c !== target) { c += dir; pts.push([r, c]); } }
-    else if (r === 1) { const target = EXIT_COL; const dir = target > c ? 1 : -1; while (c !== target) { c += dir; pts.push([r, c]); } }
-  }
-  return pts;
+function cellCenter(r, c) {
+  return [gridX + c * CELL + CELL / 2, gridY + r * CELL + CELL / 2];
 }
 
-// ─── PATHFINDING (BFS for enemies) ───
-function findPath(startR, startC) {
-  const q = [[startR, startC]];
-  const visited = Array.from({ length: ROWS }, () => Array(COLS).fill(false));
-  const prev = Array.from({ length: ROWS }, () => Array(COLS).fill(null));
-  visited[startR][startC] = true;
-
-  while (q.length) {
-    const [r, c] = q.shift();
-    if (grid[r][c].type === 3) {
-      // Reconstruct
-      const path = [];
-      let cur = [r, c];
-      while (cur) { path.unshift(cur); cur = prev[cur[0]][cur[1]]; }
-      return path;
+// ─── DRAW TOWER ICONS (canvas-drawn, no emoji) ───
+function drawTowerIcon(ctx, id, x, y, sz) {
+  ctx.save();
+  ctx.translate(x, y);
+  const s = sz / 20;
+  if (id === 'spotlight') {
+    // Cone of light from a lamp
+    ctx.fillStyle = '#444';
+    ctx.fillRect(-2*s, -8*s, 4*s, 12*s); // pole
+    ctx.fillStyle = C.spotlight;
+    ctx.beginPath();
+    ctx.moveTo(-1*s, -8*s); ctx.lineTo(-8*s, 4*s); ctx.lineTo(8*s, 4*s); ctx.lineTo(1*s, -8*s);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.globalAlpha = 0.4;
+    ctx.beginPath();
+    ctx.moveTo(0, -6*s); ctx.lineTo(-5*s, 3*s); ctx.lineTo(5*s, 3*s);
+    ctx.closePath(); ctx.fill();
+    ctx.globalAlpha = 1;
+  } else if (id === 'sensor') {
+    // Radar dish
+    ctx.fillStyle = '#555';
+    ctx.fillRect(-1.5*s, -2*s, 3*s, 10*s); // pole
+    ctx.fillStyle = C.sensor;
+    ctx.beginPath(); ctx.arc(0, -2*s, 7*s, Math.PI * 1.15, Math.PI * 1.85); ctx.lineTo(0, -2*s); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.beginPath(); ctx.arc(0, -2*s, 2*s, 0, Math.PI * 2); ctx.fill();
+    // Waves
+    ctx.strokeStyle = C.sensor;
+    ctx.lineWidth = 1*s;
+    ctx.globalAlpha = 0.4;
+    for (let i = 1; i <= 3; i++) {
+      ctx.beginPath(); ctx.arc(0, -4*s, (3+i*3)*s, -Math.PI*0.4, Math.PI*0.4); ctx.stroke();
     }
-    for (const [dr, dc] of [[-1,0],[1,0],[0,-1],[0,1]]) {
-      const nr = r + dr, nc = c + dc;
-      if (nr < 0 || nr >= ROWS || nc < 0 || nc >= COLS) continue;
-      if (visited[nr][nc]) continue;
-      const cell = grid[nr][nc];
-      if (cell.type === 0 && cell.tower && cell.tower.id === 'wall') continue; // walls block
-      if (cell.tower && cell.tower.id !== 'wall') continue; // other towers block placement but not path... actually towers are on non-path cells
-      // Enemies can walk on path cells and empty cells (but prefer path)
-      visited[nr][nc] = true;
-      prev[nr][nc] = [r, c];
-      q.push([nr, nc]);
+    ctx.globalAlpha = 1;
+  } else if (id === 'k9') {
+    // Dog silhouette
+    ctx.fillStyle = C.k9;
+    // Body
+    ctx.beginPath(); ctx.ellipse(0, 2*s, 8*s, 5*s, 0, 0, Math.PI * 2); ctx.fill();
+    // Head
+    ctx.beginPath(); ctx.ellipse(7*s, -3*s, 4*s, 3.5*s, 0.3, 0, Math.PI * 2); ctx.fill();
+    // Ears
+    ctx.beginPath(); ctx.ellipse(9*s, -6*s, 2*s, 3*s, 0.5, 0, Math.PI * 2); ctx.fill();
+    // Legs
+    ctx.fillRect(-6*s, 5*s, 2.5*s, 5*s);
+    ctx.fillRect(-1*s, 5*s, 2.5*s, 5*s);
+    ctx.fillRect(3*s, 5*s, 2.5*s, 4*s);
+    // Eye
+    ctx.fillStyle = '#1a1a1a';
+    ctx.beginPath(); ctx.arc(9*s, -3*s, 1*s, 0, Math.PI * 2); ctx.fill();
+  } else if (id === 'drone') {
+    // Quadcopter
+    ctx.fillStyle = '#555';
+    ctx.fillRect(-7*s, -1*s, 14*s, 2*s); // cross bar h
+    ctx.fillRect(-1*s, -7*s, 2*s, 14*s); // cross bar v
+    ctx.fillStyle = C.drone;
+    // Rotors
+    [[-7,-7],[7,-7],[-7,7],[7,7]].forEach(([rx,ry]) => {
+      ctx.beginPath(); ctx.arc(rx*s, ry*s, 4*s, 0, Math.PI * 2); ctx.fill();
+    });
+    // Center body
+    ctx.fillStyle = '#444';
+    ctx.beginPath(); ctx.arc(0, 0, 3*s, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#f44';
+    ctx.beginPath(); ctx.arc(0, 0, 1.5*s, 0, Math.PI * 2); ctx.fill();
+  } else if (id === 'wall') {
+    // Concrete wall section
+    ctx.fillStyle = '#888';
+    ctx.fillRect(-8*s, -6*s, 16*s, 12*s);
+    ctx.fillStyle = '#777';
+    for (let by = -5; by < 5; by += 4) {
+      for (let bx = -7; bx < 7; bx += 6) {
+        ctx.fillRect(bx*s, by*s, 5*s, 3*s);
+      }
     }
+    // Razor wire on top
+    ctx.strokeStyle = '#aaa';
+    ctx.lineWidth = 1*s;
+    ctx.beginPath();
+    for (let i = -8; i <= 8; i += 2) {
+      ctx.lineTo(i*s, -6*s + Math.sin(i) * 2*s);
+    }
+    ctx.stroke();
+  } else if (id === 'depot') {
+    // ICE van/depot
+    ctx.fillStyle = C.depot;
+    ctx.beginPath(); ctx.roundRect(-9*s, -5*s, 18*s, 12*s, 2*s); ctx.fill();
+    ctx.fillStyle = '#1e4a8a';
+    ctx.fillRect(-8*s, 2*s, 16*s, 4*s);
+    // Windshield
+    ctx.fillStyle = 'rgba(140,200,255,0.4)';
+    ctx.fillRect(-6*s, -4*s, 12*s, 4*s);
+    // ICE text
+    ctx.fillStyle = '#fff';
+    ctx.font = `700 ${6*s}px Oswald,sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('ICE', 0, 0);
+    // Wheels
+    ctx.fillStyle = '#222';
+    ctx.beginPath(); ctx.arc(-6*s, 7*s, 2.5*s, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(6*s, 7*s, 2.5*s, 0, Math.PI * 2); ctx.fill();
   }
-  return null; // no path
+  ctx.restore();
 }
 
-// ─── TOWER TYPES ───
-const TOWERS = {
-  spotlight: { id: 'spotlight', name: 'Spotlight', icon: '💡', cost: 50, range: 2.5, color: '#ffdd44', desc: 'Slows all in range', cooldown: 0 },
-  sensor: { id: 'sensor', name: 'Sensor', icon: '📡', cost: 75, range: 3, color: '#44ddff', desc: 'Reveals hidden crossers', cooldown: 0 },
-  k9: { id: 'k9', name: 'K-9 Unit', icon: '🐕', cost: 100, range: 2, color: '#bb8844', desc: 'Chases & holds one enemy', cooldown: 3 },
-  drone: { id: 'drone', name: 'Drone', icon: '🛸', cost: 125, range: 3.5, color: '#88aaff', desc: 'Tags enemies for pickup', cooldown: 1.5 },
-  wall: { id: 'wall', name: 'Wall', icon: '🧱', cost: 30, range: 0, color: '#999', desc: 'Blocks path', cooldown: 0 },
-  depot: { id: 'depot', name: 'ICE Depot', icon: '🚐', cost: 150, range: 4, color: '#2862b5', desc: 'Sends trucks to collect', cooldown: 2 },
-};
-
-// ─── GAME STATE ───
-let gameRunning = false;
-let money = 500, lives = 20, wave = 0, totalDeported = 0, totalGotThrough = 0;
-let enemies = [], towers = [], trucks = [], effects = [];
-let selectedTower = null;
-let waveActive = false, waveEnemies = [], spawnTimer = 0, spawnIndex = 0;
-let lastTime = 0;
-let pathCache = null; // cached main path for enemies
-
-// ─── WAVES ───
-const WAVES = [
-  { count: 8, speed: 30, hp: 1, reward: 10, delay: 1.2 },
-  { count: 12, speed: 32, hp: 1, reward: 10, delay: 1.0 },
-  { count: 15, speed: 35, hp: 1, reward: 12, delay: 0.9, fast: 3 },
-  { count: 15, speed: 33, hp: 2, reward: 15, delay: 0.9 },
-  { count: 20, speed: 36, hp: 2, reward: 15, delay: 0.8, fast: 5 },
-  { count: 20, speed: 34, hp: 2, reward: 18, delay: 0.7, stealth: 4 },
-  { count: 25, speed: 38, hp: 3, reward: 20, delay: 0.7, fast: 6 },
-  { count: 25, speed: 36, hp: 3, reward: 22, delay: 0.6, stealth: 6, fast: 4 },
-  { count: 30, speed: 40, hp: 3, reward: 25, delay: 0.5, stealth: 8, fast: 8 },
-  { count: 35, speed: 42, hp: 4, reward: 30, delay: 0.45, stealth: 10, fast: 10, boss: 2 },
-];
-
-// ─── ENEMY ───
-function spawnEnemy(cfg, index) {
-  const isFast = cfg.fast && index >= cfg.count - cfg.fast;
-  const isStealth = cfg.stealth && index >= (cfg.fast ? cfg.count - cfg.fast - cfg.stealth : cfg.count - cfg.stealth) && !isFast;
-  const isBoss = cfg.boss && index >= cfg.count - cfg.boss;
-  const path = pathCache;
-  if (!path || path.length < 2) return null;
-  const [sr, sc_] = path[0];
-  return {
-    x: gridOffX + sc_ * CELL + CELL / 2,
-    y: gridOffY + sr * CELL + CELL / 2,
-    pathIdx: 0,
-    path,
-    speed: isFast ? cfg.speed * 1.6 : isBoss ? cfg.speed * 0.6 : cfg.speed,
-    baseSpeed: isFast ? cfg.speed * 1.6 : isBoss ? cfg.speed * 0.6 : cfg.speed,
-    hp: isBoss ? cfg.hp * 3 : cfg.hp,
-    maxHp: isBoss ? cfg.hp * 3 : cfg.hp,
-    detained: false,
-    detainTimer: 0,
-    tagged: false,
-    revealed: false,
-    stealth: isStealth,
-    boss: isBoss,
-    fast: isFast,
-    reward: cfg.reward,
-    slowTimer: 0,
-    held: false,
-    heldBy: null,
-    pickedUp: false,
-    pickupProgress: 0,
-    skin: ['#c68642','#8d5524','#d2996c','#e0ac69','#a0522d','#cd853f'][Math.floor(Math.random() * 6)],
-    shirtColor: ['#cc4444','#44aa44','#4444cc','#cc8844','#aa44aa','#44aaaa','#888888'][Math.floor(Math.random() * 7)],
-  };
-}
-
-// ─── TRUCKS ───
-function spawnTruck(depot, target) {
-  return {
-    x: depot.x, y: depot.y,
-    tx: target.x, ty: target.y,
-    targetEnemy: target,
-    speed: 100,
-    state: 'going', // going, returning
-    carrying: false,
-    depot,
-  };
-}
-
-// ─── INIT ───
+// ─── TOWER BAR ───
 function buildTowerBar() {
   const bar = document.getElementById('towerBar');
   bar.innerHTML = '';
-  Object.values(TOWERS).forEach(t => {
+  TDEFS.forEach(t => {
     const btn = document.createElement('div');
     btn.className = 'tower-btn';
     btn.dataset.id = t.id;
-    btn.innerHTML = `<div class="icon">${t.icon}</div><div class="name">${t.name}</div><div class="cost">$${t.cost}</div>`;
-    btn.addEventListener('click', () => selectTower(t.id));
+    // Mini canvas icon
+    const ic = document.createElement('canvas');
+    ic.width = 56; ic.height = 56;
+    const ictx = ic.getContext('2d');
+    ictx.setTransform(2, 0, 0, 2, 0, 0);
+    drawTowerIcon(ictx, t.id, 14, 14, 12);
+    const nameDiv = document.createElement('div'); nameDiv.className = 'name'; nameDiv.textContent = t.name;
+    const costDiv = document.createElement('div'); costDiv.className = 'cost'; costDiv.textContent = '$' + t.cost;
+    btn.appendChild(ic); btn.appendChild(nameDiv); btn.appendChild(costDiv);
+    btn.addEventListener('click', () => {
+      selectedTower = selectedTower === t.id ? null : t.id;
+      document.querySelectorAll('.tower-btn').forEach(b => b.classList.toggle('selected', b.dataset.id === selectedTower));
+      hideTooltip();
+    });
     bar.appendChild(btn);
   });
 }
 
-function selectTower(id) {
-  selectedTower = selectedTower === id ? null : id;
-  document.querySelectorAll('.tower-btn').forEach(b => {
-    b.classList.toggle('selected', b.dataset.id === selectedTower);
-  });
-  hideTooltip();
-}
-
 function updateTowerBar() {
   document.querySelectorAll('.tower-btn').forEach(b => {
-    const t = TOWERS[b.dataset.id];
-    b.classList.toggle('disabled', money < t.cost);
+    b.classList.toggle('disabled', money < TMAP[b.dataset.id].cost);
   });
 }
 
-// ─── PLACE TOWER ───
+// ─── PLACE ───
 CV.addEventListener('click', e => {
   if (!gameRunning) return;
-  const mx = e.clientX, my = e.clientY;
-  const gc = Math.floor((mx - gridOffX) / CELL);
-  const gr = Math.floor((my - gridOffY) / CELL);
+  const gc = Math.floor((e.clientX - gridX) / CELL);
+  const gr = Math.floor((e.clientY - gridY) / CELL);
+  if (gc < 0 || gc >= COLS || gr < 0 || gr >= ROWS) { hideTooltip(); return; }
 
-  // Check if clicked existing tower
-  if (gc >= 0 && gc < COLS && gr >= 0 && gr < ROWS && grid[gr][gc].tower) {
-    showTooltip(gr, gc, mx, my);
-    return;
-  }
-
+  if (grid[gr][gc]) { showTooltip(gr, gc, e.clientX, e.clientY); return; }
   hideTooltip();
   if (!selectedTower) return;
-  if (gc < 0 || gc >= COLS || gr < 0 || gr >= ROWS) return;
+  const def = TMAP[selectedTower];
+  if (money < def.cost) return;
 
-  const cell = grid[gr][gc];
-  const tDef = TOWERS[selectedTower];
-  if (money < tDef.cost) return;
+  // Can't place on top or bottom row (entry/exit zones)
+  if (gr === 0 || gr === ROWS - 1) return;
 
-  // Walls can go on path or empty; others only on empty
-  if (tDef.id === 'wall') {
-    if (cell.tower) return;
-    if (cell.type === 3 || cell.type === 2) return; // can't block entry/exit
-    // Test if wall still allows a path
-    cell.tower = { ...tDef, r: gr, c: gc, x: gridOffX + gc * CELL + CELL / 2, y: gridOffY + gr * CELL + CELL / 2, cooldownTimer: 0, level: 1 };
-    const testPath = findPath(ROWS - 1, ENTRY_COL);
-    if (!testPath) { cell.tower = null; effects.push({ x: gridOffX + gc * CELL + CELL / 2, y: gridOffY + gr * CELL + CELL / 2, text: 'NO PATH', color: '#f44', life: 1 }); return; }
-    pathCache = testPath;
-    // Repath active enemies
-    enemies.forEach(en => { if (!en.detained && !en.pickedUp) { const np = findPath(Math.floor((en.y - gridOffY) / CELL), Math.floor((en.x - gridOffX) / CELL)); if (np) { en.path = np; en.pathIdx = 0; } } });
-  } else {
-    if (cell.type !== 0 || cell.tower) return;
-    cell.tower = { ...tDef, r: gr, c: gc, x: gridOffX + gc * CELL + CELL / 2, y: gridOffY + gr * CELL + CELL / 2, cooldownTimer: 0, level: 1, dog: null };
-  }
-
-  money -= tDef.cost;
-  towers.push(cell.tower);
-  updateTowerBar();
-  updateHUD();
+  const t = {
+    id: def.id, r: gr, c: gc, level: 1,
+    range: def.range, color: def.color, cooldown: 0,
+    x: gridX + gc * CELL + CELL / 2,
+    y: gridY + gr * CELL + CELL / 2,
+  };
+  grid[gr][gc] = t;
+  towers.push(t);
+  money -= def.cost;
+  updateTowerBar(); updateHUD();
 });
 
 // ─── TOOLTIP ───
 function showTooltip(r, c, mx, my) {
-  const t = grid[r][c].tower;
-  if (!t) return;
+  const t = grid[r][c]; if (!t) return;
+  const def = TMAP[t.id];
+  const sell = Math.floor(def.cost * 0.6 * t.level);
+  const upg = Math.floor(def.cost * 1.5 * t.level);
   const tip = document.getElementById('tooltip');
-  const sellVal = Math.floor(TOWERS[t.id].cost * 0.6 * t.level);
-  const upgCost = Math.floor(TOWERS[t.id].cost * 1.5 * t.level);
-  tip.innerHTML = `<div style="font-family:var(--font-heading);font-size:.7rem;font-weight:700;color:var(--gold);margin-bottom:4px">${t.name} Lv${t.level}</div>` +
-    `<div style="color:rgba(255,255,255,.5);margin-bottom:4px">${t.desc}</div>` +
-    `<button class="sell-btn" onclick="sellTower(${r},${c})">Sell $${sellVal}</button>` +
-    (t.level < 3 ? `<button class="upgrade-btn" onclick="upgradeTower(${r},${c})">Upgrade $${upgCost}</button>` : '');
+  tip.innerHTML = `<div style="font-family:var(--font-heading);font-size:.7rem;font-weight:700;color:var(--gold);margin-bottom:3px">${def.name} Lv${t.level}</div>` +
+    `<div style="color:rgba(255,255,255,.4);margin-bottom:4px;font-size:.6rem">${def.desc}</div>` +
+    `<button class="sell-btn" onclick="sellT(${r},${c})">Sell $${sell}</button>` +
+    (t.level < 3 ? `<button class="upgrade-btn" onclick="upgT(${r},${c})">Upgrade $${upg}</button>` : '');
   tip.style.display = 'block';
-  tip.style.left = Math.min(mx, W - 180) + 'px';
-  tip.style.top = Math.max(40, my - 80) + 'px';
+  tip.style.left = Math.min(mx, W - 170) + 'px';
+  tip.style.top = Math.max(38, my - 70) + 'px';
 }
 function hideTooltip() { document.getElementById('tooltip').style.display = 'none'; }
 
-window.sellTower = function(r, c) {
-  const t = grid[r][c].tower;
-  if (!t) return;
-  money += Math.floor(TOWERS[t.id].cost * 0.6 * t.level);
+window.sellT = (r, c) => {
+  const t = grid[r][c]; if (!t) return;
+  money += Math.floor(TMAP[t.id].cost * 0.6 * t.level);
   towers = towers.filter(tw => tw !== t);
-  grid[r][c].tower = null;
-  pathCache = findPath(ROWS - 1, ENTRY_COL);
-  enemies.forEach(en => { if (!en.detained && !en.pickedUp) { const np = findPath(Math.floor((en.y - gridOffY) / CELL), Math.floor((en.x - gridOffX) / CELL)); if (np) { en.path = np; en.pathIdx = 0; } } });
-  hideTooltip();
-  updateTowerBar();
-  updateHUD();
+  grid[r][c] = null;
+  hideTooltip(); updateTowerBar(); updateHUD();
+};
+window.upgT = (r, c) => {
+  const t = grid[r][c]; if (!t || t.level >= 3) return;
+  const cost = Math.floor(TMAP[t.id].cost * 1.5 * t.level);
+  if (money < cost) return;
+  money -= cost; t.level++; t.range = TMAP[t.id].range * (1 + (t.level - 1) * 0.25);
+  hideTooltip(); updateTowerBar(); updateHUD();
 };
 
-window.upgradeTower = function(r, c) {
-  const t = grid[r][c].tower;
-  if (!t || t.level >= 3) return;
-  const cost = Math.floor(TOWERS[t.id].cost * 1.5 * t.level);
-  if (money < cost) return;
-  money -= cost;
-  t.level++;
-  t.range = TOWERS[t.id].range * (1 + (t.level - 1) * 0.3);
-  hideTooltip();
-  updateTowerBar();
-  updateHUD();
-};
+// ─── ENEMY ───
+function spawnEnemy(cfg, idx) {
+  const isFast = cfg.fast && Math.random() < cfg.fast;
+  const isStealth = cfg.stealth && Math.random() < cfg.stealth;
+  // Spawn across bottom row at random x
+  const sx = gridX + (Math.random() * 0.8 + 0.1) * COLS * CELL;
+  const sy = gridY + ROWS * CELL + 10;
+  return {
+    x: sx, y: sy,
+    // Slight random target x offset (drift)
+    driftX: (Math.random() - 0.5) * CELL * 2,
+    speed: isFast ? cfg.speed * 1.5 : cfg.speed,
+    hp: cfg.hp, maxHp: cfg.hp,
+    reward: cfg.reward,
+    detained: false, detainTimer: 0,
+    tagged: false, revealed: false,
+    stealth: isStealth, fast: isFast,
+    held: false, pickedUp: false,
+    slowTimer: 0,
+    skin: ['#c68642','#8d5524','#d2996c','#e0ac69','#a0522d','#cd853f','#b8763a'][Math.floor(Math.random()*7)],
+    shirt: ['#cc4444','#44aa44','#4444cc','#cc8844','#aa44aa','#44aaaa','#777'][Math.floor(Math.random()*7)],
+  };
+}
 
 // ─── UPDATE ───
 function update(dt) {
   if (!gameRunning) return;
 
   // Spawn
-  if (waveActive && spawnIndex < waveEnemies.length) {
+  if (waveActive && spawnIdx < waveCfg.count) {
     spawnTimer -= dt;
     if (spawnTimer <= 0) {
-      const cfg = WAVES[wave - 1];
-      const e = spawnEnemy(cfg, spawnIndex);
-      if (e) enemies.push(e);
-      spawnIndex++;
-      spawnTimer = cfg.delay;
+      enemies.push(spawnEnemy(waveCfg, spawnIdx));
+      spawnIdx++;
+      spawnTimer = waveCfg.delay;
     }
   }
 
-  // Check wave complete
-  if (waveActive && spawnIndex >= waveEnemies.length && enemies.length === 0) {
+  // Wave complete
+  if (waveActive && spawnIdx >= waveCfg.count && enemies.length === 0) {
     waveActive = false;
     if (wave >= 10) { endGame(true); return; }
     document.getElementById('waveBtn').style.display = 'block';
-    money += 25 + wave * 10; // wave bonus
-    updateHUD();
-    updateTowerBar();
+    money += 30 + wave * 15;
+    updateHUD(); updateTowerBar();
   }
 
   // Tower logic
   towers.forEach(t => {
     if (t.id === 'wall') return;
-    t.cooldownTimer = Math.max(0, t.cooldownTimer - dt);
+    t.cooldown = Math.max(0, t.cooldown - dt);
     const range = t.range * CELL;
-    const inRange = enemies.filter(e => !e.pickedUp && dist(t.x, t.y, e.x, e.y) < range);
+    const inR = enemies.filter(e => !e.pickedUp && dist(t.x, t.y, e.x, e.y) < range);
 
     if (t.id === 'spotlight') {
-      inRange.forEach(e => { e.slowTimer = 0.5; e.revealed = true; });
+      inR.forEach(e => { e.slowTimer = 0.5; e.revealed = true; });
     }
     if (t.id === 'sensor') {
-      inRange.forEach(e => { e.revealed = true; });
+      inR.forEach(e => { e.revealed = true; });
     }
-    if (t.id === 'k9' && t.cooldownTimer <= 0) {
-      // Find unheld enemy
-      const target = inRange.find(e => !e.held && !e.detained && !e.pickedUp);
-      if (target && !t.dog) {
-        t.dog = { x: t.x, y: t.y, target, returning: false };
-        t.cooldownTimer = (t.level >= 2 ? 2 : 3);
+    if (t.id === 'k9' && t.cooldown <= 0) {
+      const tgt = inR.find(e => !e.held && !e.detained && !e.pickedUp);
+      if (tgt) {
+        dogs.push({ x: t.x, y: t.y, target: tgt, returning: false, tower: t });
+        t.cooldown = Math.max(1.5, 3 - (t.level - 1) * 0.6);
       }
     }
-    if (t.id === 'drone' && t.cooldownTimer <= 0) {
-      const target = inRange.find(e => !e.tagged && !e.detained && !e.pickedUp);
-      if (target) {
-        target.tagged = true;
-        target.revealed = true;
-        t.cooldownTimer = Math.max(0.5, 1.5 - (t.level - 1) * 0.3);
-        effects.push({ x: target.x, y: target.y - 10, text: 'TAGGED', color: '#88aaff', life: 0.8 });
+    if (t.id === 'drone' && t.cooldown <= 0) {
+      const tgt = inR.find(e => !e.tagged && !e.detained && !e.pickedUp);
+      if (tgt) {
+        tgt.tagged = true; tgt.revealed = true;
+        t.cooldown = Math.max(0.4, 1.5 - (t.level - 1) * 0.4);
+        effects.push({ x: tgt.x, y: tgt.y - 8, text: 'TAGGED', color: C.drone, life: 0.7 });
       }
     }
-    if (t.id === 'depot' && t.cooldownTimer <= 0) {
-      // Find tagged or detained enemy for pickup
-      const target = inRange.find(e => (e.tagged || e.detained) && !e.pickedUp);
-      if (target) {
-        target.pickedUp = true;
-        target.pickupProgress = 0;
-        trucks.push(spawnTruck(t, target));
-        t.cooldownTimer = Math.max(1, 2 - (t.level - 1) * 0.3);
+    if (t.id === 'depot' && t.cooldown <= 0) {
+      const tgt = inR.find(e => (e.tagged || e.detained) && !e.pickedUp);
+      if (tgt) {
+        tgt.pickedUp = true;
+        trucks.push({ x: t.x, y: t.y, target: tgt, state: 'going', depot: t });
+        t.cooldown = Math.max(0.8, 2 - (t.level - 1) * 0.4);
       }
     }
   });
 
-  // K9 dogs
-  towers.forEach(t => {
-    if (!t.dog) return;
-    const d = t.dog;
+  // Dogs
+  dogs.forEach(d => {
     if (!d.returning) {
-      // Chase target
-      const target = d.target;
-      if (!target || target.pickedUp || target.detained) { d.returning = true; return; }
-      const dx = target.x - d.x, dy = target.y - d.y;
-      const dist_ = Math.sqrt(dx * dx + dy * dy);
-      if (dist_ < 8) {
-        // Caught! Hold enemy
-        target.held = true;
-        target.heldBy = t;
-        target.detained = true;
-        target.detainTimer = 0;
-        effects.push({ x: target.x, y: target.y - 12, text: 'HELD', color: '#bb8844', life: 1 });
+      const tgt = d.target;
+      if (!tgt || tgt.pickedUp || tgt.detained) { d.returning = true; return; }
+      const dx = tgt.x - d.x, dy = tgt.y - d.y, dd = Math.sqrt(dx*dx+dy*dy);
+      if (dd < 6) {
+        tgt.held = true; tgt.detained = true; tgt.detainTimer = 0;
+        effects.push({ x: tgt.x, y: tgt.y - 10, text: 'HELD', color: C.k9, life: 0.8 });
         d.returning = true;
-      } else {
-        const spd = 120 * dt;
-        d.x += (dx / dist_) * spd;
-        d.y += (dy / dist_) * spd;
-      }
+      } else { d.x += dx/dd * 130 * dt; d.y += dy/dd * 130 * dt; }
     } else {
-      // Return to tower
-      const dx = t.x - d.x, dy = t.y - d.y;
-      const dist_ = Math.sqrt(dx * dx + dy * dy);
-      if (dist_ < 8) { t.dog = null; }
-      else { const spd = 100 * dt; d.x += (dx / dist_) * spd; d.y += (dy / dist_) * spd; }
+      const dx = d.tower.x - d.x, dy = d.tower.y - d.y, dd = Math.sqrt(dx*dx+dy*dy);
+      if (dd < 6) d.done = true;
+      else { d.x += dx/dd * 100 * dt; d.y += dy/dd * 100 * dt; }
     }
   });
+  dogs = dogs.filter(d => !d.done);
 
   // Trucks
   trucks.forEach(tr => {
-    const target = tr.state === 'going' ? tr.targetEnemy : tr.depot;
-    const tx = tr.state === 'going' ? tr.targetEnemy.x : tr.depot.x;
-    const ty = tr.state === 'going' ? tr.targetEnemy.y : tr.depot.y;
-    const dx = tx - tr.x, dy = ty - tr.y;
-    const d = Math.sqrt(dx * dx + dy * dy);
-    if (d < 10) {
-      if (tr.state === 'going') {
-        tr.carrying = true;
-        tr.state = 'returning';
-        tr.targetEnemy.pickedUp = true;
-      } else {
-        // Delivered — deport!
-        if (tr.targetEnemy) {
-          enemies = enemies.filter(e => e !== tr.targetEnemy);
-          totalDeported++;
-          money += tr.targetEnemy.reward;
-          effects.push({ x: tr.x, y: tr.y - 10, text: 'DEPORTED +$' + tr.targetEnemy.reward, color: '#5cdb5c', life: 1.2 });
-        }
+    const tx = tr.state === 'going' ? tr.target.x : tr.depot.x;
+    const ty = tr.state === 'going' ? tr.target.y : tr.depot.y;
+    const dx = tx - tr.x, dy = ty - tr.y, dd = Math.sqrt(dx*dx+dy*dy);
+    if (dd < 8) {
+      if (tr.state === 'going') { tr.state = 'returning'; }
+      else {
+        enemies = enemies.filter(e => e !== tr.target);
+        totalDeported++; money += tr.target.reward;
+        effects.push({ x: tr.x, y: tr.y - 8, text: 'DEPORTED +$' + tr.target.reward, color: '#5c5', life: 1 });
         tr.done = true;
       }
-    } else {
-      const spd = tr.speed * dt;
-      tr.x += (dx / d) * spd;
-      tr.y += (dy / d) * spd;
-    }
+    } else { tr.x += dx/dd * 110 * dt; tr.y += dy/dd * 110 * dt; }
   });
   trucks = trucks.filter(t => !t.done);
 
-  // Enemy movement
+  // Enemy movement: walk straight north, avoid walls
   enemies.forEach(e => {
-    if (e.pickedUp || e.detained) return;
-
-    // Speed
-    let spd = e.speed;
-    if (e.slowTimer > 0) { spd *= 0.35; e.slowTimer -= dt; }
-
-    // Follow path
-    if (e.pathIdx < e.path.length - 1) {
-      const [nr, nc] = e.path[e.pathIdx + 1];
-      const tx = gridOffX + nc * CELL + CELL / 2;
-      const ty = gridOffY + nr * CELL + CELL / 2;
-      const dx = tx - e.x, dy = ty - e.y;
-      const d = Math.sqrt(dx * dx + dy * dy);
-      if (d < 3) {
-        e.pathIdx++;
-      } else {
-        e.x += (dx / d) * spd * dt;
-        e.y += (dy / d) * spd * dt;
+    if (e.pickedUp || e.detained) {
+      if (e.detained && !e.pickedUp) {
+        e.detainTimer += dt;
+        if (e.detainTimer > 6) { e.detained = false; e.held = false; e.detainTimer = 0; }
       }
+      return;
+    }
+    let spd = e.speed;
+    if (e.slowTimer > 0) { spd *= 0.3; e.slowTimer -= dt; }
+
+    // Check for wall directly ahead
+    const nextY = e.y - spd * dt;
+    const gr = Math.floor((nextY - gridY) / CELL);
+    const gc = Math.floor((e.x - gridX) / CELL);
+    if (gr >= 0 && gr < ROWS && gc >= 0 && gc < COLS && grid[gr][gc] && grid[gr][gc].id === 'wall') {
+      // Move sideways to find gap
+      const tryLeft = gc > 0 && (!grid[gr][gc-1] || grid[gr][gc-1].id !== 'wall');
+      const tryRight = gc < COLS-1 && (!grid[gr][gc+1] || grid[gr][gc+1].id !== 'wall');
+      if (tryLeft && !tryRight) e.x -= spd * dt * 0.7;
+      else if (tryRight && !tryLeft) e.x += spd * dt * 0.7;
+      else if (tryLeft && tryRight) e.x += (e.driftX > 0 ? 1 : -1) * spd * dt * 0.7;
+      // Don't move north (blocked)
+    } else {
+      e.y -= spd * dt;
+      e.x += e.driftX * dt * 0.3;
     }
 
-    // Check if reached exit
-    const gr = Math.floor((e.y - gridOffY) / CELL);
-    const gc = Math.floor((e.x - gridOffX) / CELL);
-    if (gr >= 0 && gr < ROWS && gc >= 0 && gc < COLS && grid[gr][gc].type === 3) {
+    // Clamp x
+    e.x = Math.max(gridX + 4, Math.min(gridX + COLS * CELL - 4, e.x));
+
+    // Reached border?
+    if (e.y < gridY) {
       enemies = enemies.filter(en => en !== e);
-      lives--;
-      totalGotThrough++;
-      effects.push({ x: e.x, y: e.y, text: 'GOT THROUGH', color: '#ff4444', life: 1.5 });
+      lives--; totalThrough++;
+      effects.push({ x: e.x, y: gridY + 10, text: 'GOT THROUGH!', color: '#f44', life: 1.2 });
       if (lives <= 0) endGame(false);
     }
   });
 
-  // Detained enemies timeout (auto-release if no pickup after 8s)
-  enemies.forEach(e => {
-    if (e.detained && !e.pickedUp) {
-      e.detainTimer += dt;
-      if (e.detainTimer > 8) {
-        e.detained = false;
-        e.held = false;
-        e.heldBy = null;
-        e.detainTimer = 0;
-      }
-    }
-  });
-
-  // Effects
-  effects.forEach(e => e.life -= dt * 0.8);
+  effects.forEach(e => e.life -= dt * 0.7);
   effects = effects.filter(e => e.life > 0);
-
-  updateHUD();
-  updateTowerBar();
+  updateHUD(); updateTowerBar();
 }
 
-function dist(x1, y1, x2, y2) { return Math.sqrt((x2-x1)**2 + (y2-y1)**2); }
+function dist(x1,y1,x2,y2) { return Math.sqrt((x2-x1)**2+(y2-y1)**2); }
 
 // ─── DRAW ───
 function draw() {
   cx.clearRect(0, 0, W, H);
 
-  // Background
-  cx.fillStyle = '#c8b888';
+  // BG
+  cx.fillStyle = '#2a2215';
   cx.fillRect(0, 0, W, H);
 
   // Grid
   for (let r = 0; r < ROWS; r++) {
     for (let c = 0; c < COLS; c++) {
-      const x = gridOffX + c * CELL, y = gridOffY + r * CELL;
-      const cell = grid[r][c];
-
-      if (cell.type === 1 || cell.type === 2 || cell.type === 3) {
-        cx.fillStyle = '#a09070';
-        cx.fillRect(x, y, CELL, CELL);
-        // Dirt path texture
-        cx.fillStyle = '#988868';
-        cx.fillRect(x + 1, y + 1, CELL - 2, CELL - 2);
-      } else {
-        // Desert
-        cx.fillStyle = '#d4c49a';
-        cx.fillRect(x, y, CELL, CELL);
-        // Subtle grid line
-        cx.strokeStyle = 'rgba(0,0,0,0.06)';
-        cx.lineWidth = 0.5;
-        cx.strokeRect(x, y, CELL, CELL);
-      }
-
-      // Entry/exit markers
-      if (cell.type === 2) {
-        cx.fillStyle = 'rgba(255,100,50,0.3)';
-        cx.fillRect(x, y, CELL, CELL);
-        cx.fillStyle = '#fff';
-        cx.font = `700 ${CELL * 0.3}px Oswald,sans-serif`;
-        cx.textAlign = 'center';
-        cx.fillText('ENTRY', x + CELL / 2, y + CELL * 0.65);
-      }
-      if (cell.type === 3) {
-        cx.fillStyle = 'rgba(50,150,255,0.3)';
-        cx.fillRect(x, y, CELL, CELL);
-        cx.fillStyle = '#fff';
-        cx.font = `700 ${CELL * 0.25}px Oswald,sans-serif`;
-        cx.textAlign = 'center';
-        cx.fillText('EXIT', x + CELL / 2, y + CELL * 0.65);
-      }
+      const x = gridX + c * CELL, y = gridY + r * CELL;
+      // Desert tile
+      const shade = ((r + c) % 2 === 0) ? C.sand : C.sandDark;
+      cx.fillStyle = shade;
+      cx.fillRect(x, y, CELL, CELL);
+      // Subtle grid
+      cx.strokeStyle = 'rgba(0,0,0,0.08)';
+      cx.lineWidth = 0.5;
+      cx.strokeRect(x, y, CELL, CELL);
     }
   }
 
-  // Border line at top
-  cx.fillStyle = '#555';
-  cx.fillRect(gridOffX, gridOffY - 2, COLS * CELL, 3);
-  cx.fillStyle = '#fff';
-  cx.font = `700 ${Math.max(8, CELL * 0.3)}px Oswald,sans-serif`;
+  // Border wall at top (the line they're trying to reach)
+  cx.fillStyle = '#667';
+  cx.fillRect(gridX, gridY - 4, COLS * CELL, 5);
+  cx.fillStyle = 'rgba(255,255,255,0.12)';
+  cx.fillRect(gridX, gridY - 2, COLS * CELL, 2);
+  // Razor wire
+  cx.strokeStyle = '#aaa';
+  cx.lineWidth = 1;
+  cx.beginPath();
+  for (let i = gridX; i < gridX + COLS * CELL; i += 4) {
+    cx.lineTo(i, gridY - 5 + Math.sin(i * 0.3) * 2);
+  }
+  cx.stroke();
+  cx.fillStyle = 'rgba(255,255,255,0.4)';
+  cx.font = `700 ${Math.max(8, CELL * 0.28)}px Oswald,sans-serif`;
   cx.textAlign = 'center';
-  cx.fillText('U.S. BORDER', gridOffX + COLS * CELL / 2, gridOffY - 6);
+  cx.fillText('U.S. BORDER', gridX + COLS * CELL / 2, gridY - 8);
 
-  // Draw towers
+  // Entry zone at bottom
+  cx.fillStyle = 'rgba(250,70,22,0.1)';
+  cx.fillRect(gridX, gridY + (ROWS - 1) * CELL, COLS * CELL, CELL);
+  cx.fillStyle = 'rgba(255,255,255,0.15)';
+  cx.font = `600 ${Math.max(6, CELL * 0.22)}px Oswald,sans-serif`;
+  cx.fillText('CROSSING ZONE', gridX + COLS * CELL / 2, gridY + ROWS * CELL - CELL * 0.35);
+
+  // Towers
   towers.forEach(t => {
-    const x = t.x, y = t.y;
-    const sz = CELL * 0.4;
-
-    if (t.id === 'wall') {
-      cx.fillStyle = '#888';
-      cx.fillRect(x - CELL/2 + 2, y - CELL/2 + 2, CELL - 4, CELL - 4);
-      cx.fillStyle = '#777';
-      // Brick pattern
-      for (let by = -CELL/2 + 4; by < CELL/2 - 2; by += 6) {
-        for (let bx = -CELL/2 + 3; bx < CELL/2 - 2; bx += 10) {
-          cx.fillRect(x + bx, y + by, 8, 4);
-        }
-      }
-      return;
-    }
-
-    // Range circle (if selected)
-    if (selectedTower === t.id || false) {
-      cx.strokeStyle = `${t.color}44`;
+    const range = t.range * CELL;
+    // Range circle (subtle)
+    if (selectedTower === t.id) {
+      cx.strokeStyle = `rgba(${t.id === 'spotlight' ? '232,200,64' : t.id === 'sensor' ? '64,184,216' : t.id === 'depot' ? '40,98,181' : '200,144,64'},0.2)`;
       cx.lineWidth = 1;
-      cx.beginPath(); cx.arc(x, y, t.range * CELL, 0, Math.PI * 2); cx.stroke();
+      cx.beginPath(); cx.arc(t.x, t.y, range, 0, Math.PI * 2); cx.stroke();
     }
-
-    // Tower base
-    cx.fillStyle = 'rgba(0,0,0,0.15)';
-    cx.beginPath(); cx.arc(x, y + 2, sz + 2, 0, Math.PI * 2); cx.fill();
-    cx.fillStyle = t.color;
-    cx.beginPath(); cx.arc(x, y, sz, 0, Math.PI * 2); cx.fill();
-    cx.fillStyle = 'rgba(255,255,255,0.15)';
-    cx.beginPath(); cx.arc(x, y - 2, sz * 0.7, 0, Math.PI * 2); cx.fill();
-
+    // Base shadow
+    cx.fillStyle = 'rgba(0,0,0,0.2)';
+    cx.beginPath(); cx.ellipse(t.x + 1, t.y + 2, CELL * 0.4, CELL * 0.25, 0, 0, Math.PI * 2); cx.fill();
+    // Draw icon
+    drawTowerIcon(cx, t.id, t.x, t.y, CELL * 0.38);
     // Level pips
-    for (let i = 0; i < t.level; i++) {
-      cx.fillStyle = '#fff';
-      cx.beginPath(); cx.arc(x - (t.level - 1) * 3 + i * 6, y + sz + 4, 2, 0, Math.PI * 2); cx.fill();
-    }
-
-    // Icon
-    cx.font = `${CELL * 0.35}px sans-serif`;
-    cx.textAlign = 'center';
-    cx.fillText(TOWERS[t.id].icon, x, y + CELL * 0.12);
-
-    // K9 dog
-    if (t.dog) {
-      const d = t.dog;
-      cx.fillStyle = '#8B6914';
-      cx.beginPath(); cx.ellipse(d.x, d.y, 5, 3, 0, 0, Math.PI * 2); cx.fill();
-      cx.fillStyle = '#6B4914';
-      cx.beginPath(); cx.arc(d.x + 4, d.y - 2, 2.5, 0, Math.PI * 2); cx.fill();
+    if (t.level > 1) {
+      for (let i = 0; i < t.level; i++) {
+        cx.fillStyle = '#fff';
+        cx.beginPath(); cx.arc(t.x - (t.level-1)*2.5 + i*5, t.y + CELL * 0.4, 1.5, 0, Math.PI*2); cx.fill();
+      }
     }
   });
 
-  // Draw trucks
+  // Dogs
+  dogs.forEach(d => {
+    cx.fillStyle = C.k9;
+    cx.beginPath(); cx.ellipse(d.x, d.y, 5, 3, 0, 0, Math.PI * 2); cx.fill();
+    cx.fillStyle = '#8B6914';
+    cx.beginPath(); cx.arc(d.x + 3, d.y - 2, 2, 0, Math.PI * 2); cx.fill();
+  });
+
+  // Trucks
   trucks.forEach(tr => {
-    cx.fillStyle = '#2862b5';
-    cx.beginPath(); cx.roundRect(tr.x - 8, tr.y - 5, 16, 10, 2); cx.fill();
-    cx.fillStyle = '#fff';
-    cx.font = '5px Oswald,sans-serif';
-    cx.textAlign = 'center';
-    cx.fillText('ICE', tr.x, tr.y + 2);
+    cx.fillStyle = C.depot;
+    cx.beginPath(); cx.roundRect(tr.x - 7, tr.y - 4, 14, 8, 2); cx.fill();
+    cx.fillStyle = '#1e4a8a';
+    cx.fillRect(tr.x - 6, tr.y + 1, 12, 3);
+    cx.fillStyle = 'rgba(255,255,255,0.6)';
+    cx.font = '4px Oswald,sans-serif';
+    cx.textAlign = 'center'; cx.textBaseline = 'middle';
+    cx.fillText('ICE', tr.x, tr.y - 1);
+    cx.textBaseline = 'alphabetic';
   });
 
-  // Draw enemies
+  // Enemies
   enemies.forEach(e => {
-    if (e.stealth && !e.revealed) return; // invisible
-    const alpha = e.stealth && e.revealed ? 0.6 : 1;
-    cx.globalAlpha = alpha;
+    if (e.stealth && !e.revealed) return;
+    cx.globalAlpha = e.pickedUp ? 0.25 : e.stealth ? 0.55 : 1;
+    const sz = CELL * 0.22;
 
-    const x = e.x, y = e.y;
-    const sz = CELL * 0.3;
-
-    if (e.pickedUp) {
-      // Fading out
-      cx.globalAlpha = 0.3;
-    }
-
-    if (e.detained) {
-      // Detained marker
-      cx.strokeStyle = '#ff4444';
-      cx.lineWidth = 1.5;
+    // Detained ring
+    if (e.detained && !e.pickedUp) {
+      cx.strokeStyle = '#f44';
+      cx.lineWidth = 1.2;
       cx.setLineDash([3, 2]);
-      cx.beginPath(); cx.arc(x, y, sz + 4, 0, Math.PI * 2); cx.stroke();
+      cx.beginPath(); cx.arc(e.x, e.y, sz + 4, 0, Math.PI * 2); cx.stroke();
       cx.setLineDash([]);
     }
 
     // Body
-    cx.fillStyle = e.shirtColor;
-    cx.beginPath(); cx.ellipse(x, y + 2, sz * 0.7, sz, 0, 0, Math.PI * 2); cx.fill();
-
+    cx.fillStyle = e.shirt;
+    cx.beginPath(); cx.ellipse(e.x, e.y + 1, sz * 0.8, sz, 0, 0, Math.PI * 2); cx.fill();
     // Head
     cx.fillStyle = e.skin;
-    cx.beginPath(); cx.arc(x, y - sz * 0.8, sz * 0.5, 0, Math.PI * 2); cx.fill();
+    cx.beginPath(); cx.arc(e.x, e.y - sz * 0.9, sz * 0.55, 0, Math.PI * 2); cx.fill();
+    // Hair
+    cx.fillStyle = '#1a1a1a';
+    cx.beginPath(); cx.arc(e.x, e.y - sz * 1.15, sz * 0.4, 0, Math.PI * 2); cx.fill();
 
-    // Boss indicator
-    if (e.boss) {
-      cx.strokeStyle = '#ff0';
-      cx.lineWidth = 2;
-      cx.beginPath(); cx.arc(x, y, sz + 3, 0, Math.PI * 2); cx.stroke();
-    }
-
-    // Tagged indicator
+    // Tagged dot
     if (e.tagged && !e.pickedUp) {
-      cx.fillStyle = '#88aaff';
-      cx.beginPath(); cx.arc(x + sz, y - sz, 3, 0, Math.PI * 2); cx.fill();
+      cx.fillStyle = C.drone;
+      cx.beginPath(); cx.arc(e.x + sz, e.y - sz, 2.5, 0, Math.PI * 2); cx.fill();
     }
 
-    // HP bar if hp > 1
-    if (e.maxHp > 1) {
-      const bw = sz * 2, bh = 2;
-      cx.fillStyle = 'rgba(0,0,0,0.3)';
-      cx.fillRect(x - bw / 2, y - sz * 1.5, bw, bh);
-      cx.fillStyle = '#5cdb5c';
-      cx.fillRect(x - bw / 2, y - sz * 1.5, bw * (e.hp / e.maxHp), bh);
+    // Fast indicator
+    if (e.fast) {
+      cx.strokeStyle = '#f84';
+      cx.lineWidth = 1;
+      cx.beginPath();
+      cx.moveTo(e.x - sz - 2, e.y + sz + 2);
+      cx.lineTo(e.x - sz - 5, e.y + sz + 5);
+      cx.moveTo(e.x + sz + 2, e.y + sz + 2);
+      cx.lineTo(e.x + sz + 5, e.y + sz + 5);
+      cx.stroke();
     }
 
     cx.globalAlpha = 1;
   });
 
-  // Draw effects
+  // Effects
   cx.textAlign = 'center';
   effects.forEach(e => {
     cx.globalAlpha = Math.min(1, e.life);
     cx.fillStyle = e.color;
-    cx.font = `700 ${e.size || 10}px Oswald,sans-serif`;
-    cx.fillText(e.text, e.x, e.y - (1 - Math.min(1, e.life)) * 20);
+    cx.font = `700 ${Math.max(8, CELL * 0.25)}px Oswald,sans-serif`;
+    cx.fillText(e.text, e.x, e.y - (1 - Math.min(1, e.life)) * 15);
   });
   cx.globalAlpha = 1;
-
-  // Placement preview
-  if (selectedTower) {
-    // Show range on hover... simplified: just show selected indicator
-  }
 }
 
-// ─── GAME LOOP ───
+// ─── LOOP ───
 function loop(ts) {
   const dt = Math.min((ts - lastTime) / 1000, 0.05);
   lastTime = ts;
@@ -792,30 +696,22 @@ function loop(ts) {
 
 // ─── GAME FLOW ───
 function startGame() {
-  money = 500; lives = 20; wave = 0; totalDeported = 0; totalGotThrough = 0;
-  enemies = []; towers = []; trucks = []; effects = [];
-  waveActive = false; selectedTower = null;
-  initGrid();
-  pathCache = findPath(ROWS - 1, ENTRY_COL);
-  buildTowerBar();
-
+  money = 500; lives = 20; wave = 0; totalDeported = 0; totalThrough = 0;
+  enemies = []; towers = []; trucks = []; dogs = []; effects = [];
+  selectedTower = null; waveActive = false;
+  initGrid(); buildTowerBar();
   document.getElementById('startScreen').classList.add('hidden');
   document.getElementById('gameOverScreen').classList.add('hidden');
   document.getElementById('hud').style.display = 'flex';
   document.getElementById('towerBar').style.display = 'flex';
   document.getElementById('waveBtn').style.display = 'block';
-  gameRunning = true;
-  updateHUD();
-  updateTowerBar();
+  gameRunning = true; updateHUD(); updateTowerBar();
 }
 
 function startWave() {
   if (waveActive || wave >= 10) return;
-  wave++;
-  const cfg = WAVES[wave - 1];
-  waveEnemies = Array(cfg.count).fill(null);
-  spawnIndex = 0;
-  spawnTimer = 0.5;
+  wave++; waveCfg = WAVES[wave - 1];
+  spawnIdx = 0; spawnTimer = 0.3;
   waveActive = true;
   document.getElementById('waveBtn').style.display = 'none';
   updateHUD();
@@ -823,16 +719,15 @@ function startWave() {
 
 function endGame(won) {
   gameRunning = false;
-  document.getElementById('goTitle').textContent = won ? 'Mission Complete' : 'Mission Failed';
+  document.getElementById('goTitle').textContent = won ? 'Border Secured' : 'Mission Failed';
   document.getElementById('goTitle').style.color = won ? 'var(--gold)' : '#D32F2F';
   document.getElementById('goSub').textContent = won
-    ? `Border secured. ${totalDeported} deported, ${totalGotThrough} got through.`
-    : `Too many got through. ${totalDeported} deported across ${wave} waves.`;
+    ? `All 10 waves repelled. ${totalDeported} deported, ${totalThrough} got through.`
+    : `The border was overrun. ${totalDeported} deported across ${wave} waves.`;
   document.getElementById('goStats').innerHTML = `
-    <div class="stat-row"><span class="stat-label">Waves Survived</span><span class="stat-val">${wave}/10</span></div>
+    <div class="stat-row"><span class="stat-label">Waves</span><span class="stat-val">${wave}/10</span></div>
     <div class="stat-row"><span class="stat-label">Deported</span><span class="stat-val">${totalDeported}</span></div>
-    <div class="stat-row"><span class="stat-label">Got Through</span><span class="stat-val">${totalGotThrough}</span></div>
-    <div class="stat-row"><span class="stat-label">Money Earned</span><span class="stat-val">$${money}</span></div>`;
+    <div class="stat-row"><span class="stat-label">Got Through</span><span class="stat-val">${totalThrough}</span></div>`;
   document.getElementById('gameOverScreen').classList.remove('hidden');
   document.getElementById('waveBtn').style.display = 'none';
 }
@@ -841,25 +736,19 @@ function updateHUD() {
   document.getElementById('hudMoney').textContent = money;
   document.getElementById('hudLives').textContent = lives;
   document.getElementById('hudDeported').textContent = totalDeported;
-  document.getElementById('hudWave').textContent = waveActive ? `WAVE ${wave}/10` : wave < 10 ? `NEXT: WAVE ${wave + 1}` : 'FINAL WAVE';
+  document.getElementById('hudWave').textContent = waveActive ? `WAVE ${wave}/10` : wave < 10 ? `NEXT: ${wave+1}/10` : 'COMPLETE';
 }
 
-function shareText() {
-  return `DEPORTATION FORCE\n\nWave ${wave}/10 | Deported: ${totalDeported}\nGot Through: ${totalGotThrough}\n\nSecure the border!\nufcr.online/deportation-force/`;
-}
-
-// ─── EVENTS ───
 document.getElementById('startBtn').addEventListener('click', startGame);
 document.getElementById('restartBtn').addEventListener('click', startGame);
 document.getElementById('waveBtn').addEventListener('click', startWave);
 document.getElementById('shareBtn').addEventListener('click', () => {
-  window.open('https://x.com/intent/tweet?text=' + encodeURIComponent(shareText()), '_blank');
+  window.open('https://x.com/intent/tweet?text=' + encodeURIComponent(`DEPORTATION FORCE\n\nWave ${wave}/10 | Deported: ${totalDeported}\nufcr.online/deportation-force/`), '_blank');
 });
 document.getElementById('copyBtn').addEventListener('click', () => {
-  navigator.clipboard.writeText(shareText()).then(() => {
-    document.getElementById('copyBtn').innerHTML = '<i class="fas fa-check"></i> Copied!';
-    setTimeout(() => { document.getElementById('copyBtn').innerHTML = '<i class="fas fa-copy"></i> Copy'; }, 2000);
-  });
+  navigator.clipboard.writeText(`DEPORTATION FORCE\nWave ${wave}/10 | Deported: ${totalDeported}\nufcr.online/deportation-force/`);
+  document.getElementById('copyBtn').textContent = 'Copied!';
+  setTimeout(() => document.getElementById('copyBtn').textContent = 'Copy', 2000);
 });
 
 requestAnimationFrame(loop);
