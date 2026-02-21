@@ -825,13 +825,14 @@ function drawScene() {
   sc.restore();
 
   // ─── Traffic cones (only on edges, small) ───
+  const coneInset = SW < 500 ? 10 : 4; // push cones further out on mobile
   for (let i = 0; i < 3; i++) {
     const t = 0.5 + i * 0.15;
     const cy_ = roadTop + (roadBot - roadTop) * t;
     const spread = (roadTopW / 2) + (roadBotW / 2 - roadTopW / 2) * t;
     const coneScale = (0.3 + t * 0.4) * sceneSc;
-    drawCone(cx - spread + 4, cy_, coneScale);
-    drawCone(cx + spread - 4, cy_, coneScale);
+    drawCone(cx - spread - coneInset, cy_, coneScale);
+    drawCone(cx + spread + coneInset, cy_, coneScale);
   }
 
   // ─── Car ───
