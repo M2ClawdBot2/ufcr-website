@@ -802,10 +802,13 @@ function drawScene() {
   sc.fillRect(gatePostX - 3, gateBaseY - 45, 6, 50);
   sc.fillStyle = '#888';
   sc.beginPath(); sc.arc(gatePostX, gateBaseY - 45, 5, 0, Math.PI * 2); sc.fill();
-  // Arm (rotates around post top)
+  // Arm (rotates around pivot at post top — positive angle lifts up)
   sc.save();
   sc.translate(gatePostX, gateBaseY - 43);
-  sc.rotate(-barrierAngle * Math.PI / 2); // 0=horizontal, 1=vertical (up)
+  // When barrierAngle=0: arm is horizontal (blocked). When 1: arm points up (open).
+  // We rotate clockwise by 90 degrees to lift. The arm extends to the right,
+  // so rotating negatively (counter-clockwise) makes it go UP.
+  sc.rotate(-barrierAngle * Math.PI * 0.45); // 0=horizontal, 1=~80 degrees up
   sc.fillStyle = '#e44';
   sc.beginPath(); sc.roundRect(0, -3, gateArmLen, 6, 2); sc.fill();
   sc.fillStyle = '#fff';
@@ -828,7 +831,7 @@ function drawScene() {
   }
 
   // ─── Car ───
-  if (currentPerson && animState !== 'idle' && animState !== 'barrier-down') {
+  if (currentPerson && animState !== 'idle') {
     drawCarFront(cx + roadBotW * 0.06 + carXOff, carY, carAngle);
   }
 
@@ -1153,42 +1156,31 @@ function sceneLoop() {
       renderDocs(currentPerson);
     }
   } else if (animState === 'barrier-up-out') {
-    barrierAngle = Math.min(1, barrierAngle + 0.04);
+    // Lift barrier quickly and visibly
+    barrierAngle = Math.min(1, barrierAngle + 0.06);
     if (barrierAngle >= 1) {
-      animState = lastDecision === 'admit' ? 'driving-out' : 'driving-forward';
+      animState = lastDecision === 'admit' ? 'driving-out' : 'driving-detained';
       animTimer = 0;
     }
   } else if (animState === 'driving-out') {
-    // Admitted: drive forward and veer right
-    carY -= 4;
-    carXOff += 3;
-    if (carY < SH * 0.15) {
+    // Admitted: car drives AWAY from us (shrinks) and veers right
+    animTimer++;
+    carY -= 3.5; // move toward horizon (gets smaller)
+    carXOff += 2.5; // drift right
+    if (carY < SH * 0.2) {
       animState = 'barrier-down';
     }
-  } else if (animState === 'driving-forward') {
-    // Detained: drive forward a bit
-    carY -= 3;
+  } else if (animState === 'driving-detained') {
+    // Detained: car drives away but veers LEFT toward ICE van area
     animTimer++;
-    if (animTimer > 25) {
-      animState = 'u-turn';
-      animTimer = 0;
-    }
-  } else if (animState === 'u-turn') {
-    // Rotate 180 degrees
-    carAngle += 0.08;
-    animTimer++;
-    if (carAngle >= Math.PI) {
-      carAngle = Math.PI;
-      animState = 'driving-away';
-    }
-  } else if (animState === 'driving-away') {
-    // Drive back out (now facing away, so increase Y)
-    carY += 5;
-    if (carY > SH + 80) {
+    carY -= 2.5;
+    carXOff += 4; // veer right toward the ICE van side
+    carAngle -= 0.02; // slight turn angle
+    if (carY < SH * 0.25) {
       animState = 'barrier-down';
     }
   } else if (animState === 'barrier-down') {
-    barrierAngle = Math.max(0, barrierAngle - 0.04);
+    barrierAngle = Math.max(0, barrierAngle - 0.06);
     if (barrierAngle <= 0) {
       animState = 'idle';
       nextCar();
@@ -1204,6 +1196,7 @@ function startGame() {
   day = 0; score = 0; strikes = 0; streak = 0;
   totalCorrect = 0; totalWrong = 0;
   allRules = [];
+  barrierAngle = 0; carY = 0; carXOff = 0; carAngle = 0; animTimer = 0;
   document.getElementById('startScreen').classList.add('hidden');
   document.getElementById('gameOverScreen').classList.add('hidden');
   document.getElementById('gameArea').style.display = 'flex';
