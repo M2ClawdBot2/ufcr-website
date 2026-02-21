@@ -96,6 +96,14 @@
   </div>
 </div>
 
+<!-- TUTORIAL / BRIEFING -->
+<div class="overlay hidden" id="tutorialScreen">
+  <div class="overlay-title" style="color:var(--orange);font-size:clamp(1.4rem,5vw,2.2rem)" id="tutTitle">BRIEFING</div>
+  <p class="overlay-sub" id="tutSub" style="margin-bottom:12px"></p>
+  <ul class="how-to" id="tutSteps"></ul>
+  <button class="btn" id="tutBtn">Begin</button>
+</div>
+
 <canvas id="game"></canvas>
 
 <div class="hud" id="hud">
@@ -163,15 +171,14 @@ const LEVELS = [
 // ─── TOWER DEFS ───
 const C = {
   spotlight: '#e8c840', sensor: '#40b8d8', k9: '#c89040',
-  drone: '#6888cc', depot: '#2862b5',
+  depot: '#2862b5',
 };
 const TDEFS = [
-  { id: 'spotlight', name: 'Spotlight', cost: 50, range: 2.8, color: C.spotlight, desc: 'Slows all crossers in range' },
-  { id: 'sensor', name: 'Sensor', cost: 75, range: 3.2, color: C.sensor, desc: 'Reveals stealth crossers' },
-  { id: 'k9', name: 'K-9', cost: 100, range: 2.2, color: C.k9, desc: 'Dog chases and holds one' },
-  { id: 'drone', name: 'Drone', cost: 125, range: 3.5, color: C.drone, desc: 'Tags for truck pickup' },
-  { id: 'wall', name: 'Wall', cost: 40, range: 0, color: '#888', desc: 'Blocks path — illegals break through over time', hp: 8, onPath: true },
-  { id: 'depot', name: 'ICE Depot', cost: 150, range: 4, color: C.depot, desc: 'Trucks collect detainees' },
+  { id: 'wall', name: 'Wall', cost: 40, range: 0, color: '#888', desc: 'Place on path. Blocks illegals until they break through.', hp: 8, onPath: true },
+  { id: 'spotlight', name: 'Spotlight', cost: 50, range: 2.8, color: C.spotlight, desc: 'Slows down all illegals in range by 70%.' },
+  { id: 'k9', name: 'K-9 Unit', cost: 100, range: 2.2, color: C.k9, desc: 'Dog chases and holds one illegal in place until picked up.' },
+  { id: 'depot', name: 'ICE Depot', cost: 150, range: 4, color: C.depot, desc: 'Sends trucks to grab held illegals and deport them for cash.' },
+  { id: 'sensor', name: 'Sensor', cost: 75, range: 3.2, color: C.sensor, desc: 'Detects invisible illegals hiding in the group.', minLevel: 5 },
 ];
 const TMAP = {}; TDEFS.forEach(t => TMAP[t.id] = t);
 
@@ -235,13 +242,6 @@ function drawTowerIcon(ctx, id, x, y, sz) {
     ctx.beginPath(); ctx.ellipse(9*s, -6*s, 2*s, 3*s, 0.5, 0, Math.PI * 2); ctx.fill();
     ctx.fillRect(-6*s, 5*s, 2.5*s, 5*s); ctx.fillRect(-1*s, 5*s, 2.5*s, 5*s); ctx.fillRect(3*s, 5*s, 2.5*s, 4*s);
     ctx.fillStyle = '#1a1a1a'; ctx.beginPath(); ctx.arc(9*s, -3*s, 1*s, 0, Math.PI * 2); ctx.fill();
-  } else if (id === 'drone') {
-    ctx.fillStyle = '#555';
-    ctx.fillRect(-7*s, -1*s, 14*s, 2*s); ctx.fillRect(-1*s, -7*s, 2*s, 14*s);
-    ctx.fillStyle = C.drone;
-    [[-7,-7],[7,-7],[-7,7],[7,7]].forEach(([rx,ry]) => { ctx.beginPath(); ctx.arc(rx*s, ry*s, 4*s, 0, Math.PI * 2); ctx.fill(); });
-    ctx.fillStyle = '#444'; ctx.beginPath(); ctx.arc(0, 0, 3*s, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = '#f44'; ctx.beginPath(); ctx.arc(0, 0, 1.5*s, 0, Math.PI * 2); ctx.fill();
   } else if (id === 'wall') {
     // Steel wall panel
     ctx.fillStyle = '#777';
@@ -278,7 +278,7 @@ function drawTowerIcon(ctx, id, x, y, sz) {
 function buildTowerBar() {
   const bar = document.getElementById('towerBar');
   bar.innerHTML = '';
-  TDEFS.forEach(t => {
+  TDEFS.filter(t => !t.minLevel || (currentLevel + 1) >= t.minLevel).forEach(t => {
     const btn = document.createElement('div');
     btn.className = 'tower-btn'; btn.dataset.id = t.id;
     const ic = document.createElement('canvas'); ic.width = 56; ic.height = 56;
@@ -379,7 +379,7 @@ function spawnEnemy() {
     speed: isFast ? cfg.speed * 1.5 : cfg.speed,
     hp: cfg.hp, maxHp: cfg.hp, reward: cfg.reward,
     detained: false, detainTimer: 0,
-    tagged: false, revealed: false,
+    revealed: false,
     stealth: isStealth, fast: isFast,
     held: false, pickedUp: false, slowTimer: 0,
     skin: ['#c68642','#8d5524','#d2996c','#e0ac69','#a0522d','#cd853f','#b8763a'][Math.floor(Math.random()*7)],
@@ -418,12 +418,8 @@ function update(dt) {
       const tgt = inR.find(e => !e.held && !e.detained && !e.pickedUp);
       if (tgt) { dogs.push({ x: t.x, y: t.y, target: tgt, returning: false, tower: t }); t.cooldown = Math.max(1.5, 3 - (t.level - 1) * 0.6); }
     }
-    if (t.id === 'drone' && t.cooldown <= 0) {
-      const tgt = inR.find(e => !e.tagged && !e.detained && !e.pickedUp);
-      if (tgt) { tgt.tagged = true; tgt.revealed = true; t.cooldown = Math.max(0.4, 1.5 - (t.level - 1) * 0.4); effects.push({ x: tgt.x, y: tgt.y - 8, text: 'TAGGED', color: C.drone, life: 0.7 }); }
-    }
     if (t.id === 'depot' && t.cooldown <= 0) {
-      const tgt = inR.find(e => (e.tagged || e.detained) && !e.pickedUp);
+      const tgt = inR.find(e => e.detained && !e.pickedUp);
       if (tgt) { tgt.pickedUp = true; trucks.push({ x: t.x, y: t.y, target: tgt, state: 'going', depot: t }); t.cooldown = Math.max(0.8, 2 - (t.level - 1) * 0.4); }
     }
   });
@@ -635,9 +631,6 @@ function draw() {
     cx.beginPath(); cx.arc(e.x, e.y - sz * 0.9, sz * 0.55, 0, Math.PI * 2); cx.fill();
     cx.fillStyle = '#1a1a1a';
     cx.beginPath(); cx.arc(e.x, e.y - sz * 1.15, sz * 0.4, 0, Math.PI * 2); cx.fill();
-    if (e.tagged && !e.pickedUp) {
-      cx.fillStyle = C.drone; cx.beginPath(); cx.arc(e.x + sz, e.y - sz, 2.5, 0, Math.PI * 2); cx.fill();
-    }
     if (e.fast) {
       cx.strokeStyle = '#f84'; cx.lineWidth = 1; cx.beginPath();
       cx.moveTo(e.x - sz - 2, e.y + sz + 2); cx.lineTo(e.x - sz - 5, e.y + sz + 5);
@@ -699,6 +692,30 @@ function showLevelSelect() {
   gameRunning = false;
 }
 
+// ─── TUTORIALS ───
+const TUTORIALS = {
+  0: {
+    title: 'WELCOME, AGENT',
+    sub: 'You\'ve been assigned to the Rio Grande sector. Illegals are approaching on foot — your job is to stop them before they reach the U.S. border.',
+    steps: [
+      'WALL ($40) — Place on the dirt path to block illegals. They\'ll bash through eventually, but it buys time.',
+      'SPOTLIGHT ($50) — Place next to the path. Slows all illegals in its range by 70%.',
+      'K-9 UNIT ($100) — Sends a dog to chase and hold one illegal in place.',
+      'ICE DEPOT ($150) — Sends trucks to grab held illegals and deport them. You earn cash for each deportation.',
+      'Strategy: Walls slow them down, spotlights keep them slow, K-9s hold them, depots deport them for money. Build a pipeline!',
+    ]
+  },
+  4: {
+    title: 'INTEL UPDATE',
+    sub: 'Starting this level, some illegals will use stealth — they\'re invisible until detected. A new tool has been unlocked.',
+    steps: [
+      'SENSOR ($75) — NEW! Reveals invisible illegals hiding in the group. Place near the path to detect them.',
+      'Without a sensor, stealth illegals slip right past your K-9s and depots undetected.',
+      'Tip: Place sensors early in the path so your other towers can do their job.',
+    ]
+  },
+};
+
 function startLevel(idx) {
   currentLevel = idx;
   levelCfg = LEVELS[idx];
@@ -706,13 +723,31 @@ function startLevel(idx) {
   totalDeported = 0; totalThrough = 0;
   enemies = []; towers = []; trucks = []; dogs = []; effects = [];
   selectedTower = null; spawnIdx = 0; spawnDone = false;
-  spawnTimer = 2.0; // initial delay before first spawn
+  spawnTimer = 3.0; // delay before first spawn (time to build)
   initGrid(levelCfg); buildTowerBar();
   document.getElementById('levelScreen').classList.add('hidden');
   document.getElementById('gameOverScreen').classList.add('hidden');
+
+  // Show tutorial if applicable
+  if (TUTORIALS[idx]) {
+    const tut = TUTORIALS[idx];
+    document.getElementById('tutTitle').textContent = tut.title;
+    document.getElementById('tutSub').textContent = tut.sub;
+    const list = document.getElementById('tutSteps');
+    list.innerHTML = '';
+    tut.steps.forEach(s => { const li = document.createElement('li'); li.textContent = s; list.appendChild(li); });
+    document.getElementById('tutorialScreen').classList.remove('hidden');
+    // Don't start game yet — wait for button
+    return;
+  }
+
+  beginLevel();
+}
+
+function beginLevel() {
+  document.getElementById('tutorialScreen').classList.add('hidden');
   document.getElementById('hud').style.display = 'flex';
   document.getElementById('towerBar').style.display = 'flex';
-  document.getElementById('backBtn').style.display = 'block';
   gameRunning = true; updateHUD(); updateTowerBar();
 }
 
@@ -749,6 +784,7 @@ function updateHUD() {
 
 // ─── EVENTS ───
 document.getElementById('startBtn').addEventListener('click', showLevelSelect);
+document.getElementById('tutBtn').addEventListener('click', beginLevel);
 document.getElementById('levelBackBtn').addEventListener('click', () => {
   document.getElementById('levelScreen').classList.add('hidden');
   document.getElementById('startScreen').classList.remove('hidden');
