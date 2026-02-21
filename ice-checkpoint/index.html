@@ -30,7 +30,7 @@
     #gameArea{position:fixed;top:0;left:0;right:0;bottom:0;display:none;flex-direction:column}
     
     /* Scene - top portion showing booth — front-facing view */
-    #scene{flex:0 0 38%;min-height:180px;max-height:300px;background:#87CEEB;position:relative;overflow:hidden;border-bottom:3px solid #444}
+    #scene{flex:0 0 35%;min-height:150px;max-height:280px;background:#87CEEB;position:relative;overflow:hidden;border-bottom:3px solid #444}
     
     /* Document inspection area */
     #deskArea{flex:1;background:#3a2a1a;position:relative;overflow:hidden;display:flex;flex-direction:column}
@@ -626,6 +626,7 @@ document.getElementById('zoomBackdrop').addEventListener('click', () => {
 function drawScene() {
   sc.clearRect(0, 0, SW, SH);
   const cx = SW / 2;
+  const sceneSc = Math.min(1, SH / 280); // global scale for small scenes
 
   // Sky gradient
   const skyGrad = sc.createLinearGradient(0, 0, 0, SH * 0.32);
@@ -724,10 +725,10 @@ function drawScene() {
     sc.stroke();
   }
 
-  // ─── Booth (left side, substantial) ───
-  const boothW = Math.min(80, SW * 0.18);
-  const boothH = SH * 0.48;
-  const boothX = cx - roadBotW * 0.33;
+  // ─── Booth (left side, scaled to scene) ───
+  const boothW = Math.min(70, SW * 0.15) * sceneSc + 20;
+  const boothH = SH * 0.42;
+  const boothX = cx - roadBotW * 0.35;
   const boothY = SH - boothH;
 
   // Booth shadow
@@ -795,7 +796,7 @@ function drawScene() {
 
   // ─── Barrier gate (animated) ───
   const gatePostX = boothX + boothW + 2;
-  const gateBaseY = SH * 0.6;
+  const gateBaseY = SH * 0.55;
   const gateArmLen = cx + roadBotW * 0.25 - gatePostX;
   // Post
   sc.fillStyle = '#777';
@@ -820,23 +821,23 @@ function drawScene() {
   sc.beginPath(); sc.roundRect(-15, -5, 16, 10, 3); sc.fill();
   sc.restore();
 
-  // ─── Traffic cones ───
-  for (let i = 0; i < 4; i++) {
-    const t = 0.45 + i * 0.13;
+  // ─── Traffic cones (only on edges, small) ───
+  for (let i = 0; i < 3; i++) {
+    const t = 0.5 + i * 0.15;
     const cy_ = roadTop + (roadBot - roadTop) * t;
     const spread = (roadTopW / 2) + (roadBotW / 2 - roadTopW / 2) * t;
-    const coneScale = 0.5 + t * 0.6;
-    drawCone(cx - spread + 8, cy_, coneScale);
-    drawCone(cx + spread - 8, cy_, coneScale);
+    const coneScale = (0.3 + t * 0.4) * sceneSc;
+    drawCone(cx - spread + 4, cy_, coneScale);
+    drawCone(cx + spread - 4, cy_, coneScale);
   }
 
   // ─── Car ───
   if (currentPerson && animState !== 'idle') {
-    drawCarFront(cx + roadBotW * 0.06 + carXOff, carY, carAngle);
+    drawCarFront(cx + roadBotW * 0.1 + carXOff, carY, carAngle);
   }
 
   // ─── ICE Van ───
-  drawICEVan(cx + roadBotW * 0.38, SH * 0.48);
+  drawICEVan(cx + roadBotW * 0.42, SH * 0.42);
 }
 
 function drawCone(x, y, s) {
@@ -857,12 +858,13 @@ function drawCarFront(x, animY, angle) {
   const col = currentPerson.carColor;
   const face = currentPerson.face;
 
-  // Perspective scale
+  // Perspective scale — responsive to scene size
   const minY = SH * 0.32, maxY = SH * 0.65;
   const t = Math.max(0, Math.min(1, (animY - minY) / (maxY - minY)));
-  const scale = 0.3 + t * 0.55;
-  const w = 120 * scale;
-  const h = 145 * scale;
+  const sceneSc = Math.min(1, SH / 300);
+  const scale = (0.25 + t * 0.45) * sceneSc;
+  const w = 130 * scale;
+  const h = 155 * scale;
 
   sc.save();
   sc.translate(x, animY);
@@ -1073,7 +1075,7 @@ function drawCarFront(x, animY, angle) {
 }
 
 function drawICEVan(x, y) {
-  const s = 0.55;
+  const s = 0.4 * Math.min(1, SH / 250);
   sc.save();
   sc.translate(x, y);
   sc.scale(s, s);
@@ -1269,8 +1271,8 @@ function nextCar() {
   document.getElementById('btnDetain').disabled = true;
 
   currentPerson = genPerson();
-  carY = SH * 0.15; // start far away (small)
-  carTargetY = SH * 0.58; // stop at booth
+  carY = SH * 0.2; // start far away (small)
+  carTargetY = SH * 0.55; // stop at booth — not too close
   carXOff = 0;
   carAngle = 0;
   animState = 'driving-in';
