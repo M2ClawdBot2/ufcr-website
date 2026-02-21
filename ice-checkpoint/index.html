@@ -1045,16 +1045,22 @@ function drawCarFront(x, animY, angle) {
   sc.fillRect(-w*0.4, h*0.455, w*0.8, 1.5*scale);
 
   // ─── License plate ───
+  const plateW = Math.max(w * 0.5, 50 * scale);
+  const plateH = Math.max(h * 0.09, 12 * scale);
+  const plateY = h * 0.36;
   sc.fillStyle = '#f8f8f0';
-  sc.beginPath(); sc.roundRect(-w*0.17, h*0.37, w*0.34, h*0.08, 2*scale); sc.fill();
+  sc.beginPath(); sc.roundRect(-plateW/2, plateY, plateW, plateH, 2*scale); sc.fill();
   sc.strokeStyle = '#aaa';
   sc.lineWidth = 0.8;
-  sc.strokeRect(-w*0.17, h*0.37, w*0.34, h*0.08);
-  // Plate text
+  sc.strokeRect(-plateW/2, plateY, plateW, plateH);
+  // Plate text — measure and fit
+  const plateFontSize = Math.max(6, Math.min(12 * scale, plateW * 0.12));
   sc.fillStyle = '#1a1a1a';
-  sc.font = `700 ${Math.max(7, 10 * scale)}px monospace`;
+  sc.font = `700 ${plateFontSize}px monospace`;
   sc.textAlign = 'center';
-  sc.fillText(currentPerson.plate, 0, h * 0.44);
+  sc.textBaseline = 'middle';
+  sc.fillText(currentPerson.plate, 0, plateY + plateH / 2);
+  sc.textBaseline = 'alphabetic';
 
   // ─── Wheels ───
   // Wheel wells (dark)
