@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>DEPORTATION FORCE — UFCR Games</title>
+  <link rel="icon" href="../assets/images/shield-logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    :root{--orange:#FA4616;--gold:#F0A830;--navy:#001845;--dark:#0A0E1A;--red:#D32F2F;--green:#43A047;--blue:#2558a0;--font-body:'Inter',sans-serif;--font-heading:'Oswald',sans-serif}
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+    html,body{width:100%;height:100%;overflow:hidden;font-family:var(--font-body);background:var(--dark);color:#fff;-webkit-tap-highlight-color:transparent;user-select:none;touch-action:none}
+    canvas{display:block;position:fixed;top:0;left:0;width:100%;height:100%}
+
+    /* HUD */
+    .hud{position:fixed;top:0;left:0;right:0;z-index:50;height:36px;background:rgba(0,24,69,.92);backdrop-filter:blur(10px);display:none;align-items:center;justify-content:space-between;padding:0 10px;border-bottom:1px solid rgba(255,255,255,.06)}
+    .hud-left,.hud-right{display:flex;align-items:center;gap:14px}
+    .hud-stat{font-family:var(--font-heading);font-size:.75rem;font-weight:600;letter-spacing:.08em}
+    .hud-stat span{color:var(--gold)}
+    .hud-stat.money span{color:#5cdb5c}
+    .hud-stat.lives span{color:var(--red)}
+    .hud-wave{font-family:var(--font-heading);font-size:.7rem;color:rgba(255,255,255,.4);letter-spacing:.12em;text-transform:uppercase}
+
+    /* Tower bar */
+    .tower-bar{position:fixed;bottom:0;left:0;right:0;z-index:50;background:rgba(0,24,69,.94);backdrop-filter:blur(10px);border-top:1px solid rgba(255,255,255,.06);display:none;padding:6px 8px;gap:6px;justify-content:center;flex-wrap:nowrap;overflow-x:auto}
+    .tower-btn{display:flex;flex-direction:column;align-items:center;padding:6px 10px;border:2px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03);cursor:pointer;min-width:60px;transition:all .15s;-webkit-tap-highlight-color:transparent}
+    .tower-btn.selected{border-color:var(--orange);background:rgba(250,70,22,.12)}
+    .tower-btn.disabled{opacity:.3;pointer-events:none}
+    .tower-btn .icon{font-size:1.1rem;margin-bottom:2px}
+    .tower-btn .name{font-family:var(--font-heading);font-size:.5rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.6)}
+    .tower-btn .cost{font-family:var(--font-heading);font-size:.55rem;font-weight:700;color:#5cdb5c}
+
+    /* Wave button */
+    .wave-btn{position:fixed;bottom:70px;right:10px;z-index:55;background:var(--orange);border:none;color:#fff;font-family:var(--font-heading);font-size:.8rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:10px 18px;cursor:pointer;display:none;box-shadow:0 2px 12px rgba(250,70,22,.3);transition:all .2s}
+    .wave-btn:hover{background:#e03a0e;transform:translateY(-2px)}
+
+    /* Overlays */
+    .overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(5,8,18,.94);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:200;padding:24px;text-align:center}
+    .overlay.hidden{display:none}
+    .overlay-label{font-family:var(--font-heading);font-size:.7rem;font-weight:600;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);margin-bottom:8px}
+    .overlay-title{font-family:var(--font-heading);font-size:clamp(2rem,7vw,3.5rem);font-weight:700;text-transform:uppercase;margin-bottom:8px;letter-spacing:.03em}
+    .overlay-sub{font-size:.85rem;color:rgba(255,255,255,.4);margin-bottom:20px;max-width:420px;line-height:1.6}
+    .btn{font-family:var(--font-heading);font-size:1rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;background:var(--orange);color:#fff;border:none;padding:12px 32px;cursor:pointer;transition:all .3s}
+    .btn:hover{background:#e03a0e}
+    .how-to{max-width:400px;margin-bottom:20px;text-align:left}
+    .how-to li{font-size:.8rem;color:rgba(255,255,255,.5);margin-bottom:5px;line-height:1.5;list-style:none;padding-left:16px;position:relative}
+    .how-to li::before{content:'';position:absolute;left:0;top:7px;width:5px;height:5px;background:var(--orange);border-radius:50%}
+    .stats-grid{min-width:220px;margin-bottom:20px}
+    .stat-row{display:flex;justify-content:space-between;font-size:.85rem;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.05)}
+    .stat-label{color:rgba(255,255,255,.35)}.stat-val{font-weight:700;color:var(--gold)}
+    .share-btns{display:flex;gap:10px;margin-top:12px}
+    .share-btn{font-family:var(--font-heading);font-size:.65rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;padding:8px 14px;border:1px solid rgba(255,255,255,.12);background:transparent;color:#fff;cursor:pointer;display:flex;align-items:center;gap:5px}
+    .share-btn:hover{background:rgba(255,255,255,.06)}
+
+    /* Sell/upgrade tooltip */
+    .tooltip{position:fixed;z-index:60;background:rgba(0,24,69,.95);border:1px solid rgba(255,255,255,.1);padding:8px 12px;display:none;font-size:.7rem;pointer-events:auto}
+    .tooltip button{font-family:var(--font-heading);font-size:.6rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;padding:4px 10px;border:none;cursor:pointer;margin-top:4px;margin-right:4px}
+    .tooltip .sell-btn{background:var(--red);color:#fff}
+    .tooltip .upgrade-btn{background:var(--green);color:#fff}
+  </style>
+</head>
+<body>
+
+<div class="overlay" id="startScreen">
+  <div class="overlay-label">UFCR Games</div>
+  <div class="overlay-title" style="color:var(--orange)">DEPORTATION FORCE</div>
+  <p class="overlay-sub">Build a border security operation. Detect, detain, and deport. Don't let anyone through.</p>
+  <ul class="how-to">
+    <li>Tap the map to place towers</li>
+    <li>Towers detect, slow, and detain crossers</li>
+    <li>ICE trucks auto-collect detained crossers</li>
+    <li>Walls block paths and force rerouting</li>
+    <li>Don't let crossers reach the north side</li>
+    <li>Survive 10 waves to win</li>
+  </ul>
+  <button class="btn" id="startBtn">Deploy</button>
+</div>
+
+<div class="overlay hidden" id="gameOverScreen">
+  <div class="overlay-label">Operation Complete</div>
+  <div class="overlay-title" id="goTitle">Mission Failed</div>
+  <p class="overlay-sub" id="goSub"></p>
+  <div class="stats-grid" id="goStats"></div>
+  <button class="btn" id="restartBtn">Redeploy</button>
+  <div class="share-btns">
+    <button class="share-btn" id="shareBtn"><i class="fab fa-x-twitter"></i> Share</button>
+    <button class="share-btn" id="copyBtn"><i class="fas fa-copy"></i> Copy</button>
+  </div>
+</div>
+
+<canvas id="game"></canvas>
+
+<div class="hud" id="hud">
+  <div class="hud-left">
+    <div class="hud-stat money">$<span id="hudMoney">500</span></div>
+    <div class="hud-stat lives">LIVES: <span id="hudLives">20</span></div>
+  </div>
+  <div class="hud-right">
+    <div class="hud-stat">DEPORTED: <span id="hudDeported">0</span></div>
+    <div class="hud-wave" id="hudWave">WAVE 1/10</div>
+  </div>
+</div>
+
+<div class="tower-bar" id="towerBar"></div>
+<button class="wave-btn" id="waveBtn">Send Wave</button>
+
+<div class="tooltip" id="tooltip"></div>
+
+<script>
+const CV = document.getElementById('game');
+const cx = CV.getContext('2d');
+let W, H, dpr;
+
+// ─── GRID ───
+const COLS = 18, ROWS = 12;
+let CELL;
+let gridOffX, gridOffY;
+
+function resize() {
+  dpr = window.devicePixelRatio || 1;
+  W = window.innerWidth; H = window.innerHeight;
+  CV.width = W * dpr; CV.height = H * dpr;
+  CV.style.width = W + 'px'; CV.style.height = H + 'px';
+  cx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  // Fit grid
+  const hudTop = 36, barBot = 66;
+  const availW = W - 8, availH = H - hudTop - barBot - 8;
+  CELL = Math.floor(Math.min(availW / COLS, availH / ROWS));
+  gridOffX = Math.floor((W - COLS * CELL) / 2);
+  gridOffY = hudTop + Math.floor((availH - ROWS * CELL) / 2) + 4;
+}
+resize();
+window.addEventListener('resize', resize);
+
+// ─── MAP ───
+// 0=empty, 1=path, 2=entry(south), 3=exit(north), 9=blocked(decor)
+let grid = [];
+const ENTRY_COL = 9;
+const EXIT_COL = 9;
+
+function initGrid() {
+  grid = [];
+  for (let r = 0; r < ROWS; r++) {
+    grid[r] = [];
+    for (let c = 0; c < COLS; c++) {
+      grid[r][c] = { type: 0, tower: null };
+    }
+  }
+  // Create a winding path
+  const path = generatePath();
+  path.forEach(([r, c]) => grid[r][c].type = 1);
+  // Entry and exit
+  grid[ROWS - 1][ENTRY_COL].type = 2;
+  grid[0][EXIT_COL].type = 3;
+}
+
+function generatePath() {
+  // Create a winding S-shaped path from bottom to top
+  const pts = [];
+  let c = ENTRY_COL;
+  for (let r = ROWS - 1; r >= 0; r--) {
+    pts.push([r, c]);
+    // Horizontal segments at certain rows
+    if (r === ROWS - 3) { const target = 3; const dir = target > c ? 1 : -1; while (c !== target) { c += dir; pts.push([r, c]); } }
+    else if (r === ROWS - 6) { const target = 14; const dir = target > c ? 1 : -1; while (c !== target) { c += dir; pts.push([r, c]); } }
+    else if (r === ROWS - 9) { const target = 5; const dir = target > c ? 1 : -1; while (c !== target) { c += dir; pts.push([r, c]); } }
+    else if (r === 1) { const target = EXIT_COL; const dir = target > c ? 1 : -1; while (c !== target) { c += dir; pts.push([r, c]); } }
+  }
+  return pts;
+}
+
+// ─── PATHFINDING (BFS for enemies) ───
+function findPath(startR, startC) {
+  const q = [[startR, startC]];
+  const visited = Array.from({ length: ROWS }, () => Array(COLS).fill(false));
+  const prev = Array.from({ length: ROWS }, () => Array(COLS).fill(null));
+  visited[startR][startC] = true;
+
+  while (q.length) {
+    const [r, c] = q.shift();
+    if (grid[r][c].type === 3) {
+      // Reconstruct
+      const path = [];
+      let cur = [r, c];
+      while (cur) { path.unshift(cur); cur = prev[cur[0]][cur[1]]; }
+      return path;
+    }
+    for (const [dr, dc] of [[-1,0],[1,0],[0,-1],[0,1]]) {
+      const nr = r + dr, nc = c + dc;
+      if (nr < 0 || nr >= ROWS || nc < 0 || nc >= COLS) continue;
+      if (visited[nr][nc]) continue;
+      const cell = grid[nr][nc];
+      if (cell.type === 0 && cell.tower && cell.tower.id === 'wall') continue; // walls block
+      if (cell.tower && cell.tower.id !== 'wall') continue; // other towers block placement but not path... actually towers are on non-path cells
+      // Enemies can walk on path cells and empty cells (but prefer path)
+      visited[nr][nc] = true;
+      prev[nr][nc] = [r, c];
+      q.push([nr, nc]);
+    }
+  }
+  return null; // no path
+}
+
+// ─── TOWER TYPES ───
+const TOWERS = {
+  spotlight: { id: 'spotlight', name: 'Spotlight', icon: '💡', cost: 50, range: 2.5, color: '#ffdd44', desc: 'Slows all in range', cooldown: 0 },
+  sensor: { id: 'sensor', name: 'Sensor', icon: '📡', cost: 75, range: 3, color: '#44ddff', desc: 'Reveals hidden crossers', cooldown: 0 },
+  k9: { id: 'k9', name: 'K-9 Unit', icon: '🐕', cost: 100, range: 2, color: '#bb8844', desc: 'Chases & holds one enemy', cooldown: 3 },
+  drone: { id: 'drone', name: 'Drone', icon: '🛸', cost: 125, range: 3.5, color: '#88aaff', desc: 'Tags enemies for pickup', cooldown: 1.5 },
+  wall: { id: 'wall', name: 'Wall', icon: '🧱', cost: 30, range: 0, color: '#999', desc: 'Blocks path', cooldown: 0 },
+  depot: { id: 'depot', name: 'ICE Depot', icon: '🚐', cost: 150, range: 4, color: '#2862b5', desc: 'Sends trucks to collect', cooldown: 2 },
+};
+
+// ─── GAME STATE ───
+let gameRunning = false;
+let money = 500, lives = 20, wave = 0, totalDeported = 0, totalGotThrough = 0;
+let enemies = [], towers = [], trucks = [], effects = [];
+let selectedTower = null;
+let waveActive = false, waveEnemies = [], spawnTimer = 0, spawnIndex = 0;
+let lastTime = 0;
+let pathCache = null; // cached main path for enemies
+
+// ─── WAVES ───
+const WAVES = [
+  { count: 8, speed: 30, hp: 1, reward: 10, delay: 1.2 },
+  { count: 12, speed: 32, hp: 1, reward: 10, delay: 1.0 },
+  { count: 15, speed: 35, hp: 1, reward: 12, delay: 0.9, fast: 3 },
+  { count: 15, speed: 33, hp: 2, reward: 15, delay: 0.9 },
+  { count: 20, speed: 36, hp: 2, reward: 15, delay: 0.8, fast: 5 },
+  { count: 20, speed: 34, hp: 2, reward: 18, delay: 0.7, stealth: 4 },
+  { count: 25, speed: 38, hp: 3, reward: 20, delay: 0.7, fast: 6 },
+  { count: 25, speed: 36, hp: 3, reward: 22, delay: 0.6, stealth: 6, fast: 4 },
+  { count: 30, speed: 40, hp: 3, reward: 25, delay: 0.5, stealth: 8, fast: 8 },
+  { count: 35, speed: 42, hp: 4, reward: 30, delay: 0.45, stealth: 10, fast: 10, boss: 2 },
+];
+
+// ─── ENEMY ───
+function spawnEnemy(cfg, index) {
+  const isFast = cfg.fast && index >= cfg.count - cfg.fast;
+  const isStealth = cfg.stealth && index >= (cfg.fast ? cfg.count - cfg.fast - cfg.stealth : cfg.count - cfg.stealth) && !isFast;
+  const isBoss = cfg.boss && index >= cfg.count - cfg.boss;
+  const path = pathCache;
+  if (!path || path.length < 2) return null;
+  const [sr, sc_] = path[0];
+  return {
+    x: gridOffX + sc_ * CELL + CELL / 2,
+    y: gridOffY + sr * CELL + CELL / 2,
+    pathIdx: 0,
+    path,
+    speed: isFast ? cfg.speed * 1.6 : isBoss ? cfg.speed * 0.6 : cfg.speed,
+    baseSpeed: isFast ? cfg.speed * 1.6 : isBoss ? cfg.speed * 0.6 : cfg.speed,
+    hp: isBoss ? cfg.hp * 3 : cfg.hp,
+    maxHp: isBoss ? cfg.hp * 3 : cfg.hp,
+    detained: false,
+    detainTimer: 0,
+    tagged: false,
+    revealed: false,
+    stealth: isStealth,
+    boss: isBoss,
+    fast: isFast,
+    reward: cfg.reward,
+    slowTimer: 0,
+    held: false,
+    heldBy: null,
+    pickedUp: false,
+    pickupProgress: 0,
+    skin: ['#c68642','#8d5524','#d2996c','#e0ac69','#a0522d','#cd853f'][Math.floor(Math.random() * 6)],
+    shirtColor: ['#cc4444','#44aa44','#4444cc','#cc8844','#aa44aa','#44aaaa','#888888'][Math.floor(Math.random() * 7)],
+  };
+}
+
+// ─── TRUCKS ───
+function spawnTruck(depot, target) {
+  return {
+    x: depot.x, y: depot.y,
+    tx: target.x, ty: target.y,
+    targetEnemy: target,
+    speed: 100,
+    state: 'going', // going, returning
+    carrying: false,
+    depot,
+  };
+}
+
+// ─── INIT ───
+function buildTowerBar() {
+  const bar = document.getElementById('towerBar');
+  bar.innerHTML = '';
+  Object.values(TOWERS).forEach(t => {
+    const btn = document.createElement('div');
+    btn.className = 'tower-btn';
+    btn.dataset.id = t.id;
+    btn.innerHTML = `<div class="icon">${t.icon}</div><div class="name">${t.name}</div><div class="cost">$${t.cost}</div>`;
+    btn.addEventListener('click', () => selectTower(t.id));
+    bar.appendChild(btn);
+  });
+}
+
+function selectTower(id) {
+  selectedTower = selectedTower === id ? null : id;
+  document.querySelectorAll('.tower-btn').forEach(b => {
+    b.classList.toggle('selected', b.dataset.id === selectedTower);
+  });
+  hideTooltip();
+}
+
+function updateTowerBar() {
+  document.querySelectorAll('.tower-btn').forEach(b => {
+    const t = TOWERS[b.dataset.id];
+    b.classList.toggle('disabled', money < t.cost);
+  });
+}
+
+// ─── PLACE TOWER ───
+CV.addEventListener('click', e => {
+  if (!gameRunning) return;
+  const mx = e.clientX, my = e.clientY;
+  const gc = Math.floor((mx - gridOffX) / CELL);
+  const gr = Math.floor((my - gridOffY) / CELL);
+
+  // Check if clicked existing tower
+  if (gc >= 0 && gc < COLS && gr >= 0 && gr < ROWS && grid[gr][gc].tower) {
+    showTooltip(gr, gc, mx, my);
+    return;
+  }
+
+  hideTooltip();
+  if (!selectedTower) return;
+  if (gc < 0 || gc >= COLS || gr < 0 || gr >= ROWS) return;
+
+  const cell = grid[gr][gc];
+  const tDef = TOWERS[selectedTower];
+  if (money < tDef.cost) return;
+
+  // Walls can go on path or empty; others only on empty
+  if (tDef.id === 'wall') {
+    if (cell.tower) return;
+    if (cell.type === 3 || cell.type === 2) return; // can't block entry/exit
+    // Test if wall still allows a path
+    cell.tower = { ...tDef, r: gr, c: gc, x: gridOffX + gc * CELL + CELL / 2, y: gridOffY + gr * CELL + CELL / 2, cooldownTimer: 0, level: 1 };
+    const testPath = findPath(ROWS - 1, ENTRY_COL);
+    if (!testPath) { cell.tower = null; effects.push({ x: gridOffX + gc * CELL + CELL / 2, y: gridOffY + gr * CELL + CELL / 2, text: 'NO PATH', color: '#f44', life: 1 }); return; }
+    pathCache = testPath;
+    // Repath active enemies
+    enemies.forEach(en => { if (!en.detained && !en.pickedUp) { const np = findPath(Math.floor((en.y - gridOffY) / CELL), Math.floor((en.x - gridOffX) / CELL)); if (np) { en.path = np; en.pathIdx = 0; } } });
+  } else {
+    if (cell.type !== 0 || cell.tower) return;
+    cell.tower = { ...tDef, r: gr, c: gc, x: gridOffX + gc * CELL + CELL / 2, y: gridOffY + gr * CELL + CELL / 2, cooldownTimer: 0, level: 1, dog: null };
+  }
+
+  money -= tDef.cost;
+  towers.push(cell.tower);
+  updateTowerBar();
+  updateHUD();
+});
+
+// ─── TOOLTIP ───
+function showTooltip(r, c, mx, my) {
+  const t = grid[r][c].tower;
+  if (!t) return;
+  const tip = document.getElementById('tooltip');
+  const sellVal = Math.floor(TOWERS[t.id].cost * 0.6 * t.level);
+  const upgCost = Math.floor(TOWERS[t.id].cost * 1.5 * t.level);
+  tip.innerHTML = `<div style="font-family:var(--font-heading);font-size:.7rem;font-weight:700;color:var(--gold);margin-bottom:4px">${t.name} Lv${t.level}</div>` +
+    `<div style="color:rgba(255,255,255,.5);margin-bottom:4px">${t.desc}</div>` +
+    `<button class="sell-btn" onclick="sellTower(${r},${c})">Sell $${sellVal}</button>` +
+    (t.level < 3 ? `<button class="upgrade-btn" onclick="upgradeTower(${r},${c})">Upgrade $${upgCost}</button>` : '');
+  tip.style.display = 'block';
+  tip.style.left = Math.min(mx, W - 180) + 'px';
+  tip.style.top = Math.max(40, my - 80) + 'px';
+}
+function hideTooltip() { document.getElementById('tooltip').style.display = 'none'; }
+
+window.sellTower = function(r, c) {
+  const t = grid[r][c].tower;
+  if (!t) return;
+  money += Math.floor(TOWERS[t.id].cost * 0.6 * t.level);
+  towers = towers.filter(tw => tw !== t);
+  grid[r][c].tower = null;
+  pathCache = findPath(ROWS - 1, ENTRY_COL);
+  enemies.forEach(en => { if (!en.detained && !en.pickedUp) { const np = findPath(Math.floor((en.y - gridOffY) / CELL), Math.floor((en.x - gridOffX) / CELL)); if (np) { en.path = np; en.pathIdx = 0; } } });
+  hideTooltip();
+  updateTowerBar();
+  updateHUD();
+};
+
+window.upgradeTower = function(r, c) {
+  const t = grid[r][c].tower;
+  if (!t || t.level >= 3) return;
+  const cost = Math.floor(TOWERS[t.id].cost * 1.5 * t.level);
+  if (money < cost) return;
+  money -= cost;
+  t.level++;
+  t.range = TOWERS[t.id].range * (1 + (t.level - 1) * 0.3);
+  hideTooltip();
+  updateTowerBar();
+  updateHUD();
+};
+
+// ─── UPDATE ───
+function update(dt) {
+  if (!gameRunning) return;
+
+  // Spawn
+  if (waveActive && spawnIndex < waveEnemies.length) {
+    spawnTimer -= dt;
+    if (spawnTimer <= 0) {
+      const cfg = WAVES[wave - 1];
+      const e = spawnEnemy(cfg, spawnIndex);
+      if (e) enemies.push(e);
+      spawnIndex++;
+      spawnTimer = cfg.delay;
+    }
+  }
+
+  // Check wave complete
+  if (waveActive && spawnIndex >= waveEnemies.length && enemies.length === 0) {
+    waveActive = false;
+    if (wave >= 10) { endGame(true); return; }
+    document.getElementById('waveBtn').style.display = 'block';
+    money += 25 + wave * 10; // wave bonus
+    updateHUD();
+    updateTowerBar();
+  }
+
+  // Tower logic
+  towers.forEach(t => {
+    if (t.id === 'wall') return;
+    t.cooldownTimer = Math.max(0, t.cooldownTimer - dt);
+    const range = t.range * CELL;
+    const inRange = enemies.filter(e => !e.pickedUp && dist(t.x, t.y, e.x, e.y) < range);
+
+    if (t.id === 'spotlight') {
+      inRange.forEach(e => { e.slowTimer = 0.5; e.revealed = true; });
+    }
+    if (t.id === 'sensor') {
+      inRange.forEach(e => { e.revealed = true; });
+    }
+    if (t.id === 'k9' && t.cooldownTimer <= 0) {
+      // Find unheld enemy
+      const target = inRange.find(e => !e.held && !e.detained && !e.pickedUp);
+      if (target && !t.dog) {
+        t.dog = { x: t.x, y: t.y, target, returning: false };
+        t.cooldownTimer = (t.level >= 2 ? 2 : 3);
+      }
+    }
+    if (t.id === 'drone' && t.cooldownTimer <= 0) {
+      const target = inRange.find(e => !e.tagged && !e.detained && !e.pickedUp);
+      if (target) {
+        target.tagged = true;
+        target.revealed = true;
+        t.cooldownTimer = Math.max(0.5, 1.5 - (t.level - 1) * 0.3);
+        effects.push({ x: target.x, y: target.y - 10, text: 'TAGGED', color: '#88aaff', life: 0.8 });
+      }
+    }
+    if (t.id === 'depot' && t.cooldownTimer <= 0) {
+      // Find tagged or detained enemy for pickup
+      const target = inRange.find(e => (e.tagged || e.detained) && !e.pickedUp);
+      if (target) {
+        target.pickedUp = true;
+        target.pickupProgress = 0;
+        trucks.push(spawnTruck(t, target));
+        t.cooldownTimer = Math.max(1, 2 - (t.level - 1) * 0.3);
+      }
+    }
+  });
+
+  // K9 dogs
+  towers.forEach(t => {
+    if (!t.dog) return;
+    const d = t.dog;
+    if (!d.returning) {
+      // Chase target
+      const target = d.target;
+      if (!target || target.pickedUp || target.detained) { d.returning = true; return; }
+      const dx = target.x - d.x, dy = target.y - d.y;
+      const dist_ = Math.sqrt(dx * dx + dy * dy);
+      if (dist_ < 8) {
+        // Caught! Hold enemy
+        target.held = true;
+        target.heldBy = t;
+        target.detained = true;
+        target.detainTimer = 0;
+        effects.push({ x: target.x, y: target.y - 12, text: 'HELD', color: '#bb8844', life: 1 });
+        d.returning = true;
+      } else {
+        const spd = 120 * dt;
+        d.x += (dx / dist_) * spd;
+        d.y += (dy / dist_) * spd;
+      }
+    } else {
+      // Return to tower
+      const dx = t.x - d.x, dy = t.y - d.y;
+      const dist_ = Math.sqrt(dx * dx + dy * dy);
+      if (dist_ < 8) { t.dog = null; }
+      else { const spd = 100 * dt; d.x += (dx / dist_) * spd; d.y += (dy / dist_) * spd; }
+    }
+  });
+
+  // Trucks
+  trucks.forEach(tr => {
+    const target = tr.state === 'going' ? tr.targetEnemy : tr.depot;
+    const tx = tr.state === 'going' ? tr.targetEnemy.x : tr.depot.x;
+    const ty = tr.state === 'going' ? tr.targetEnemy.y : tr.depot.y;
+    const dx = tx - tr.x, dy = ty - tr.y;
+    const d = Math.sqrt(dx * dx + dy * dy);
+    if (d < 10) {
+      if (tr.state === 'going') {
+        tr.carrying = true;
+        tr.state = 'returning';
+        tr.targetEnemy.pickedUp = true;
+      } else {
+        // Delivered — deport!
+        if (tr.targetEnemy) {
+          enemies = enemies.filter(e => e !== tr.targetEnemy);
+          totalDeported++;
+          money += tr.targetEnemy.reward;
+          effects.push({ x: tr.x, y: tr.y - 10, text: 'DEPORTED +$' + tr.targetEnemy.reward, color: '#5cdb5c', life: 1.2 });
+        }
+        tr.done = true;
+      }
+    } else {
+      const spd = tr.speed * dt;
+      tr.x += (dx / d) * spd;
+      tr.y += (dy / d) * spd;
+    }
+  });
+  trucks = trucks.filter(t => !t.done);
+
+  // Enemy movement
+  enemies.forEach(e => {
+    if (e.pickedUp || e.detained) return;
+
+    // Speed
+    let spd = e.speed;
+    if (e.slowTimer > 0) { spd *= 0.35; e.slowTimer -= dt; }
+
+    // Follow path
+    if (e.pathIdx < e.path.length - 1) {
+      const [nr, nc] = e.path[e.pathIdx + 1];
+      const tx = gridOffX + nc * CELL + CELL / 2;
+      const ty = gridOffY + nr * CELL + CELL / 2;
+      const dx = tx - e.x, dy = ty - e.y;
+      const d = Math.sqrt(dx * dx + dy * dy);
+      if (d < 3) {
+        e.pathIdx++;
+      } else {
+        e.x += (dx / d) * spd * dt;
+        e.y += (dy / d) * spd * dt;
+      }
+    }
+
+    // Check if reached exit
+    const gr = Math.floor((e.y - gridOffY) / CELL);
+    const gc = Math.floor((e.x - gridOffX) / CELL);
+    if (gr >= 0 && gr < ROWS && gc >= 0 && gc < COLS && grid[gr][gc].type === 3) {
+      enemies = enemies.filter(en => en !== e);
+      lives--;
+      totalGotThrough++;
+      effects.push({ x: e.x, y: e.y, text: 'GOT THROUGH', color: '#ff4444', life: 1.5 });
+      if (lives <= 0) endGame(false);
+    }
+  });
+
+  // Detained enemies timeout (auto-release if no pickup after 8s)
+  enemies.forEach(e => {
+    if (e.detained && !e.pickedUp) {
+      e.detainTimer += dt;
+      if (e.detainTimer > 8) {
+        e.detained = false;
+        e.held = false;
+        e.heldBy = null;
+        e.detainTimer = 0;
+      }
+    }
+  });
+
+  // Effects
+  effects.forEach(e => e.life -= dt * 0.8);
+  effects = effects.filter(e => e.life > 0);
+
+  updateHUD();
+  updateTowerBar();
+}
+
+function dist(x1, y1, x2, y2) { return Math.sqrt((x2-x1)**2 + (y2-y1)**2); }
+
+// ─── DRAW ───
+function draw() {
+  cx.clearRect(0, 0, W, H);
+
+  // Background
+  cx.fillStyle = '#c8b888';
+  cx.fillRect(0, 0, W, H);
+
+  // Grid
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < COLS; c++) {
+      const x = gridOffX + c * CELL, y = gridOffY + r * CELL;
+      const cell = grid[r][c];
+
+      if (cell.type === 1 || cell.type === 2 || cell.type === 3) {
+        cx.fillStyle = '#a09070';
+        cx.fillRect(x, y, CELL, CELL);
+        // Dirt path texture
+        cx.fillStyle = '#988868';
+        cx.fillRect(x + 1, y + 1, CELL - 2, CELL - 2);
+      } else {
+        // Desert
+        cx.fillStyle = '#d4c49a';
+        cx.fillRect(x, y, CELL, CELL);
+        // Subtle grid line
+        cx.strokeStyle = 'rgba(0,0,0,0.06)';
+        cx.lineWidth = 0.5;
+        cx.strokeRect(x, y, CELL, CELL);
+      }
+
+      // Entry/exit markers
+      if (cell.type === 2) {
+        cx.fillStyle = 'rgba(255,100,50,0.3)';
+        cx.fillRect(x, y, CELL, CELL);
+        cx.fillStyle = '#fff';
+        cx.font = `700 ${CELL * 0.3}px Oswald,sans-serif`;
+        cx.textAlign = 'center';
+        cx.fillText('ENTRY', x + CELL / 2, y + CELL * 0.65);
+      }
+      if (cell.type === 3) {
+        cx.fillStyle = 'rgba(50,150,255,0.3)';
+        cx.fillRect(x, y, CELL, CELL);
+        cx.fillStyle = '#fff';
+        cx.font = `700 ${CELL * 0.25}px Oswald,sans-serif`;
+        cx.textAlign = 'center';
+        cx.fillText('EXIT', x + CELL / 2, y + CELL * 0.65);
+      }
+    }
+  }
+
+  // Border line at top
+  cx.fillStyle = '#555';
+  cx.fillRect(gridOffX, gridOffY - 2, COLS * CELL, 3);
+  cx.fillStyle = '#fff';
+  cx.font = `700 ${Math.max(8, CELL * 0.3)}px Oswald,sans-serif`;
+  cx.textAlign = 'center';
+  cx.fillText('U.S. BORDER', gridOffX + COLS * CELL / 2, gridOffY - 6);
+
+  // Draw towers
+  towers.forEach(t => {
+    const x = t.x, y = t.y;
+    const sz = CELL * 0.4;
+
+    if (t.id === 'wall') {
+      cx.fillStyle = '#888';
+      cx.fillRect(x - CELL/2 + 2, y - CELL/2 + 2, CELL - 4, CELL - 4);
+      cx.fillStyle = '#777';
+      // Brick pattern
+      for (let by = -CELL/2 + 4; by < CELL/2 - 2; by += 6) {
+        for (let bx = -CELL/2 + 3; bx < CELL/2 - 2; bx += 10) {
+          cx.fillRect(x + bx, y + by, 8, 4);
+        }
+      }
+      return;
+    }
+
+    // Range circle (if selected)
+    if (selectedTower === t.id || false) {
+      cx.strokeStyle = `${t.color}44`;
+      cx.lineWidth = 1;
+      cx.beginPath(); cx.arc(x, y, t.range * CELL, 0, Math.PI * 2); cx.stroke();
+    }
+
+    // Tower base
+    cx.fillStyle = 'rgba(0,0,0,0.15)';
+    cx.beginPath(); cx.arc(x, y + 2, sz + 2, 0, Math.PI * 2); cx.fill();
+    cx.fillStyle = t.color;
+    cx.beginPath(); cx.arc(x, y, sz, 0, Math.PI * 2); cx.fill();
+    cx.fillStyle = 'rgba(255,255,255,0.15)';
+    cx.beginPath(); cx.arc(x, y - 2, sz * 0.7, 0, Math.PI * 2); cx.fill();
+
+    // Level pips
+    for (let i = 0; i < t.level; i++) {
+      cx.fillStyle = '#fff';
+      cx.beginPath(); cx.arc(x - (t.level - 1) * 3 + i * 6, y + sz + 4, 2, 0, Math.PI * 2); cx.fill();
+    }
+
+    // Icon
+    cx.font = `${CELL * 0.35}px sans-serif`;
+    cx.textAlign = 'center';
+    cx.fillText(TOWERS[t.id].icon, x, y + CELL * 0.12);
+
+    // K9 dog
+    if (t.dog) {
+      const d = t.dog;
+      cx.fillStyle = '#8B6914';
+      cx.beginPath(); cx.ellipse(d.x, d.y, 5, 3, 0, 0, Math.PI * 2); cx.fill();
+      cx.fillStyle = '#6B4914';
+      cx.beginPath(); cx.arc(d.x + 4, d.y - 2, 2.5, 0, Math.PI * 2); cx.fill();
+    }
+  });
+
+  // Draw trucks
+  trucks.forEach(tr => {
+    cx.fillStyle = '#2862b5';
+    cx.beginPath(); cx.roundRect(tr.x - 8, tr.y - 5, 16, 10, 2); cx.fill();
+    cx.fillStyle = '#fff';
+    cx.font = '5px Oswald,sans-serif';
+    cx.textAlign = 'center';
+    cx.fillText('ICE', tr.x, tr.y + 2);
+  });
+
+  // Draw enemies
+  enemies.forEach(e => {
+    if (e.stealth && !e.revealed) return; // invisible
+    const alpha = e.stealth && e.revealed ? 0.6 : 1;
+    cx.globalAlpha = alpha;
+
+    const x = e.x, y = e.y;
+    const sz = CELL * 0.3;
+
+    if (e.pickedUp) {
+      // Fading out
+      cx.globalAlpha = 0.3;
+    }
+
+    if (e.detained) {
+      // Detained marker
+      cx.strokeStyle = '#ff4444';
+      cx.lineWidth = 1.5;
+      cx.setLineDash([3, 2]);
+      cx.beginPath(); cx.arc(x, y, sz + 4, 0, Math.PI * 2); cx.stroke();
+      cx.setLineDash([]);
+    }
+
+    // Body
+    cx.fillStyle = e.shirtColor;
+    cx.beginPath(); cx.ellipse(x, y + 2, sz * 0.7, sz, 0, 0, Math.PI * 2); cx.fill();
+
+    // Head
+    cx.fillStyle = e.skin;
+    cx.beginPath(); cx.arc(x, y - sz * 0.8, sz * 0.5, 0, Math.PI * 2); cx.fill();
+
+    // Boss indicator
+    if (e.boss) {
+      cx.strokeStyle = '#ff0';
+      cx.lineWidth = 2;
+      cx.beginPath(); cx.arc(x, y, sz + 3, 0, Math.PI * 2); cx.stroke();
+    }
+
+    // Tagged indicator
+    if (e.tagged && !e.pickedUp) {
+      cx.fillStyle = '#88aaff';
+      cx.beginPath(); cx.arc(x + sz, y - sz, 3, 0, Math.PI * 2); cx.fill();
+    }
+
+    // HP bar if hp > 1
+    if (e.maxHp > 1) {
+      const bw = sz * 2, bh = 2;
+      cx.fillStyle = 'rgba(0,0,0,0.3)';
+      cx.fillRect(x - bw / 2, y - sz * 1.5, bw, bh);
+      cx.fillStyle = '#5cdb5c';
+      cx.fillRect(x - bw / 2, y - sz * 1.5, bw * (e.hp / e.maxHp), bh);
+    }
+
+    cx.globalAlpha = 1;
+  });
+
+  // Draw effects
+  cx.textAlign = 'center';
+  effects.forEach(e => {
+    cx.globalAlpha = Math.min(1, e.life);
+    cx.fillStyle = e.color;
+    cx.font = `700 ${e.size || 10}px Oswald,sans-serif`;
+    cx.fillText(e.text, e.x, e.y - (1 - Math.min(1, e.life)) * 20);
+  });
+  cx.globalAlpha = 1;
+
+  // Placement preview
+  if (selectedTower) {
+    // Show range on hover... simplified: just show selected indicator
+  }
+}
+
+// ─── GAME LOOP ───
+function loop(ts) {
+  const dt = Math.min((ts - lastTime) / 1000, 0.05);
+  lastTime = ts;
+  if (gameRunning) { update(dt); draw(); }
+  requestAnimationFrame(loop);
+}
+
+// ─── GAME FLOW ───
+function startGame() {
+  money = 500; lives = 20; wave = 0; totalDeported = 0; totalGotThrough = 0;
+  enemies = []; towers = []; trucks = []; effects = [];
+  waveActive = false; selectedTower = null;
+  initGrid();
+  pathCache = findPath(ROWS - 1, ENTRY_COL);
+  buildTowerBar();
+
+  document.getElementById('startScreen').classList.add('hidden');
+  document.getElementById('gameOverScreen').classList.add('hidden');
+  document.getElementById('hud').style.display = 'flex';
+  document.getElementById('towerBar').style.display = 'flex';
+  document.getElementById('waveBtn').style.display = 'block';
+  gameRunning = true;
+  updateHUD();
+  updateTowerBar();
+}
+
+function startWave() {
+  if (waveActive || wave >= 10) return;
+  wave++;
+  const cfg = WAVES[wave - 1];
+  waveEnemies = Array(cfg.count).fill(null);
+  spawnIndex = 0;
+  spawnTimer = 0.5;
+  waveActive = true;
+  document.getElementById('waveBtn').style.display = 'none';
+  updateHUD();
+}
+
+function endGame(won) {
+  gameRunning = false;
+  document.getElementById('goTitle').textContent = won ? 'Mission Complete' : 'Mission Failed';
+  document.getElementById('goTitle').style.color = won ? 'var(--gold)' : '#D32F2F';
+  document.getElementById('goSub').textContent = won
+    ? `Border secured. ${totalDeported} deported, ${totalGotThrough} got through.`
+    : `Too many got through. ${totalDeported} deported across ${wave} waves.`;
+  document.getElementById('goStats').innerHTML = `
+    <div class="stat-row"><span class="stat-label">Waves Survived</span><span class="stat-val">${wave}/10</span></div>
+    <div class="stat-row"><span class="stat-label">Deported</span><span class="stat-val">${totalDeported}</span></div>
+    <div class="stat-row"><span class="stat-label">Got Through</span><span class="stat-val">${totalGotThrough}</span></div>
+    <div class="stat-row"><span class="stat-label">Money Earned</span><span class="stat-val">$${money}</span></div>`;
+  document.getElementById('gameOverScreen').classList.remove('hidden');
+  document.getElementById('waveBtn').style.display = 'none';
+}
+
+function updateHUD() {
+  document.getElementById('hudMoney').textContent = money;
+  document.getElementById('hudLives').textContent = lives;
+  document.getElementById('hudDeported').textContent = totalDeported;
+  document.getElementById('hudWave').textContent = waveActive ? `WAVE ${wave}/10` : wave < 10 ? `NEXT: WAVE ${wave + 1}` : 'FINAL WAVE';
+}
+
+function shareText() {
+  return `DEPORTATION FORCE\n\nWave ${wave}/10 | Deported: ${totalDeported}\nGot Through: ${totalGotThrough}\n\nSecure the border!\nufcr.online/deportation-force/`;
+}
+
+// ─── EVENTS ───
+document.getElementById('startBtn').addEventListener('click', startGame);
+document.getElementById('restartBtn').addEventListener('click', startGame);
+document.getElementById('waveBtn').addEventListener('click', startWave);
+document.getElementById('shareBtn').addEventListener('click', () => {
+  window.open('https://x.com/intent/tweet?text=' + encodeURIComponent(shareText()), '_blank');
+});
+document.getElementById('copyBtn').addEventListener('click', () => {
+  navigator.clipboard.writeText(shareText()).then(() => {
+    document.getElementById('copyBtn').innerHTML = '<i class="fas fa-check"></i> Copied!';
+    setTimeout(() => { document.getElementById('copyBtn').innerHTML = '<i class="fas fa-copy"></i> Copy'; }, 2000);
+  });
+});
+
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
