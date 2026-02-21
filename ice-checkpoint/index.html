@@ -118,7 +118,7 @@
   <div class="overlay-title" style="color:var(--orange)">ICE CHECKPOINT</div>
   <p class="overlay-sub">You're an ICE agent at a border checkpoint. Inspect documents. Spot forgeries. Admit or detain. Don't let fakes through.</p>
   <ul class="how-to">
-    <li>Cars pull up — inspect their documents</li>
+    <li>People walk up — inspect their documents</li>
     <li>Tap a document to zoom in</li>
     <li>Check for expired dates, wrong info, missing watermarks</li>
     <li>New rules added each day — check the rulebook</li>
@@ -211,8 +211,8 @@ const OFFICES = ['El Paso','San Diego','Tucson','Laredo','McAllen','Nogales','Br
 const FAKE_OFFICES = ['Puerto Verde','San Marcos Sur','Rio Nuevo','Costa Linda','Playa Norte'];
 const EMPLOYERS = ['Del Sol Farms','Rio Grande Logistics','Mesa Construction','Valley Fresh Produce','Sunbelt Textiles','Border Steel Co','Southwest Packing','Lone Star Dairy','Pacific Harvest','Gulf Coast Marine'];
 const FAKE_EMPLOYERS = ['Phantom LLC','Nowhere Corp','XYZ Holdings','ABC Services Inc'];
-const CAR_COLORS = ['#cc2828','#2255aa','#228833','#aa8822','#666','#884488','#cc6622','#2288aa'];
-const CAR_NAMES = ['Sedan','Pickup','SUV','Hatchback','Van','Coupe'];
+const SHIRT_COLORS = ['#cc2828','#2255aa','#228833','#aa8822','#666','#884488','#cc6622','#2288aa','#445566','#554433','#335544'];
+const COUNTRIES = ['Mexico','Guatemala','Honduras','El Salvador','Colombia','Venezuela','Brazil','Ecuador','Nicaragua','Peru'];
 const SKIN_TONES_WHITE = ['#f1c27d','#e8b98a','#f5d0a9','#edd3b8','#dbb99b'];
 const SKIN_TONES_HISPANIC = ['#c68642','#d2996c','#cd853f','#b8763a','#d4a76a'];
 const SKIN_TONES_BLACK = ['#8d5524','#6b3a1f','#a0522d','#7a4420','#5c3317'];
@@ -224,13 +224,14 @@ const HAIR_STYLES = ['short','bald','long','medium'];
 let gameRunning = false;
 let day = 0, score = 0, strikes = 0, streak = 0;
 let totalCorrect = 0, totalWrong = 0;
-let carsToday = 0, carsProcessed = 0;
+let peopleToday = 0, peopleProcessed = 0;
 let currentPerson = null;
-// Animation states: idle, driving-in, barrier-up, waiting, barrier-up-out, driving-out, u-turn, driving-away
+// Animation states: idle, walking-in, waiting, barrier-up-out, walking-out, walking-detained
 let animState = 'idle';
-let carY = 0, carTargetY = 0; // Y position (distance from viewer)
-let carXOff = 0; // X offset for turning
-let carAngle = 0; // rotation for u-turn
+let persY = 0, persTargetY = 0; // Y position (distance from viewer)
+let persXOff = 0; // X offset for walking away
+let persAngle = 0; // rotation
+let walkFrame = 0; // walking animation frame
 let barrierAngle = 0; // 0 = down, 1 = up
 let animTimer = 0;
 let allRules = [];
@@ -245,86 +246,86 @@ const DAY_CONFIGS = [
   {
     day: 1,
     title: 'First Day',
-    sub: 'Welcome to the checkpoint, agent. Start simple — check IDs and registrations.',
-    cars: 6,
+    sub: 'Welcome to the checkpoint, agent. Start simple — check IDs.',
+    people: 6,
     forgeChance: 0.35,
     newRules: [
-      'All drivers must have a valid Driver\'s License (not expired)',
-      'Vehicle Registration must match the car at the checkpoint',
+      'All persons must have a valid ID (not expired)',
+      'ID photo must match the person at the checkpoint',
     ],
-    forgeTypes: ['expired_license','wrong_plate'],
+    forgeTypes: ['expired_license','wrong_photo'],
   },
   {
     day: 2,
     title: 'Tightening Up',
     sub: 'We\'re seeing more fakes. Stay sharp.',
-    cars: 7,
+    people: 7,
     forgeChance: 0.4,
     newRules: [
       'Name must match across ALL documents',
-      'Photo on license must match the driver',
+      'Check DOB — must be a valid date',
     ],
-    forgeTypes: ['expired_license','wrong_plate','name_mismatch','wrong_photo'],
+    forgeTypes: ['expired_license','name_mismatch','wrong_photo','wrong_dob'],
   },
   {
     day: 3,
     title: 'New Requirements',
     sub: 'HQ has added travel visa checks for non-citizens.',
-    cars: 8,
+    people: 8,
     forgeChance: 0.45,
     newRules: [
       'Non-citizen travelers must have a valid Travel Visa',
       'Visa issuing office must be a recognized port of entry',
     ],
-    forgeTypes: ['expired_license','wrong_plate','name_mismatch','wrong_photo','expired_visa','fake_office'],
+    forgeTypes: ['expired_license','name_mismatch','wrong_photo','wrong_dob','expired_visa','fake_office'],
   },
   {
     day: 4,
     title: 'Intel Alert',
-    sub: 'Forged Texas licenses have been circulating. Check watermarks carefully.',
-    cars: 9,
+    sub: 'Forged Texas IDs have been circulating. Check watermarks carefully.',
+    people: 9,
     forgeChance: 0.5,
     newRules: [
-      'ALERT: Texas licenses must show "LONE STAR" watermark',
-      'Check license state abbreviation matches the state name',
+      'ALERT: Texas IDs must show "LONE STAR" watermark',
+      'Check ID state abbreviation matches the state name',
     ],
-    forgeTypes: ['expired_license','wrong_plate','name_mismatch','wrong_photo','expired_visa','fake_office','missing_watermark','wrong_state_abbr'],
+    forgeTypes: ['expired_license','name_mismatch','wrong_photo','wrong_dob','expired_visa','fake_office','missing_watermark','wrong_state_abbr'],
   },
   {
     day: 5,
     title: 'Work Permits',
     sub: 'All workers must now present employment authorization.',
-    cars: 10,
+    people: 10,
     forgeChance: 0.5,
     newRules: [
       'Workers must carry a valid Work Permit',
       'Employer must be a registered company (watch for fakes)',
     ],
-    forgeTypes: ['expired_license','wrong_plate','name_mismatch','wrong_photo','expired_visa','fake_office','missing_watermark','wrong_state_abbr','expired_work_permit','fake_employer'],
+    forgeTypes: ['expired_license','name_mismatch','wrong_photo','wrong_dob','expired_visa','fake_office','missing_watermark','wrong_state_abbr','expired_work_permit','fake_employer'],
   },
   {
     day: 6,
     title: 'Crackdown',
     sub: 'Multiple forgery rings busted. Expect sophisticated fakes.',
-    cars: 10,
+    people: 10,
     forgeChance: 0.55,
     newRules: [
-      'Registration VIN must be exactly 6 digits',
       'Dates must use MM/DD/YYYY format — reject DD/MM/YYYY',
+      'Passport number must be exactly 9 characters',
     ],
-    forgeTypes: ['expired_license','wrong_plate','name_mismatch','wrong_photo','expired_visa','fake_office','missing_watermark','wrong_state_abbr','expired_work_permit','fake_employer','bad_vin','wrong_date_format'],
+    forgeTypes: ['expired_license','name_mismatch','wrong_photo','wrong_dob','expired_visa','fake_office','missing_watermark','wrong_state_abbr','expired_work_permit','fake_employer','wrong_date_format','bad_passport_num'],
   },
   {
     day: 7,
     title: 'Zero Tolerance',
     sub: 'Every document scrutinized. No mistakes.',
-    cars: 12,
+    people: 12,
     forgeChance: 0.6,
     newRules: [
       'All previous rules remain in effect',
       'Multiple forgeries may appear on a single person',
     ],
-    forgeTypes: ['expired_license','wrong_plate','name_mismatch','wrong_photo','expired_visa','fake_office','missing_watermark','wrong_state_abbr','expired_work_permit','fake_employer','bad_vin','wrong_date_format'],
+    forgeTypes: ['expired_license','name_mismatch','wrong_photo','wrong_dob','expired_visa','fake_office','missing_watermark','wrong_state_abbr','expired_work_permit','fake_employer','wrong_date_format','bad_passport_num'],
   },
 ];
 
@@ -332,7 +333,7 @@ function getDayConfig() {
   if (day <= DAY_CONFIGS.length) return DAY_CONFIGS[day - 1];
   // Endless mode after day 7
   const base = DAY_CONFIGS[DAY_CONFIGS.length - 1];
-  return { ...base, day, cars: 12 + (day - 7) * 2, forgeChance: Math.min(0.75, 0.6 + (day - 7) * 0.03), newRules: ['Vigilance is paramount. Trust nothing.'], title: 'Day ' + day, sub: 'The fakes keep coming. Stay sharp.' };
+  return { ...base, day, people: 12 + (day - 7) * 2, forgeChance: Math.min(0.75, 0.6 + (day - 7) * 0.03), newRules: ['Vigilance is paramount. Trust nothing.'], title: 'Day ' + day, sub: 'The fakes keep coming. Stay sharp.' };
 }
 
 // ─── PERSON GENERATOR ───
@@ -347,12 +348,10 @@ function genDate(yearMin, yearMax, monthMin, monthMax) {
 }
 function pad(n) { return n < 10 ? '0' + n : '' + n; }
 
-function genPlate() {
+function genPassportNum() {
   const letters = 'ABCDEFGHJKLMNPRSTUVWXYZ';
-  return randEl(letters) + randEl(letters) + randEl(letters) + '-' + randInt(1000, 9999);
+  return randEl(letters) + randInt(10000000, 99999999);
 }
-
-function genVIN() { return '' + randInt(100000, 999999); }
 
 function genFace(demo) {
   const skinMap = { white: SKIN_TONES_WHITE, hispanic: SKIN_TONES_HISPANIC, black: SKIN_TONES_BLACK };
@@ -381,10 +380,10 @@ function genPerson() {
   const isCitizen = demo === 'hispanic' ? Math.random() > 0.55 : Math.random() > 0.3;
   const isWorker = !isCitizen && Math.random() > 0.4;
   const face = genFace(demo);
-  const carColor = randEl(CAR_COLORS);
-  const carType = randEl(CAR_NAMES);
-  const plate = genPlate();
-  const vin = genVIN();
+  const shirtColor = randEl(SHIRT_COLORS);
+  const country = isCitizen ? 'United States' : randEl(COUNTRIES);
+  const dob = genDate(1960, 2005);
+  const passportNum = genPassportNum();
 
   const licExpiry = genDate(2027, 2031);
   const visaExpiry = genDate(2027, 2030);
@@ -394,21 +393,24 @@ function genPerson() {
 
   const person = {
     name, firstName, lastName, state, abbr, face, isCitizen, isWorker,
-    carColor, carType, plate, vin,
+    shirtColor, country, dob, passportNum,
     licExpiry, visaExpiry, workExpiry, office, employer,
     forgeries: [],
     docs: [],
   };
 
   // Build documents
-  const licData = { type: 'license', name, state, abbr, expiry: licExpiry.str, photo: { ...face }, watermark: state === 'Texas' ? 'LONE STAR' : state.toUpperCase() };
-  const regData = { type: 'registration', name, carType, carColor, plate, vin, state };
+  const licData = { type: 'license', name, state, abbr, expiry: licExpiry.str, dob: dob.str, photo: { ...face }, watermark: state === 'Texas' ? 'LONE STAR' : state.toUpperCase() };
   
   person.docs.push(licData);
-  person.docs.push(regData);
+
+  // Non-citizens also carry a passport
+  if (!isCitizen) {
+    person.docs.push({ type: 'passport', name, country, dob: dob.str, passportNum, photo: { ...face } });
+  }
 
   if (!isCitizen && day >= 3) {
-    person.docs.push({ type: 'visa', name, expiry: visaExpiry.str, office, country: randEl(['Mexico','Guatemala','Honduras','El Salvador','Colombia','Venezuela','Brazil','Ecuador']) });
+    person.docs.push({ type: 'visa', name, expiry: visaExpiry.str, office, country });
   }
   if (isWorker && day >= 5) {
     person.docs.push({ type: 'work_permit', name, expiry: workExpiry.str, employer });
@@ -433,7 +435,7 @@ function genPerson() {
 function canApplyForge(type, p) {
   switch (type) {
     case 'expired_license': return true;
-    case 'wrong_plate': return true;
+    case 'wrong_dob': return p.docs.length > 1;
     case 'name_mismatch': return p.docs.length > 1;
     case 'wrong_photo': return true;
     case 'expired_visa': return p.docs.some(d => d.type === 'visa');
@@ -442,7 +444,7 @@ function canApplyForge(type, p) {
     case 'wrong_state_abbr': return true;
     case 'expired_work_permit': return p.docs.some(d => d.type === 'work_permit');
     case 'fake_employer': return p.docs.some(d => d.type === 'work_permit');
-    case 'bad_vin': return true;
+    case 'bad_passport_num': return p.docs.some(d => d.type === 'passport');
     case 'wrong_date_format': return true;
     default: return false;
   }
@@ -458,8 +460,11 @@ function applyForgery(type, p) {
       p.docs.find(d => d.type === 'license').expiry = exp.str;
       break;
     }
-    case 'wrong_plate': {
-      p.docs.find(d => d.type === 'registration').plate = genPlate(); // different from actual
+    case 'wrong_dob': {
+      // Different DOB on passport vs license
+      const newDob = genDate(1960, 2005);
+      const passport = p.docs.find(d => d.type === 'passport');
+      if (passport) passport.dob = newDob.str;
       break;
     }
     case 'name_mismatch': {
@@ -467,7 +472,9 @@ function applyForgery(type, p) {
       const otherDocs = p.docs.filter((d, i) => i > 0);
       if (otherDocs.length) {
         const d = randEl(otherDocs);
-        d.name = randEl(FIRST_NAMES) + ' ' + randEl(LAST_NAMES);
+        const fakeDemo = randEl(DEMOGRAPHICS);
+        const fakeNames = fakeDemo === 'hispanic' ? NAMES_HISPANIC : fakeDemo === 'black' ? NAMES_BLACK : NAMES_WHITE;
+        d.name = randEl(fakeNames.first) + ' ' + randEl(fakeNames.last);
       }
       break;
     }
@@ -506,9 +513,9 @@ function applyForgery(type, p) {
       if (w) w.employer = randEl(FAKE_EMPLOYERS);
       break;
     }
-    case 'bad_vin': {
-      const reg = p.docs.find(d => d.type === 'registration');
-      reg.vin = '' + randInt(10000, 99999); // 5 digits instead of 6
+    case 'bad_passport_num': {
+      const pp = p.docs.find(d => d.type === 'passport');
+      if (pp) pp.passportNum = pp.passportNum.slice(0, -1); // 8 chars instead of 9
       break;
     }
     case 'wrong_date_format': {
@@ -552,19 +559,22 @@ function renderDocHTML(doc, person) {
   switch (doc.type) {
     case 'license': return `
       <div class="doc-watermark">${doc.watermark || ''}</div>
-      <div class="doc-header">${doc.state} Driver's License</div>
+      <div class="doc-header">${doc.state} ID Card</div>
       <div class="doc-photo" id="photoHolder">${drawFaceHTML(doc.photo)}</div>
       <div class="doc-field"><div class="doc-label">Name</div><div class="doc-val">${doc.name}</div></div>
+      <div class="doc-field"><div class="doc-label">DOB</div><div class="doc-val">${doc.dob || ''}</div></div>
       <div class="doc-field"><div class="doc-label">State</div><div class="doc-val">${doc.state} (${doc.abbr})</div></div>
       <div class="doc-field"><div class="doc-label">Expires</div><div class="doc-val">${doc.expiry}</div></div>
       <div class="doc-seal">${doc.abbr}</div>`;
-    case 'registration': return `
-      <div class="doc-header">Vehicle Registration</div>
-      <div class="doc-field"><div class="doc-label">Owner</div><div class="doc-val">${doc.name}</div></div>
-      <div class="doc-field"><div class="doc-label">Plate</div><div class="doc-val">${doc.plate}</div></div>
-      <div class="doc-field"><div class="doc-label">VIN</div><div class="doc-val">${doc.vin}</div></div>
-      <div class="doc-field"><div class="doc-label">State</div><div class="doc-val">${doc.state}</div></div>
-      <div class="doc-seal">DMV</div>`;
+    case 'passport': return `
+      <div class="doc-watermark">PASSPORT</div>
+      <div class="doc-header">${doc.country} Passport</div>
+      <div class="doc-photo">${drawFaceHTML(doc.photo)}</div>
+      <div class="doc-field"><div class="doc-label">Name</div><div class="doc-val">${doc.name}</div></div>
+      <div class="doc-field"><div class="doc-label">DOB</div><div class="doc-val">${doc.dob}</div></div>
+      <div class="doc-field"><div class="doc-label">Passport No.</div><div class="doc-val">${doc.passportNum}</div></div>
+      <div class="doc-field"><div class="doc-label">Nationality</div><div class="doc-val">${doc.country}</div></div>
+      <div class="doc-seal">GOV</div>`;
     case 'visa': return `
       <div class="doc-watermark">TRAVEL VISA</div>
       <div class="doc-header">U.S. Travel Visa</div>
@@ -834,14 +844,13 @@ function drawScene() {
     drawCone(cx + spread - 4, cy_, coneScale);
   }
 
-  // ─── Car ───
+  // ─── Person ───
   if (currentPerson && animState !== 'idle') {
-    // Car follows the perspective road — X interpolates between road edges based on Y
-    const roadT = Math.max(0, Math.min(1, (carY - roadTop) / (roadBot - roadTop)));
+    // Person follows the perspective road
+    const roadT = Math.max(0, Math.min(1, (persY - roadTop) / (roadBot - roadTop)));
     const roadW = roadTopW + (roadBotW - roadTopW) * roadT;
-    // Slightly right of center (driving lane)
-    const carRoadX = cx + roadW * 0.08 + carXOff * roadT;
-    drawCarFront(carRoadX, carY, carAngle);
+    const persRoadX = cx + roadW * 0.05 + persXOff * roadT;
+    drawWalkingPerson(persRoadX, persY, persAngle);
   }
 
   // ─── ICE Van ───
@@ -862,228 +871,125 @@ function drawCone(x, y, s) {
   sc.beginPath(); sc.roundRect(x - 7*s, y + 2*s, 14*s, 3*s, 1); sc.fill();
 }
 
-function drawCarFront(x, animY, angle) {
-  const col = currentPerson.carColor;
+function drawWalkingPerson(x, animY, angle) {
   const face = currentPerson.face;
+  const shirt = currentPerson.shirtColor;
 
-  // Perspective scale — responsive to scene size
+  // Perspective scale
   const minY = SH * 0.32, maxY = SH * 0.65;
   const t = Math.max(0, Math.min(1, (animY - minY) / (maxY - minY)));
   const sceneSc = Math.min(1, SH / 300);
-  const scale = (0.25 + t * 0.45) * sceneSc;
-  const w = 130 * scale;
-  const h = 155 * scale;
+  const scale = (0.3 + t * 0.55) * sceneSc;
 
   sc.save();
   sc.translate(x, animY);
   if (angle) sc.rotate(angle);
 
+  // Walking bob
+  const isWalking = animState === 'walking-in' || animState === 'walking-out' || animState === 'walking-detained';
+  const bob = isWalking ? Math.sin(walkFrame * 0.3) * 2 * scale : 0;
+  const legSwing = isWalking ? Math.sin(walkFrame * 0.3) * 0.3 : 0;
+
   // Shadow
-  sc.fillStyle = 'rgba(0,0,0,0.18)';
-  sc.beginPath(); sc.ellipse(3, h*0.49, w*0.52, h*0.05, 0, 0, Math.PI*2); sc.fill();
+  sc.fillStyle = 'rgba(0,0,0,0.15)';
+  sc.beginPath(); sc.ellipse(0, 40*scale, 12*scale, 4*scale, 0, 0, Math.PI*2); sc.fill();
 
-  // ─── Lower body ───
-  sc.fillStyle = col;
-  sc.beginPath(); sc.roundRect(-w/2, -h*0.08, w, h*0.58, [0,0, 6*scale, 6*scale]); sc.fill();
-
-  // ─── Hood (sloped panel on top of lower body) ───
-  sc.fillStyle = shadeColor(col, 18);
-  sc.beginPath();
-  sc.moveTo(-w*0.46, -h*0.08);
-  sc.lineTo(-w*0.38, -h*0.2);
-  sc.lineTo(w*0.38, -h*0.2);
-  sc.lineTo(w*0.46, -h*0.08);
-  sc.closePath(); sc.fill();
-  // Hood highlight
-  sc.fillStyle = 'rgba(255,255,255,0.06)';
-  sc.beginPath();
-  sc.moveTo(-w*0.2, -h*0.18);
-  sc.lineTo(w*0.2, -h*0.18);
-  sc.lineTo(w*0.15, -h*0.09);
-  sc.lineTo(-w*0.15, -h*0.09);
-  sc.closePath(); sc.fill();
-
-  // ─── Grille ───
-  sc.fillStyle = '#282828';
-  sc.beginPath(); sc.roundRect(-w*0.34, -h*0.09, w*0.68, h*0.06, 3*scale); sc.fill();
-  // Chrome trim
-  sc.strokeStyle = 'rgba(200,200,200,0.3)';
-  sc.lineWidth = 1;
-  sc.beginPath(); sc.roundRect(-w*0.34, -h*0.09, w*0.68, h*0.06, 3*scale); sc.stroke();
-  // Slats
+  // ─── Legs ───
+  const legW = 5 * scale;
+  const legH = 22 * scale;
+  const legY = 18 * scale;
+  // Left leg
+  sc.save();
+  sc.translate(-4*scale, legY);
+  sc.rotate(legSwing);
+  sc.fillStyle = '#3a5a8a'; // jeans
+  sc.beginPath(); sc.roundRect(-legW/2, 0, legW, legH, 2*scale); sc.fill();
+  // Shoe
   sc.fillStyle = '#3a3a3a';
-  for (let i = 0; i < 6; i++) {
-    const sx = -w*0.3 + i * w*0.105;
-    sc.fillRect(sx, -h*0.085, w*0.07, h*0.045);
+  sc.beginPath(); sc.roundRect(-legW/2 - 1*scale, legH - 3*scale, legW + 3*scale, 4*scale, [0, 2*scale, 2*scale, 1*scale]); sc.fill();
+  sc.restore();
+  // Right leg
+  sc.save();
+  sc.translate(4*scale, legY);
+  sc.rotate(-legSwing);
+  sc.fillStyle = '#3a5a8a';
+  sc.beginPath(); sc.roundRect(-legW/2, 0, legW, legH, 2*scale); sc.fill();
+  sc.fillStyle = '#3a3a3a';
+  sc.beginPath(); sc.roundRect(-legW/2 - 1*scale, legH - 3*scale, legW + 3*scale, 4*scale, [0, 2*scale, 2*scale, 1*scale]); sc.fill();
+  sc.restore();
+
+  // ─── Body / Shirt ───
+  sc.fillStyle = shirt;
+  sc.beginPath(); sc.roundRect(-10*scale, -8*scale + bob, 20*scale, 28*scale, [4*scale, 4*scale, 2*scale, 2*scale]); sc.fill();
+  // Shirt highlight
+  sc.fillStyle = 'rgba(255,255,255,0.08)';
+  sc.fillRect(-3*scale, -5*scale + bob, 6*scale, 20*scale);
+
+  // ─── Arms ───
+  const armSwing = isWalking ? Math.sin(walkFrame * 0.3) * 0.25 : 0;
+  sc.fillStyle = face.skin;
+  // Left arm
+  sc.save();
+  sc.translate(-10*scale, -2*scale + bob);
+  sc.rotate(-armSwing);
+  sc.fillStyle = shirt;
+  sc.beginPath(); sc.roundRect(-4*scale, 0, 5*scale, 16*scale, 2*scale); sc.fill();
+  sc.fillStyle = face.skin;
+  sc.beginPath(); sc.arc(-1.5*scale, 17*scale, 3*scale, 0, Math.PI*2); sc.fill();
+  sc.restore();
+  // Right arm
+  sc.save();
+  sc.translate(10*scale, -2*scale + bob);
+  sc.rotate(armSwing);
+  sc.fillStyle = shirt;
+  sc.beginPath(); sc.roundRect(-1*scale, 0, 5*scale, 16*scale, 2*scale); sc.fill();
+  sc.fillStyle = face.skin;
+  sc.beginPath(); sc.arc(1.5*scale, 17*scale, 3*scale, 0, Math.PI*2); sc.fill();
+  sc.restore();
+
+  // ─── Neck ───
+  sc.fillStyle = face.skin;
+  sc.fillRect(-3*scale, -12*scale + bob, 6*scale, 6*scale);
+
+  // ─── Head ───
+  sc.beginPath(); sc.ellipse(0, -20*scale + bob, 10*scale, 12*scale, 0, 0, Math.PI*2); sc.fill();
+  // Ears
+  sc.beginPath(); sc.ellipse(-10*scale, -20*scale + bob, 2.5*scale, 3.5*scale, 0, 0, Math.PI*2); sc.fill();
+  sc.beginPath(); sc.ellipse(10*scale, -20*scale + bob, 2.5*scale, 3.5*scale, 0, 0, Math.PI*2); sc.fill();
+
+  // Hair
+  if (face.hairStyle !== 'bald') {
+    sc.fillStyle = face.hair;
+    if (face.hairStyle === 'long') {
+      sc.beginPath(); sc.ellipse(0, -27*scale + bob, 12*scale, 9*scale, 0, 0, Math.PI*2); sc.fill();
+      sc.fillRect(-11*scale, -24*scale + bob, 22*scale, 6*scale);
+    } else if (face.hairStyle === 'medium') {
+      sc.beginPath(); sc.ellipse(0, -28*scale + bob, 11*scale, 7*scale, 0, 0, Math.PI*2); sc.fill();
+    } else {
+      sc.beginPath(); sc.ellipse(0, -29*scale + bob, 10*scale, 5*scale, 0, 0, Math.PI*2); sc.fill();
+    }
   }
 
-  // ─── Headlights (more detailed) ───
-  // Housing
-  sc.fillStyle = '#e8e0cc';
-  sc.beginPath(); sc.roundRect(-w/2 + 2*scale, -h*0.13, w*0.18, h*0.08, [4*scale, 2*scale, 2*scale, 4*scale]); sc.fill();
-  sc.beginPath(); sc.roundRect(w/2 - 2*scale - w*0.18, -h*0.13, w*0.18, h*0.08, [2*scale, 4*scale, 4*scale, 2*scale]); sc.fill();
-  // Bulb glow
-  sc.fillStyle = '#fff8dd';
-  sc.beginPath(); sc.arc(-w/2 + 2*scale + w*0.09, -h*0.09, 4*scale, 0, Math.PI*2); sc.fill();
-  sc.beginPath(); sc.arc(w/2 - 2*scale - w*0.09, -h*0.09, 4*scale, 0, Math.PI*2); sc.fill();
-  // Reflector
-  sc.fillStyle = 'rgba(255,255,230,0.3)';
-  sc.beginPath(); sc.arc(-w/2 + 2*scale + w*0.09, -h*0.09, 2.5*scale, 0, Math.PI*2); sc.fill();
-  sc.beginPath(); sc.arc(w/2 - 2*scale - w*0.09, -h*0.09, 2.5*scale, 0, Math.PI*2); sc.fill();
-
-  // ─── Fog lights ───
-  sc.fillStyle = 'rgba(255,255,200,0.25)';
-  sc.beginPath(); sc.arc(-w*0.28, -h*0.015, 2.5*scale, 0, Math.PI*2); sc.fill();
-  sc.beginPath(); sc.arc(w*0.28, -h*0.015, 2.5*scale, 0, Math.PI*2); sc.fill();
-
-  // ─── Windshield ───
-  const wsGrad = sc.createLinearGradient(0, -h*0.38, 0, -h*0.15);
-  wsGrad.addColorStop(0, 'rgba(100,170,220,0.65)');
-  wsGrad.addColorStop(1, 'rgba(130,190,230,0.4)');
-  sc.fillStyle = wsGrad;
-  sc.beginPath();
-  sc.moveTo(-w*0.4, -h*0.18);
-  sc.lineTo(-w*0.33, -h*0.38);
-  sc.lineTo(w*0.33, -h*0.38);
-  sc.lineTo(w*0.4, -h*0.18);
-  sc.closePath(); sc.fill();
-  // Windshield reflection
-  sc.fillStyle = 'rgba(255,255,255,0.08)';
-  sc.beginPath();
-  sc.moveTo(-w*0.35, -h*0.35);
-  sc.lineTo(-w*0.15, -h*0.35);
-  sc.lineTo(-w*0.25, -h*0.2);
-  sc.lineTo(-w*0.38, -h*0.2);
-  sc.closePath(); sc.fill();
-  // A-pillars
-  sc.strokeStyle = shadeColor(col, -25);
-  sc.lineWidth = 3.5 * scale;
-  sc.lineCap = 'round';
-  sc.beginPath(); sc.moveTo(-w*0.39, -h*0.19); sc.lineTo(-w*0.32, -h*0.37); sc.stroke();
-  sc.beginPath(); sc.moveTo(w*0.39, -h*0.19); sc.lineTo(w*0.32, -h*0.37); sc.stroke();
-
-  // ─── Driver ───
-  if (scale > 0.5) {
-    const ds = scale * 0.85;
-    sc.save();
-    sc.translate(w * 0.06, -h * 0.26);
-    // Shoulders/shirt
-    sc.fillStyle = ['#445566','#554433','#335544','#553344','#444444'][Math.floor(face.mouthW) % 5];
-    sc.beginPath(); sc.ellipse(0, 14*ds, 15*ds, 9*ds, 0, -Math.PI, 0); sc.fill();
-    // Neck
-    sc.fillStyle = face.skin;
-    sc.fillRect(-3*ds, 5*ds, 6*ds, 8*ds);
-    // Head
-    sc.beginPath(); sc.ellipse(0, 0, 10*ds, 13*ds, 0, 0, Math.PI*2); sc.fill();
-    // Ears
-    sc.beginPath(); sc.ellipse(-10*ds, 0, 2.5*ds, 4*ds, 0, 0, Math.PI*2); sc.fill();
-    sc.beginPath(); sc.ellipse(10*ds, 0, 2.5*ds, 4*ds, 0, 0, Math.PI*2); sc.fill();
-    // Hair
-    if (face.hairStyle !== 'bald') {
-      sc.fillStyle = face.hair;
-      if (face.hairStyle === 'long') {
-        sc.beginPath(); sc.ellipse(0, -7*ds, 12*ds, 9*ds, 0, 0, Math.PI*2); sc.fill();
-        sc.fillRect(-11*ds, -4*ds, 22*ds, 8*ds);
-      } else if (face.hairStyle === 'medium') {
-        sc.beginPath(); sc.ellipse(0, -8*ds, 11*ds, 7*ds, 0, 0, Math.PI*2); sc.fill();
-      } else {
-        sc.beginPath(); sc.ellipse(0, -9*ds, 10*ds, 5*ds, 0, 0, Math.PI*2); sc.fill();
-      }
-    }
-    // Eyes
+  // Eyes
+  if (scale > 0.35) {
     sc.fillStyle = '#fff';
-    sc.beginPath(); sc.ellipse(-4*ds, (-1+face.eyeY)*ds, 2.5*ds, 2*ds, 0, 0, Math.PI*2); sc.fill();
-    sc.beginPath(); sc.ellipse(4*ds, (-1+face.eyeY)*ds, 2.5*ds, 2*ds, 0, 0, Math.PI*2); sc.fill();
+    sc.beginPath(); sc.ellipse(-4*scale, (-21+face.eyeY)*scale + bob, 2.5*scale, 2*scale, 0, 0, Math.PI*2); sc.fill();
+    sc.beginPath(); sc.ellipse(4*scale, (-21+face.eyeY)*scale + bob, 2.5*scale, 2*scale, 0, 0, Math.PI*2); sc.fill();
     sc.fillStyle = '#1a1a1a';
-    sc.beginPath(); sc.arc(-4*ds, (-1+face.eyeY)*ds, 1.3*ds, 0, Math.PI*2); sc.fill();
-    sc.beginPath(); sc.arc(4*ds, (-1+face.eyeY)*ds, 1.3*ds, 0, Math.PI*2); sc.fill();
+    sc.beginPath(); sc.arc(-4*scale, (-21+face.eyeY)*scale + bob, 1.3*scale, 0, Math.PI*2); sc.fill();
+    sc.beginPath(); sc.arc(4*scale, (-21+face.eyeY)*scale + bob, 1.3*scale, 0, Math.PI*2); sc.fill();
     // Nose
     sc.fillStyle = shadeColor(face.skin, -15);
-    sc.beginPath(); sc.ellipse(0, 3*ds, 2*ds, face.noseH*0.5*ds, 0, 0, Math.PI*2); sc.fill();
+    sc.beginPath(); sc.ellipse(0, -17*scale + bob, 2*scale, face.noseH*0.5*scale, 0, 0, Math.PI*2); sc.fill();
     // Mouth
     sc.strokeStyle = shadeColor(face.skin, -40);
-    sc.lineWidth = 1.2*ds;
+    sc.lineWidth = 1.2*scale;
     sc.lineCap = 'round';
     sc.beginPath();
-    sc.moveTo(-face.mouthW/2*ds, 7*ds);
-    sc.quadraticCurveTo(0, 8.5*ds, face.mouthW/2*ds, 7*ds);
+    sc.moveTo(-face.mouthW/2*scale, -13*scale + bob);
+    sc.quadraticCurveTo(0, -11.5*scale + bob, face.mouthW/2*scale, -13*scale + bob);
     sc.stroke();
-    sc.restore();
   }
-
-  // ─── Roof ───
-  sc.fillStyle = shadeColor(col, -28);
-  sc.beginPath();
-  sc.moveTo(-w*0.33, -h*0.38);
-  sc.lineTo(-w*0.28, -h*0.47);
-  sc.lineTo(w*0.28, -h*0.47);
-  sc.lineTo(w*0.33, -h*0.38);
-  sc.closePath(); sc.fill();
-  // Roof highlight
-  sc.fillStyle = 'rgba(255,255,255,0.04)';
-  sc.fillRect(-w*0.15, -h*0.46, w*0.3, h*0.07);
-
-  // ─── Side mirrors ───
-  sc.fillStyle = shadeColor(col, -12);
-  sc.beginPath();
-  sc.moveTo(-w/2, -h*0.14);
-  sc.lineTo(-w/2 - 7*scale, -h*0.1);
-  sc.lineTo(-w/2 - 7*scale, -h*0.04);
-  sc.lineTo(-w/2, -h*0.02);
-  sc.closePath(); sc.fill();
-  sc.beginPath();
-  sc.moveTo(w/2, -h*0.14);
-  sc.lineTo(w/2 + 7*scale, -h*0.1);
-  sc.lineTo(w/2 + 7*scale, -h*0.04);
-  sc.lineTo(w/2, -h*0.02);
-  sc.closePath(); sc.fill();
-  // Mirror glass
-  sc.fillStyle = 'rgba(100,160,200,0.4)';
-  sc.fillRect(-w/2 - 6*scale, -h*0.1, 5*scale, 5*scale);
-  sc.fillRect(w/2 + 1*scale, -h*0.1, 5*scale, 5*scale);
-
-  // ─── Bumper ───
-  sc.fillStyle = '#3a3a3a';
-  sc.beginPath(); sc.roundRect(-w/2 + 1*scale, h*0.44, w - 2*scale, h*0.06, [0,0, 4*scale, 4*scale]); sc.fill();
-  // Bumper chrome strip
-  sc.fillStyle = 'rgba(200,200,200,0.15)';
-  sc.fillRect(-w*0.4, h*0.455, w*0.8, 1.5*scale);
-
-  // ─── License plate ───
-  const plateW = Math.max(w * 0.5, 50 * scale);
-  const plateH = Math.max(h * 0.09, 12 * scale);
-  const plateY = h * 0.36;
-  sc.fillStyle = '#f8f8f0';
-  sc.beginPath(); sc.roundRect(-plateW/2, plateY, plateW, plateH, 2*scale); sc.fill();
-  sc.strokeStyle = '#aaa';
-  sc.lineWidth = 0.8;
-  sc.strokeRect(-plateW/2, plateY, plateW, plateH);
-  // Plate text — measure and fit
-  const plateFontSize = Math.max(6, Math.min(12 * scale, plateW * 0.12));
-  sc.fillStyle = '#1a1a1a';
-  sc.font = `700 ${plateFontSize}px monospace`;
-  sc.textAlign = 'center';
-  sc.textBaseline = 'middle';
-  sc.fillText(currentPerson.plate, 0, plateY + plateH / 2);
-  sc.textBaseline = 'alphabetic';
-
-  // ─── Wheels ───
-  // Wheel wells (dark)
-  sc.fillStyle = '#1a1a1a';
-  sc.beginPath(); sc.ellipse(-w/2 + 6*scale, h*0.47, 12*scale, 6*scale, 0, 0, Math.PI*2); sc.fill();
-  sc.beginPath(); sc.ellipse(w/2 - 6*scale, h*0.47, 12*scale, 6*scale, 0, 0, Math.PI*2); sc.fill();
-  // Tires
-  sc.fillStyle = '#2a2a2a';
-  sc.beginPath(); sc.ellipse(-w/2 + 6*scale, h*0.47, 10*scale, 5*scale, 0, 0, Math.PI*2); sc.fill();
-  sc.beginPath(); sc.ellipse(w/2 - 6*scale, h*0.47, 10*scale, 5*scale, 0, 0, Math.PI*2); sc.fill();
-  // Hubcaps
-  sc.fillStyle = '#888';
-  sc.beginPath(); sc.arc(-w/2 + 6*scale, h*0.47, 4.5*scale, 0, Math.PI*2); sc.fill();
-  sc.beginPath(); sc.arc(w/2 - 6*scale, h*0.47, 4.5*scale, 0, Math.PI*2); sc.fill();
-  // Hubcap detail
-  sc.fillStyle = '#aaa';
-  sc.beginPath(); sc.arc(-w/2 + 6*scale, h*0.47, 2*scale, 0, Math.PI*2); sc.fill();
-  sc.beginPath(); sc.arc(w/2 - 6*scale, h*0.47, 2*scale, 0, Math.PI*2); sc.fill();
 
   sc.restore();
 }
@@ -1163,48 +1069,46 @@ function sceneLoop() {
   if (!gameRunning) return;
   resizeScene();
   
-  // Animate car + barrier
-  if (animState === 'driving-in') {
-    carY += (carTargetY - carY) * 0.06;
-    if (Math.abs(carY - carTargetY) < 1.5) {
-      carY = carTargetY;
+  // Animate person + barrier
+  walkFrame++;
+  if (animState === 'walking-in') {
+    persY += (persTargetY - persY) * 0.05;
+    if (Math.abs(persY - persTargetY) < 1.5) {
+      persY = persTargetY;
       animState = 'waiting';
       renderDocs(currentPerson);
     }
   } else if (animState === 'barrier-up-out') {
-    // Lift barrier quickly and visibly
     barrierAngle = Math.min(1, barrierAngle + 0.06);
     if (barrierAngle >= 1) {
-      animState = lastDecision === 'admit' ? 'driving-out' : 'driving-detained';
+      animState = lastDecision === 'admit' ? 'walking-out' : 'walking-detained';
       animTimer = 0;
     }
-  } else if (animState === 'driving-out') {
-    // Admitted: car drives TOWARD camera along road, then veers right off screen
+  } else if (animState === 'walking-out') {
+    // Admitted: person walks toward camera along road, exits off screen
     animTimer++;
-    carY += 3 + animTimer * 0.15; // accelerate toward camera
+    persY += 2.5 + animTimer * 0.1;
     if (animTimer > 20) {
-      carXOff += 4 + (animTimer - 20) * 0.5; // veer right after passing booth
-      carAngle -= 0.012;
+      persXOff += 3 + (animTimer - 20) * 0.3;
     }
-    if (carY > SH + 60) {
+    if (persY > SH + 60) {
       animState = 'barrier-down';
     }
-  } else if (animState === 'driving-detained') {
-    // Detained: car drives away (shrinks) then veers right toward ICE van
+  } else if (animState === 'walking-detained') {
+    // Detained: person walks toward ICE van
     animTimer++;
-    carY -= 2; // drive away from camera
-    if (animTimer > 10) {
-      carXOff += 3 + (animTimer - 10) * 0.4; // veer toward ICE van side
-      carAngle -= 0.015;
+    persY -= 1.5;
+    if (animTimer > 5) {
+      persXOff += 2.5 + (animTimer - 5) * 0.3;
     }
-    if (carY < SH * 0.28) {
+    if (persY < SH * 0.30) {
       animState = 'barrier-down';
     }
   } else if (animState === 'barrier-down') {
     barrierAngle = Math.max(0, barrierAngle - 0.06);
     if (barrierAngle <= 0) {
       animState = 'idle';
-      nextCar();
+      nextPerson();
     }
   }
 
@@ -1217,7 +1121,7 @@ function startGame() {
   day = 0; score = 0; strikes = 0; streak = 0;
   totalCorrect = 0; totalWrong = 0;
   allRules = [];
-  barrierAngle = 0; carY = 0; carXOff = 0; carAngle = 0; animTimer = 0;
+  barrierAngle = 0; persY = 0; persXOff = 0; persAngle = 0; animTimer = 0; walkFrame = 0;
   document.getElementById('startScreen').classList.add('hidden');
   document.getElementById('gameOverScreen').classList.add('hidden');
   document.getElementById('gameArea').style.display = 'flex';
@@ -1232,8 +1136,8 @@ function startGame() {
 function nextDay() {
   day++;
   const cfg = getDayConfig();
-  carsToday = cfg.cars;
-  carsProcessed = 0;
+  peopleToday = cfg.people;
+  peopleProcessed = 0;
 
   // Add new rules
   cfg.newRules.forEach(r => allRules.push(r));
@@ -1271,27 +1175,27 @@ function updateRulebook() {
 
 function beginShift() {
   document.getElementById('briefScreen').classList.add('hidden');
-  nextCar();
+  nextPerson();
 }
 
-function nextCar() {
-  if (carsProcessed >= carsToday) {
-    // Day complete
+function nextPerson() {
+  if (peopleProcessed >= peopleToday) {
     nextDay();
     return;
   }
   
   const desk = document.getElementById('desk');
-  desk.innerHTML = '<div style="color:rgba(255,255,255,.3);font-size:.8rem;padding:20px;text-align:center">Vehicle approaching...</div>';
+  desk.innerHTML = '<div style="color:rgba(255,255,255,.3);font-size:.8rem;padding:20px;text-align:center">Someone approaching...</div>';
   document.getElementById('btnAdmit').disabled = true;
   document.getElementById('btnDetain').disabled = true;
 
   currentPerson = genPerson();
-  carY = SH * 0.2; // start far away (small)
-  carTargetY = SH * 0.55; // stop at booth — not too close
-  carXOff = 0;
-  carAngle = 0;
-  animState = 'driving-in';
+  persY = SH * 0.2;
+  persTargetY = SH * 0.55;
+  persXOff = 0;
+  persAngle = 0;
+  walkFrame = 0;
+  animState = 'walking-in';
   updateHUD();
 }
 
@@ -1311,7 +1215,7 @@ function makeDecision(admit) {
     document.getElementById('zoomBackdrop').style.display = 'none';
   }
 
-  carsProcessed++;
+  peopleProcessed++;
 
   if (correct) {
     totalCorrect++;
@@ -1351,8 +1255,8 @@ function makeDecision(admit) {
 
 function describeForgery(type) {
   const map = {
-    expired_license: 'Expired license',
-    wrong_plate: 'Plate mismatch',
+    expired_license: 'Expired ID',
+    wrong_dob: 'DOB mismatch between documents',
     name_mismatch: 'Name mismatch',
     wrong_photo: 'Photo doesn\'t match',
     expired_visa: 'Expired visa',
@@ -1361,7 +1265,7 @@ function describeForgery(type) {
     wrong_state_abbr: 'Wrong state abbreviation',
     expired_work_permit: 'Expired work permit',
     fake_employer: 'Fake employer',
-    bad_vin: 'Invalid VIN',
+    bad_passport_num: 'Invalid passport number',
     wrong_date_format: 'Wrong date format',
   };
   return map[type] || type;
@@ -1381,7 +1285,7 @@ function updateHUD() {
   document.getElementById('hudDay').textContent = day;
   document.getElementById('hudStrikes').textContent = strikes + '/3';
   document.getElementById('hudStrikes').style.color = strikes >= 2 ? '#f44' : strikes >= 1 ? '#fa4' : '#fff';
-  document.getElementById('hudQueue').textContent = Math.max(0, carsToday - carsProcessed);
+  document.getElementById('hudQueue').textContent = Math.max(0, peopleToday - peopleProcessed);
 }
 
 function endGame() {
@@ -1391,7 +1295,7 @@ function endGame() {
   const dayWord = day === 1 ? '1 day' : day + ' days';
   document.getElementById('goTitle').textContent = strikes >= 3 ? 'Fired' : 'Shift Over';
   document.getElementById('goTitle').style.color = strikes >= 3 ? '#D32F2F' : 'var(--gold)';
-  document.getElementById('goSub').textContent = `You lasted ${dayWord} and processed ${totalCorrect + totalWrong} vehicles.`;
+  document.getElementById('goSub').textContent = `You lasted ${dayWord} and processed ${totalCorrect + totalWrong} people.`;
   document.getElementById('goStats').innerHTML = `
     <div class="stat-row"><span class="stat-label">Score</span><span class="stat-val">${score}</span></div>
     <div class="stat-row"><span class="stat-label">Days Survived</span><span class="stat-val">${day}</span></div>
