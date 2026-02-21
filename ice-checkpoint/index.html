@@ -30,11 +30,13 @@
     #gameArea{position:fixed;top:0;left:0;right:0;bottom:0;display:none;flex-direction:column}
     
     /* Scene - top portion showing booth — front-facing view */
-    #scene{flex:0 0 35%;min-height:150px;max-height:280px;background:#87CEEB;position:relative;overflow:hidden;border-bottom:3px solid #444}
+    #scene{flex:0 0 35%;min-height:150px;max-height:500px;background:#87CEEB;position:relative;overflow:hidden;border-bottom:3px solid #444}
+    @media (min-width:641px){#scene{flex:0 0 45%}}
     
     /* Document inspection area */
     #deskArea{flex:1;background:#3a2a1a;position:relative;overflow:hidden;display:flex;flex-direction:column}
-    #desk{flex:1;position:relative;overflow:auto;padding:10px;display:flex;gap:10px;flex-wrap:wrap;align-content:flex-start;-webkit-overflow-scrolling:touch}
+    #desk{flex:1;position:relative;overflow:auto;padding:12px;display:flex;gap:12px;flex-wrap:wrap;align-content:flex-start;justify-content:center;-webkit-overflow-scrolling:touch}
+    @media (min-width:641px){#desk{padding:20px 30px;gap:20px}}
     
     /* Action buttons */
     #actions{display:flex;gap:0;height:64px;flex-shrink:0}
@@ -46,13 +48,15 @@
     #btnAdmit:disabled,#btnDetain:disabled{opacity:.3;pointer-events:none}
 
     /* Documents */
-    .doc{background:#f5f0e0;color:#1a1a1a;border:1px solid #c8c0a8;padding:12px;font-family:var(--font-doc);font-size:.7rem;line-height:1.6;min-width:150px;max-width:200px;position:relative;cursor:pointer;transition:transform .2s,box-shadow .2s;flex-shrink:0;box-shadow:2px 2px 8px rgba(0,0,0,.3)}
+    .doc{background:#f5f0e0;color:#1a1a1a;border:1px solid #c8c0a8;padding:14px 16px;font-family:var(--font-doc);font-size:.75rem;line-height:1.6;min-width:170px;max-width:260px;position:relative;cursor:pointer;transition:transform .2s,box-shadow .2s;flex-shrink:0;box-shadow:2px 2px 8px rgba(0,0,0,.3)}
+    @media (min-width:641px){.doc{padding:18px 20px;font-size:.85rem;min-width:220px;max-width:300px}}
     .doc:hover{transform:translateY(-2px);box-shadow:2px 4px 12px rgba(0,0,0,.4)}
     .doc.zoomed{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(1.8);z-index:200;max-width:240px;box-shadow:0 0 60px rgba(0,0,0,.7)}
-    .doc-header{font-family:var(--font-heading);font-size:.65rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#1a4a8a;border-bottom:1px solid #bbb8a0;padding-bottom:4px;margin-bottom:6px;text-align:center}
-    .doc-field{margin-bottom:3px}
+    .doc-header{font-family:var(--font-heading);font-size:.65rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#1a4a8a;border-bottom:1px solid #bbb8a0;padding-bottom:4px;margin-bottom:8px;text-align:center}
+    .doc-field{margin-bottom:4px}
     .doc-label{font-size:.55rem;color:#888;text-transform:uppercase;letter-spacing:.1em}
     .doc-val{font-weight:700;font-size:.72rem}
+    @media (min-width:641px){.doc-header{font-size:.8rem;margin-bottom:10px}.doc-field{margin-bottom:6px}.doc-label{font-size:.65rem}.doc-val{font-size:.88rem}}
     .doc-seal{position:absolute;bottom:8px;right:8px;width:30px;height:30px;border:2px solid rgba(26,74,138,.25);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.4rem;color:rgba(26,74,138,.3);font-family:var(--font-heading);font-weight:700;letter-spacing:.05em;text-transform:uppercase}
     .doc-photo{width:36px;height:44px;background:#ddd;border:1px solid #bbb;float:right;margin:0 0 6px 8px;display:flex;align-items:center;justify-content:center;overflow:hidden}
     .doc-watermark{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-30deg);font-family:var(--font-heading);font-size:1.2rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:rgba(26,74,138,.06);pointer-events:none;white-space:nowrap}
