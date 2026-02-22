@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EXECUTIVE ORDER — Strategy Game | UFCR</title>
+  <meta name="description" content="Sign executive orders. Shape the nation. Watch the chaos unfold.">
+  <link rel="icon" href="../assets/images/shield-logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <style>
+    :root {
+      --blue: #0021A5;
+      --orange: #FA4616;
+      --gold: #F0A830;
+      --white: #FFFFFF;
+      --navy: #001845;
+      --dark: #0A0E1A;
+      --green: #34C759;
+      --red: #FF3B30;
+      --purple: #AF52DE;
+      --cyan: #32D4DE;
+      --font-body: 'Inter', -apple-system, sans-serif;
+      --font-heading: 'Oswald', 'Inter', sans-serif;
+      --ease: cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html { -webkit-font-smoothing: antialiased; font-size: 16px; }
+    body { font-family: var(--font-body); background: var(--dark); color: var(--white); overflow-x: hidden; min-height: 100vh; }
+    a { text-decoration: none; color: inherit; }
+
+    /* NAV */
+    .nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100; height: 64px;
+      background: rgba(0,24,69,0.95); backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .nav-inner {
+      max-width: 1200px; margin: 0 auto; padding: 0 20px; height: 100%;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .nav-logo { display: flex; align-items: center; gap: 10px; }
+    .nav-logo img { height: 36px; border-radius: 6px; background: white; padding: 2px; }
+    .nav-logo span { font-family: var(--font-heading); font-size: 1.2rem; font-weight: 700; letter-spacing: 0.08em; }
+    .nav-back {
+      font-size: 0.85rem; font-weight: 500; color: rgba(255,255,255,0.6);
+      transition: color 0.3s;
+    }
+    .nav-back:hover { color: var(--gold); }
+
+    /* SCREENS */
+    .screen { display: none; }
+    .screen.active { display: flex; flex-direction: column; align-items: center; }
+
+    /* TITLE SCREEN */
+    #title-screen {
+      justify-content: center; min-height: 100vh; padding: 80px 20px 40px;
+      background: radial-gradient(ellipse at 50% 30%, rgba(0,33,165,0.3) 0%, transparent 60%);
+    }
+    .title-seal {
+      width: 140px; height: 140px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--gold) 0%, #D4912A 100%);
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 0 60px rgba(240,168,48,0.3), 0 8px 32px rgba(0,0,0,0.4);
+      margin-bottom: 32px; position: relative;
+      animation: sealPulse 3s ease-in-out infinite;
+    }
+    @keyframes sealPulse {
+      0%, 100% { box-shadow: 0 0 60px rgba(240,168,48,0.3), 0 8px 32px rgba(0,0,0,0.4); }
+      50% { box-shadow: 0 0 80px rgba(240,168,48,0.5), 0 8px 32px rgba(0,0,0,0.4); }
+    }
+    .title-seal i { font-size: 3.5rem; color: var(--dark); }
+    .title-heading {
+      font-family: var(--font-heading); font-size: clamp(2.5rem, 6vw, 4rem);
+      font-weight: 700; letter-spacing: 0.06em; text-align: center;
+      background: linear-gradient(135deg, var(--white) 0%, var(--gold) 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      margin-bottom: 12px;
+    }
+    .title-sub {
+      font-size: 1.1rem; color: rgba(255,255,255,0.5); text-align: center;
+      max-width: 400px; line-height: 1.6; margin-bottom: 40px;
+    }
+    .btn-play {
+      padding: 16px 48px; border: none; border-radius: 12px; cursor: pointer;
+      font-family: var(--font-heading); font-size: 1.3rem; font-weight: 600;
+      letter-spacing: 0.08em; color: var(--dark);
+      background: linear-gradient(135deg, var(--gold) 0%, #FFD060 100%);
+      box-shadow: 0 4px 24px rgba(240,168,48,0.4);
+      transition: transform 0.3s var(--ease), box-shadow 0.3s var(--ease);
+    }
+    .btn-play:hover { transform: translateY(-2px) scale(1.03); box-shadow: 0 8px 32px rgba(240,168,48,0.6); }
+    .btn-play:active { transform: scale(0.97); }
+
+    /* GAME SCREEN */
+    #game-screen { padding: 80px 16px 24px; min-height: 100vh; width: 100%; }
+
+    /* HUD */
+    .hud {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
+      width: 100%; max-width: 700px; margin-bottom: 24px;
+    }
+    .hud-card {
+      background: rgba(255,255,255,0.06); border-radius: 12px; padding: 14px 12px;
+      text-align: center; border: 1px solid rgba(255,255,255,0.08);
+      transition: border-color 0.4s, background 0.4s;
+    }
+    .hud-card.pulse-green { border-color: rgba(52,199,89,0.5); background: rgba(52,199,89,0.08); }
+    .hud-card.pulse-red { border-color: rgba(255,59,48,0.5); background: rgba(255,59,48,0.08); }
+    .hud-label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.1em; color: rgba(255,255,255,0.4); margin-bottom: 4px; }
+    .hud-value { font-family: var(--font-heading); font-size: 1.5rem; font-weight: 700; }
+    .hud-bar { width: 100%; height: 4px; border-radius: 2px; background: rgba(255,255,255,0.1); margin-top: 6px; overflow: hidden; }
+    .hud-bar-fill { height: 100%; border-radius: 2px; transition: width 0.8s var(--ease), background 0.4s; }
+
+    /* DAY COUNTER */
+    .day-banner {
+      font-family: var(--font-heading); font-size: 1rem; letter-spacing: 0.12em;
+      color: var(--gold); margin-bottom: 20px; opacity: 0.7;
+    }
+
+    /* ORDER CARDS */
+    .order-area {
+      width: 100%; max-width: 700px; position: relative; min-height: 300px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .order-card {
+      width: 100%; max-width: 500px; border-radius: 16px; overflow: hidden;
+      background: linear-gradient(145deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.04) 100%);
+      border: 1px solid rgba(255,255,255,0.12);
+      box-shadow: 0 8px 40px rgba(0,0,0,0.3);
+      position: relative;
+    }
+    .order-header {
+      padding: 20px 24px 16px; display: flex; align-items: center; gap: 14px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .order-icon {
+      width: 48px; height: 48px; border-radius: 12px; display: flex;
+      align-items: center; justify-content: center; font-size: 1.3rem;
+      flex-shrink: 0;
+    }
+    .order-category { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; color: rgba(255,255,255,0.4); }
+    .order-title { font-family: var(--font-heading); font-size: 1.15rem; font-weight: 600; margin-top: 2px; }
+    .order-body { padding: 20px 24px; }
+    .order-desc { font-size: 0.9rem; line-height: 1.65; color: rgba(255,255,255,0.7); margin-bottom: 16px; }
+    .order-effects { display: flex; flex-wrap: wrap; gap: 8px; }
+    .order-effect {
+      font-size: 0.75rem; padding: 4px 10px; border-radius: 6px;
+      font-weight: 500; display: flex; align-items: center; gap: 4px;
+    }
+    .order-effect.positive { background: rgba(52,199,89,0.15); color: var(--green); }
+    .order-effect.negative { background: rgba(255,59,48,0.15); color: var(--red); }
+    .order-actions {
+      padding: 16px 24px 24px; display: flex; gap: 12px;
+    }
+    .btn-sign, .btn-veto {
+      flex: 1; padding: 14px; border: none; border-radius: 12px; cursor: pointer;
+      font-family: var(--font-heading); font-size: 1rem; font-weight: 600;
+      letter-spacing: 0.06em; transition: transform 0.2s, box-shadow 0.3s;
+    }
+    .btn-sign {
+      background: linear-gradient(135deg, var(--green), #2AA84B);
+      color: white; box-shadow: 0 4px 20px rgba(52,199,89,0.3);
+    }
+    .btn-veto {
+      background: linear-gradient(135deg, var(--red), #D42A20);
+      color: white; box-shadow: 0 4px 20px rgba(255,59,48,0.3);
+    }
+    .btn-sign:hover, .btn-veto:hover { transform: translateY(-2px); }
+    .btn-sign:active, .btn-veto:active { transform: scale(0.96); }
+
+    /* EVENT TOAST */
+    .event-toast {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(100px);
+      background: rgba(0,24,69,0.95); backdrop-filter: blur(16px);
+      border: 1px solid rgba(255,255,255,0.12); border-radius: 14px;
+      padding: 16px 24px; max-width: 420px; width: calc(100% - 40px);
+      z-index: 200; opacity: 0; pointer-events: none;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.5);
+    }
+    .event-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); pointer-events: auto; }
+    .event-toast-title { font-family: var(--font-heading); font-size: 0.9rem; margin-bottom: 4px; color: var(--gold); }
+    .event-toast-text { font-size: 0.82rem; line-height: 1.5; color: rgba(255,255,255,0.7); }
+
+    /* GAME OVER */
+    #gameover-screen { justify-content: center; min-height: 100vh; padding: 80px 20px 40px; text-align: center; }
+    .go-title {
+      font-family: var(--font-heading); font-size: clamp(2rem, 5vw, 3rem);
+      font-weight: 700; margin-bottom: 8px;
+    }
+    .go-reason { font-size: 1rem; color: rgba(255,255,255,0.5); margin-bottom: 32px; max-width: 400px; }
+    .go-stats { display: flex; gap: 24px; margin-bottom: 36px; flex-wrap: wrap; justify-content: center; }
+    .go-stat { text-align: center; }
+    .go-stat-value { font-family: var(--font-heading); font-size: 2rem; font-weight: 700; color: var(--gold); }
+    .go-stat-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; color: rgba(255,255,255,0.4); }
+    .btn-retry {
+      padding: 14px 40px; border: none; border-radius: 12px; cursor: pointer;
+      font-family: var(--font-heading); font-size: 1.1rem; font-weight: 600;
+      letter-spacing: 0.06em; color: var(--dark);
+      background: linear-gradient(135deg, var(--gold) 0%, #FFD060 100%);
+      box-shadow: 0 4px 24px rgba(240,168,48,0.4);
+      transition: transform 0.3s var(--ease);
+    }
+    .btn-retry:hover { transform: translateY(-2px) scale(1.03); }
+
+    /* PARTICLES */
+    .particles { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
+    .screen { position: relative; z-index: 1; }
+
+    /* RESPONSIVE */
+    @media (max-width: 600px) {
+      .hud { grid-template-columns: repeat(2, 1fr); }
+      .order-header { padding: 16px 18px 12px; }
+      .order-body { padding: 16px 18px; }
+      .order-actions { padding: 12px 18px 20px; }
+    }
+  </style>
+</head>
+<body>
+
+<canvas class="particles" id="particles"></canvas>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="../" class="nav-logo">
+      <img src="../assets/images/shield-logo.png" alt="UFCR">
+      <span>UFCR</span>
+    </a>
+    <a href="../games/" class="nav-back"><i class="fa-solid fa-arrow-left"></i> Games</a>
+  </div>
+</nav>
+
+<!-- TITLE -->
+<div id="title-screen" class="screen active">
+  <div class="title-seal"><i class="fa-solid fa-stamp"></i></div>
+  <h1 class="title-heading">EXECUTIVE ORDER</h1>
+  <p class="title-sub">Sign or veto executive orders. Balance approval, economy, security, and liberty. How long can you last?</p>
+  <button class="btn-play" onclick="startGame()">TAKE OFFICE</button>
+</div>
+
+<!-- GAME -->
+<div id="game-screen" class="screen">
+  <div class="hud">
+    <div class="hud-card" id="hud-approval">
+      <div class="hud-label">Approval</div>
+      <div class="hud-value" id="val-approval">60%</div>
+      <div class="hud-bar"><div class="hud-bar-fill" id="bar-approval" style="width:60%;background:var(--green)"></div></div>
+    </div>
+    <div class="hud-card" id="hud-economy">
+      <div class="hud-label">Economy</div>
+      <div class="hud-value" id="val-economy">50</div>
+      <div class="hud-bar"><div class="hud-bar-fill" id="bar-economy" style="width:50%;background:var(--cyan)"></div></div>
+    </div>
+    <div class="hud-card" id="hud-security">
+      <div class="hud-label">Security</div>
+      <div class="hud-value" id="val-security">50</div>
+      <div class="hud-bar"><div class="hud-bar-fill" id="bar-security" style="width:50%;background:var(--orange)"></div></div>
+    </div>
+    <div class="hud-card" id="hud-liberty">
+      <div class="hud-label">Liberty</div>
+      <div class="hud-value" id="val-liberty">50</div>
+      <div class="hud-bar"><div class="hud-bar-fill" id="bar-liberty" style="width:50%;background:var(--purple)"></div></div>
+    </div>
+  </div>
+  <div class="day-banner" id="day-banner">DAY 1</div>
+  <div class="order-area" id="order-area"></div>
+</div>
+
+<!-- GAME OVER -->
+<div id="gameover-screen" class="screen">
+  <h1 class="go-title" id="go-title">IMPEACHED</h1>
+  <p class="go-reason" id="go-reason"></p>
+  <div class="go-stats">
+    <div class="go-stat"><div class="go-stat-value" id="go-days">0</div><div class="go-stat-label">Days in Office</div></div>
+    <div class="go-stat"><div class="go-stat-value" id="go-signed">0</div><div class="go-stat-label">Orders Signed</div></div>
+    <div class="go-stat"><div class="go-stat-value" id="go-vetoed">0</div><div class="go-stat-label">Orders Vetoed</div></div>
+  </div>
+  <button class="btn-retry" onclick="startGame()">RUN AGAIN</button>
+</div>
+
+<div class="event-toast" id="event-toast">
+  <div class="event-toast-title" id="toast-title"></div>
+  <div class="event-toast-text" id="toast-text"></div>
+</div>
+
+<script>
+// ========== GAME DATA ==========
+const ORDERS = [
+  // IMMIGRATION
+  { cat: "Immigration", icon: "fa-passport", color: "#FA4616",
+    title: "Close the Southern Border", desc: "Shut down all non-essential border crossings and deploy the National Guard to enforce a complete halt on illegal entry.",
+    sign: { approval: 8, economy: -5, security: 15, liberty: -8 },
+    veto: { approval: -6, economy: 3, security: -10, liberty: 5 },
+    signEvent: "Border crossings drop 94%. CNN loses its mind.", vetoEvent: "Open borders activists celebrate. Crossings surge." },
+  { cat: "Immigration", icon: "fa-helicopter", color: "#FA4616",
+    title: "Activate ICE Deportation Force", desc: "Fund a massive expansion of ICE operations to remove criminal illegal aliens from American cities.",
+    sign: { approval: 10, economy: -3, security: 12, liberty: -6 },
+    veto: { approval: -8, economy: 2, security: -8, liberty: 4 },
+    signEvent: "ICE conducts record operations. Sanctuary cities furious.", vetoEvent: "Criminal aliens remain. Crime ticks up in major cities." },
+  { cat: "Immigration", icon: "fa-wall-brick", color: "#FA4616",
+    title: "Fund the Border Wall", desc: "Redirect $12 billion in military funds to complete the border wall along the entire southern border.",
+    sign: { approval: 6, economy: -8, security: 10, liberty: -2 },
+    veto: { approval: -4, economy: 5, security: -6, liberty: 2 },
+    signEvent: "Construction begins immediately. Workers hired by thousands.", vetoEvent: "Wall remains incomplete. Cartels celebrate with fireworks." },
+
+  // ECONOMY
+  { cat: "Economy", icon: "fa-chart-line", color: "#32D4DE",
+    title: "Slash Corporate Tax to 15%", desc: "Cut the corporate tax rate to 15% to supercharge business investment and bring companies back to America.",
+    sign: { approval: 5, economy: 14, security: 0, liberty: 5 },
+    veto: { approval: -3, economy: -8, security: 0, liberty: -2 },
+    signEvent: "Stock market surges 800 points. Companies announce new factories.", vetoEvent: "Wall Street disappointed. Companies eye overseas expansion." },
+  { cat: "Economy", icon: "fa-gas-pump", color: "#32D4DE",
+    title: "Drill Baby Drill", desc: "Open all federal lands for oil and gas exploration. Eliminate red tape on energy permits.",
+    sign: { approval: 7, economy: 12, security: 3, liberty: 4 },
+    veto: { approval: -5, economy: -6, security: -2, liberty: -1 },
+    signEvent: "Gas prices plummet. Energy independence achieved.", vetoEvent: "Gas prices climb to $6/gallon. OPEC celebrates." },
+  { cat: "Economy", icon: "fa-coins", color: "#32D4DE",
+    title: "Eliminate Income Tax on Tips", desc: "Sign an order directing Treasury to stop collecting income tax on tipped wages.",
+    sign: { approval: 12, economy: -4, security: 0, liberty: 8 },
+    veto: { approval: -10, economy: 3, security: 0, liberty: -3 },
+    signEvent: "Service workers ecstatic. Restaurant industry booms.", vetoEvent: "Waiters and bartenders across America are disappointed." },
+  { cat: "Economy", icon: "fa-sack-dollar", color: "#32D4DE",
+    title: "Impose 25% Tariff on China", desc: "Slap a massive tariff on all Chinese imports to protect American manufacturing.",
+    sign: { approval: 4, economy: -6, security: 8, liberty: -3 },
+    veto: { approval: -3, economy: 8, security: -4, liberty: 3 },
+    signEvent: "Trade war escalates. American steel producers rejoice.", vetoEvent: "Cheap Chinese goods continue flooding the market." },
+
+  // SECURITY
+  { cat: "Security", icon: "fa-shield-halved", color: "#F0A830",
+    title: "Rebuild the Military", desc: "Increase defense spending by $100 billion, with focus on naval and cyber capabilities.",
+    sign: { approval: 5, economy: -10, security: 15, liberty: -3 },
+    veto: { approval: -4, economy: 6, security: -12, liberty: 2 },
+    signEvent: "Pentagon cheers. New aircraft carriers commissioned.", vetoEvent: "Military readiness concerns grow. Adversaries take note." },
+  { cat: "Security", icon: "fa-gun", color: "#F0A830",
+    title: "National Concealed Carry Reciprocity", desc: "Mandate that all states recognize concealed carry permits from every other state.",
+    sign: { approval: 6, economy: 0, security: 5, liberty: 14 },
+    veto: { approval: -5, economy: 0, security: -2, liberty: -10 },
+    signEvent: "2A supporters celebrate nationwide. NRA membership surges.", vetoEvent: "Gun rights groups vow primary challenges against you." },
+  { cat: "Security", icon: "fa-user-secret", color: "#F0A830",
+    title: "Ban TikTok", desc: "Order a complete ban on TikTok and all ByteDance products from operating in the United States.",
+    sign: { approval: -5, economy: 2, security: 12, liberty: -10 },
+    veto: { approval: 4, economy: -1, security: -8, liberty: 6 },
+    signEvent: "Gen Z riots. National security experts approve.", vetoEvent: "CCP data collection continues. Teens relieved." },
+  { cat: "Security", icon: "fa-satellite", color: "#F0A830",
+    title: "Expand Space Force", desc: "Triple Space Force budget and establish a permanent lunar military presence.",
+    sign: { approval: 3, economy: -8, security: 10, liberty: 0 },
+    veto: { approval: -1, economy: 5, security: -5, liberty: 0 },
+    signEvent: "Elon Musk approves. Moon base construction begins.", vetoEvent: "China beats us to the moon. Embarrassing." },
+
+  // LIBERTY / CULTURE
+  { cat: "Liberty", icon: "fa-graduation-cap", color: "#AF52DE",
+    title: "Ban DEI in Federal Agencies", desc: "Eliminate all Diversity, Equity, and Inclusion programs from the federal government.",
+    sign: { approval: 8, economy: 4, security: 0, liberty: 6 },
+    veto: { approval: -6, economy: -2, security: 0, liberty: -4 },
+    signEvent: "DEI bureaucrats pack their desks. Meritocracy restored.", vetoEvent: "Mandatory diversity trainings continue. Morale drops." },
+  { cat: "Liberty", icon: "fa-book", color: "#AF52DE",
+    title: "School Choice Executive Order", desc: "Redirect federal education funding to follow the student, enabling parents to choose any school.",
+    sign: { approval: 7, economy: -3, security: 0, liberty: 12 },
+    veto: { approval: -5, economy: 2, security: 0, liberty: -8 },
+    signEvent: "Parents rejoice. Teachers unions declare war.", vetoEvent: "Public school monopoly preserved. Unions donate heavily." },
+  { cat: "Liberty", icon: "fa-cross", color: "#AF52DE",
+    title: "Protect Religious Liberty", desc: "Sign a sweeping religious liberty order preventing any government agency from penalizing faith-based organizations.",
+    sign: { approval: 6, economy: 0, security: 0, liberty: 10 },
+    veto: { approval: -4, economy: 0, security: 0, liberty: -6 },
+    signEvent: "Churches celebrate. ACLU files 47 lawsuits.", vetoEvent: "Faith organizations feel abandoned." },
+  { cat: "Liberty", icon: "fa-tower-broadcast", color: "#AF52DE",
+    title: "Break Up Big Tech", desc: "Direct the DOJ to pursue antitrust action against Google, Meta, and Amazon.",
+    sign: { approval: 9, economy: -7, security: 2, liberty: 10 },
+    veto: { approval: -6, economy: 5, security: -2, liberty: -8 },
+    signEvent: "Silicon Valley panics. Free speech advocates celebrate.", vetoEvent: "Tech monopolies tighten their grip on information." },
+  { cat: "Liberty", icon: "fa-cannabis", color: "#AF52DE",
+    title: "Federally Legalize Cannabis", desc: "Deschedule marijuana entirely and pardon all federal cannabis offenses.",
+    sign: { approval: 10, economy: 8, security: -4, liberty: 12 },
+    veto: { approval: -6, economy: -3, security: 3, liberty: -8 },
+    signEvent: "Snoop Dogg tweets your approval rating to the moon.", vetoEvent: "Prohibition continues. Black market thrives." },
+
+  // WILD CARDS
+  { cat: "Classified", icon: "fa-file-shield", color: "#FF6B6B",
+    title: "Release the JFK Files", desc: "Declassify every document related to the JFK assassination. All of them. No redactions.",
+    sign: { approval: 14, economy: 0, security: -8, liberty: 12 },
+    veto: { approval: -10, economy: 0, security: 5, liberty: -10 },
+    signEvent: "Conspiracy theorists vindicated. CIA director resigns.", vetoEvent: "The truth stays buried. Trust in government drops further." },
+  { cat: "Classified", icon: "fa-user-astronaut", color: "#FF6B6B",
+    title: "Disclose UFO Programs", desc: "Order full disclosure of all UAP/UFO programs, including recovered materials and non-human intelligence.",
+    sign: { approval: 8, economy: 2, security: -12, liberty: 15 },
+    veto: { approval: -4, economy: 0, security: 8, liberty: -6 },
+    signEvent: "Pentagon admits they have alien tech. World freaks out.", vetoEvent: "Cover-up continues. Whistleblowers silenced." },
+  { cat: "Executive Power", icon: "fa-gavel", color: "#FFD060",
+    title: "Abolish the ATF", desc: "Dismantle the Bureau of Alcohol, Tobacco, Firearms and Explosives entirely.",
+    sign: { approval: 5, economy: 3, security: -8, liberty: 15 },
+    veto: { approval: -3, economy: -1, security: 5, liberty: -10 },
+    signEvent: "Gun owners celebrate. ATF agents update their resumes.", vetoEvent: "ATF announces expanded operations. Dog owners nervous." },
+  { cat: "Executive Power", icon: "fa-landmark", color: "#FFD060",
+    title: "Term Limits for Congress", desc: "Push an executive order demanding a constitutional convention for congressional term limits.",
+    sign: { approval: 15, economy: 0, security: 0, liberty: 8 },
+    veto: { approval: -12, economy: 0, security: 0, liberty: -5 },
+    signEvent: "Career politicians panic. The people cheer.", vetoEvent: "Swamp creatures breathe a sigh of relief." },
+  { cat: "Executive Power", icon: "fa-money-bill-transfer", color: "#FFD060",
+    title: "Audit the Federal Reserve", desc: "Order a complete public audit of the Federal Reserve's balance sheet and transactions.",
+    sign: { approval: 10, economy: -8, security: 0, liberty: 10 },
+    veto: { approval: -7, economy: 5, security: 0, liberty: -6 },
+    signEvent: "Markets wobble. Transparency advocates ecstatic.", vetoEvent: "The Fed continues operating in the shadows." },
+  { cat: "Foreign Policy", icon: "fa-flag-usa", color: "#4A90D9",
+    title: "Withdraw from the UN", desc: "Pull the United States out of the United Nations and stop all funding immediately.",
+    sign: { approval: 4, economy: 8, security: -6, liberty: 6 },
+    veto: { approval: -2, economy: -4, security: 4, liberty: -2 },
+    signEvent: "Globalists in shambles. America goes full sovereign.", vetoEvent: "UN peacekeeping continues with American tax dollars." },
+  { cat: "Foreign Policy", icon: "fa-handshake-slash", color: "#4A90D9",
+    title: "End All Foreign Aid", desc: "Immediately halt all foreign aid and redirect funding to domestic infrastructure.",
+    sign: { approval: 7, economy: 12, security: -5, liberty: 2 },
+    veto: { approval: -4, economy: -6, security: 3, liberty: 0 },
+    signEvent: "Billions saved. Roads and bridges get funding.", vetoEvent: "Billions continue flowing overseas while potholes multiply." },
+  { cat: "Economy", icon: "fa-bitcoin-sign", color: "#32D4DE",
+    title: "Create a National Bitcoin Reserve", desc: "Order the Treasury to purchase 1 million Bitcoin as a strategic reserve asset.",
+    sign: { approval: 4, economy: -5, security: 2, liberty: 10 },
+    veto: { approval: -2, economy: 3, security: 0, liberty: -4 },
+    signEvent: "Bitcoin moons. Crypto bros worship you.", vetoEvent: "Crypto community calls you a boomer." },
+];
+
+const RANDOM_EVENTS = [
+  { title: "Media Scandal!", text: "Anonymous source leaks embarrassing old emails. Approval takes a hit.", effect: { approval: -8 } },
+  { title: "Economic Boom!", text: "GDP growth exceeds expectations. Markets rally.", effect: { economy: 8 } },
+  { title: "Terror Threat Averted", text: "Intelligence agencies stop a major attack. Security focus rewarded.", effect: { approval: 5, security: 5 } },
+  { title: "Viral Moment", text: "Your press conference goes viral for all the right reasons.", effect: { approval: 10 } },
+  { title: "Government Shutdown", text: "Congress can't agree on a budget. You get blamed.", effect: { approval: -6, economy: -5 } },
+  { title: "Natural Disaster", text: "Hurricane hits the Gulf Coast. Your response will be judged.", effect: { approval: -3, economy: -6, security: -3 } },
+  { title: "Stock Market Crash", text: "Markets drop 12% in a single week. Panic ensues.", effect: { economy: -12, approval: -8 } },
+  { title: "Whistleblower Leak", text: "A government insider exposes classified programs.", effect: { approval: -4, security: -6, liberty: 5 } },
+  { title: "Rally Turnout Record", text: "Your rally draws the biggest crowd in American history.", effect: { approval: 12 } },
+  { title: "Gas Price Drop", text: "Oil prices plummet. Everyone's happy at the pump.", effect: { approval: 6, economy: 6 } },
+];
+
+// ========== GAME STATE ==========
+let state = {};
+
+function initState() {
+  return {
+    approval: 60, economy: 50, security: 50, liberty: 50,
+    day: 1, signed: 0, vetoed: 0, orderQueue: [], playing: false
+  };
+}
+
+// ========== PARTICLES ==========
+const canvas = document.getElementById('particles');
+const ctx = canvas.getContext('2d');
+let dots = [];
+
+function resizeCanvas() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+
+for (let i = 0; i < 50; i++) {
+  dots.push({
+    x: Math.random() * canvas.width, y: Math.random() * canvas.height,
+    vx: (Math.random() - 0.5) * 0.3, vy: (Math.random() - 0.5) * 0.3,
+    r: Math.random() * 2 + 0.5, a: Math.random() * 0.15 + 0.03
+  });
+}
+
+function drawParticles() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  dots.forEach(d => {
+    d.x += d.vx; d.y += d.vy;
+    if (d.x < 0 || d.x > canvas.width) d.vx *= -1;
+    if (d.y < 0 || d.y > canvas.height) d.vy *= -1;
+    ctx.beginPath();
+    ctx.arc(d.x, d.y, d.r, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(240,168,48,${d.a})`;
+    ctx.fill();
+  });
+  requestAnimationFrame(drawParticles);
+}
+drawParticles();
+
+// ========== SCREEN MANAGEMENT ==========
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// ========== HUD ==========
+function updateHUD(animate = true) {
+  const stats = ['approval', 'economy', 'security', 'liberty'];
+  const colors = { approval: '--green', economy: '--cyan', security: '--orange', liberty: '--purple' };
+  const barColors = { approval: 'var(--green)', economy: 'var(--cyan)', security: 'var(--orange)', liberty: 'var(--purple)' };
+
+  stats.forEach(s => {
+    const v = Math.max(0, Math.min(100, state[s]));
+    state[s] = v;
+    const el = document.getElementById(`val-${s}`);
+    const bar = document.getElementById(`bar-${s}`);
+    const card = document.getElementById(`hud-${s}`);
+
+    if (animate && el._prev !== undefined && el._prev !== v) {
+      const diff = v - el._prev;
+      card.classList.add(diff > 0 ? 'pulse-green' : 'pulse-red');
+      setTimeout(() => card.classList.remove('pulse-green', 'pulse-red'), 600);
+    }
+
+    el.textContent = s === 'approval' ? v + '%' : v;
+    bar.style.width = v + '%';
+    if (v < 20) bar.style.background = 'var(--red)';
+    else bar.style.background = barColors[s];
+    el._prev = v;
+  });
+
+  document.getElementById('day-banner').textContent = `DAY ${state.day}`;
+}
+
+// ========== ORDER RENDERING ==========
+function shuffleOrders() {
+  const arr = [...ORDERS];
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function showOrder() {
+  if (state.orderQueue.length === 0) state.orderQueue = shuffleOrders();
+  const order = state.orderQueue.pop();
+  state.currentOrder = order;
+
+  const area = document.getElementById('order-area');
+  const effectsHTML = [...Object.entries(order.sign)].filter(([k,v]) => v !== 0).map(([k,v]) => {
+    const label = k.charAt(0).toUpperCase() + k.slice(1);
+    const cls = v > 0 ? 'positive' : 'negative';
+    const arrow = v > 0 ? '↑' : '↓';
+    return `<span class="order-effect ${cls}">${arrow} ${label} ${v > 0 ? '+' : ''}${v}</span>`;
+  }).join('');
+
+  area.innerHTML = `
+    <div class="order-card" id="current-card">
+      <div class="order-header">
+        <div class="order-icon" style="background:${order.color}22;color:${order.color}">
+          <i class="fa-solid ${order.icon}"></i>
+        </div>
+        <div>
+          <div class="order-category">${order.cat}</div>
+          <div class="order-title">${order.title}</div>
+        </div>
+      </div>
+      <div class="order-body">
+        <div class="order-desc">${order.desc}</div>
+        <div class="order-effects">${effectsHTML}</div>
+      </div>
+      <div class="order-actions">
+        <button class="btn-sign" onclick="decide('sign')"><i class="fa-solid fa-signature"></i> SIGN</button>
+        <button class="btn-veto" onclick="decide('veto')"><i class="fa-solid fa-ban"></i> VETO</button>
+      </div>
+    </div>
+  `;
+
+  // Animate in
+  const card = document.getElementById('current-card');
+  gsap.fromTo(card, { opacity: 0, y: 40, scale: 0.95 }, { opacity: 1, y: 0, scale: 1, duration: 0.5, ease: 'power3.out' });
+}
+
+// ========== DECISIONS ==========
+function decide(action) {
+  const order = state.currentOrder;
+  const effects = action === 'sign' ? order.sign : order.veto;
+  const eventText = action === 'sign' ? order.signEvent : order.vetoEvent;
+
+  if (action === 'sign') state.signed++; else state.vetoed++;
+
+  // Apply effects
+  Object.entries(effects).forEach(([k, v]) => { state[k] += v; });
+
+  // Animate card out
+  const card = document.getElementById('current-card');
+  const dir = action === 'sign' ? 1 : -1;
+  gsap.to(card, {
+    x: dir * 400, opacity: 0, rotation: dir * 15, duration: 0.4, ease: 'power2.in',
+    onComplete: () => {
+      updateHUD(true);
+
+      // Show event toast
+      showToast(action === 'sign' ? 'ORDER SIGNED' : 'ORDER VETOED', eventText);
+
+      // Random event every 3 days
+      if (state.day % 3 === 0 && Math.random() > 0.4) {
+        setTimeout(() => triggerRandomEvent(), 1800);
+      }
+
+      // Check game over
+      setTimeout(() => {
+        if (checkGameOver()) return;
+        state.day++;
+        updateHUD(false);
+        showOrder();
+      }, 1200);
+    }
+  });
+}
+
+function showToast(title, text) {
+  const toast = document.getElementById('event-toast');
+  document.getElementById('toast-title').textContent = title;
+  document.getElementById('toast-text').textContent = text;
+  gsap.fromTo(toast, { y: 100, opacity: 0 }, { y: 0, opacity: 1, duration: 0.4, ease: 'power3.out' });
+  toast.classList.add('show');
+  setTimeout(() => {
+    gsap.to(toast, { y: 100, opacity: 0, duration: 0.3, onComplete: () => toast.classList.remove('show') });
+  }, 2500);
+}
+
+function triggerRandomEvent() {
+  const evt = RANDOM_EVENTS[Math.floor(Math.random() * RANDOM_EVENTS.length)];
+  Object.entries(evt.effect).forEach(([k, v]) => { state[k] += v; });
+  updateHUD(true);
+  showToast(evt.title, evt.text);
+}
+
+// ========== GAME OVER ==========
+function checkGameOver() {
+  let reason = '';
+  if (state.approval <= 0) reason = 'Your approval hit 0%. The people have spoken — you\'re done.';
+  else if (state.economy <= 0) reason = 'The economy collapsed. Markets crashed, banks failed. You\'re blamed for everything.';
+  else if (state.security <= 0) reason = 'National security failed catastrophically. The nation is vulnerable and you\'re removed.';
+  else if (state.liberty <= 0) reason = 'You became a tyrant. Civil liberties gone. The Supreme Court removed you.';
+
+  if (!reason) return false;
+
+  state.playing = false;
+  document.getElementById('go-title').textContent = state.approval <= 0 ? 'VOTED OUT' : state.liberty <= 0 ? 'IMPEACHED' : 'REMOVED';
+  document.getElementById('go-reason').textContent = reason;
+  document.getElementById('go-days').textContent = state.day;
+  document.getElementById('go-signed').textContent = state.signed;
+  document.getElementById('go-vetoed').textContent = state.vetoed;
+
+  setTimeout(() => {
+    showScreen('gameover-screen');
+    gsap.fromTo('#gameover-screen', { opacity: 0 }, { opacity: 1, duration: 0.6 });
+  }, 800);
+
+  return true;
+}
+
+// ========== START ==========
+function startGame() {
+  state = initState();
+  state.orderQueue = shuffleOrders();
+  state.playing = true;
+  updateHUD(false);
+  showScreen('game-screen');
+  gsap.fromTo('#game-screen', { opacity: 0 }, { opacity: 1, duration: 0.5 });
+  showOrder();
+}
+</script>
+</body>
+</html>
