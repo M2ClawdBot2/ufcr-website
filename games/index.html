@@ -96,6 +96,17 @@
       margin-bottom: 60px;
     }
 
+    .section-header {
+      font-family: var(--font-heading);
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin: 60px 0 24px;
+      text-align: center;
+    }
+
     .games-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -175,26 +186,6 @@
     }
     .game-card:hover .game-play { gap: 14px; }
 
-    /* Coming soon card */
-    .game-card.coming-soon {
-      opacity: 0.4;
-      pointer-events: none;
-    }
-    .game-card.coming-soon::before { display: none; }
-
-    .coming-badge {
-      font-family: var(--font-heading);
-      font-size: 0.65rem;
-      font-weight: 600;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      color: var(--navy);
-      background: var(--gold);
-      padding: 4px 12px;
-      display: inline-block;
-      margin-bottom: 12px;
-    }
-
     .mini-footer {
       text-align: center;
       padding: 40px 24px;
@@ -228,9 +219,8 @@
     <h1 class="page-title">Games</h1>
     <p class="page-sub">Take a break. Play something.</p>
 
-    <h3 style="font-family: var(--font-heading); font-size: 1.5rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--gold); margin: 60px 0 24px; text-align: center;">Daily Games</h3>
+    <div class="section-header">Daily Games</div>
     <div class="games-grid">
-
       <a href="../redact/" class="game-card">
         <div class="game-icon"><i class="fas fa-square-full" style="color:var(--orange);"></i></div>
         <div class="game-tag">Daily Word Game</div>
@@ -238,7 +228,10 @@
         <p class="game-desc">Real headlines. Key words blacked out. Guess what's been censored. New puzzle every day.</p>
         <div class="game-play">Play Now <span>→</span></div>
       </a>
+    </div>
 
+    <div class="section-header">Action Games</div>
+    <div class="games-grid">
       <a href="../deport/" class="game-card">
         <div class="game-icon"><i class="fas fa-helicopter" style="color:var(--orange);"></i></div>
         <div class="game-tag">Helicopter Patrol</div>
@@ -270,14 +263,17 @@
         <p class="game-desc">Build border defenses across 10 levels. Place walls, spotlights, K-9 units, and ICE depots to stop illegals from reaching the border.</p>
         <div class="game-play">Play Now <span>&rarr;</span></div>
       </a>
+    </div>
 
-      <div class="game-card coming-soon">
-        <div class="game-icon"><i class="fas fa-gamepad" style="color:var(--gold);"></i></div>
-        <div class="coming-badge">Coming Soon</div>
-        <h2 class="game-name">???</h2>
-        <p class="game-desc">More games on the way. Stay tuned.</p>
-      </div>
-
+    <div class="section-header">Strategy Games</div>
+    <div class="games-grid">
+      <a href="../executive-order/" class="game-card">
+        <div class="game-icon"><i class="fas fa-stamp" style="color:var(--orange);"></i></div>
+        <div class="game-tag">Political Sim</div>
+        <h2 class="game-name">EXECUTIVE ORDER</h2>
+        <p class="game-desc">Sign or veto executive orders. Balance approval, economy, security, liberty. Manage factions, survive crises, win re-election.</p>
+        <div class="game-play">Play Now <span>&rarr;</span></div>
+      </a>
     </div>
   </div>
 
