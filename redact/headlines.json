@@ -3,7 +3,11 @@
     "id": 1,
     "date": "2026-02-20",
     "headline": "Ahead Of 'Sewage Crisis Of Historic Proportion,' DC Water Officials Were Focused On DEI",
-    "redacted": ["Sewage", "Officials", "DEI"],
+    "redacted": [
+      "Sewage",
+      "Officials",
+      "DEI"
+    ],
     "source": "Daily Wire",
     "context": "DC Water prioritized diversity initiatives while a massive sewage spill dumped 240 million gallons into the Potomac River.",
     "difficulty": "medium"
@@ -12,7 +16,11 @@
     "id": 2,
     "date": "2026-02-21",
     "headline": "Trump Admin Moves Closer To Yanking Federal Funding For Minnesota Over Trans Athletes Probe",
-    "redacted": ["Yanking", "Minnesota", "Athletes"],
+    "redacted": [
+      "Yanking",
+      "Minnesota",
+      "Athletes"
+    ],
     "source": "Daily Wire",
     "context": "The Trump administration threatened to pull federal funding from Minnesota for refusing to comply with Title IX rules on transgender athletes.",
     "difficulty": "medium"
@@ -21,7 +29,11 @@
     "id": 3,
     "date": "2026-02-22",
     "headline": "California Violated Federal Law By Hiding Children's Gender Transitions, Education Department Finds",
-    "redacted": ["California", "Hiding", "Transitions"],
+    "redacted": [
+      "California",
+      "Hiding",
+      "Transitions"
+    ],
     "source": "Daily Wire",
     "context": "The Education Department found California put at least 300 students on Gender Support Plans without parental knowledge.",
     "difficulty": "medium"
@@ -30,7 +42,11 @@
     "id": 4,
     "date": "2026-02-23",
     "headline": "Probe Launched Into 'Sharia City' Plan On U.S. Soil: 'You Obey America's Laws'",
-    "redacted": ["Probe", "Sharia", "Laws"],
+    "redacted": [
+      "Probe",
+      "Sharia",
+      "Laws"
+    ],
     "source": "Daily Wire",
     "context": "Texas AG Ken Paxton launched an investigation into a planned development with concerns about up to 20,000 foreign nationals.",
     "difficulty": "hard"
@@ -39,7 +55,11 @@
     "id": 5,
     "date": "2026-02-24",
     "headline": "Ohio May Protect Parents Who Won't 'Affirm' Their Child's 'Gender Identity'",
-    "redacted": ["Ohio", "Parents", "Affirm"],
+    "redacted": [
+      "Ohio",
+      "Parents",
+      "Affirm"
+    ],
     "source": "Daily Wire",
     "context": "Ohio legislators moved to protect parents from CPS investigations for not affirming their child's gender identity.",
     "difficulty": "medium"
@@ -48,7 +68,11 @@
     "id": 6,
     "date": "2026-02-25",
     "headline": "Virginia Democrats Move To Soften Robbery Laws",
-    "redacted": ["Virginia", "Soften", "Robbery"],
+    "redacted": [
+      "Virginia",
+      "Soften",
+      "Robbery"
+    ],
     "source": "Daily Wire",
     "context": "Virginia Democrats pushed legislation to reduce penalties for robbery offenses.",
     "difficulty": "easy"
@@ -57,7 +81,11 @@
     "id": 7,
     "date": "2026-02-26",
     "headline": "The GOP's 2026 Wake-Up Call: Strategies And Statistics",
-    "redacted": ["GOP", "Wake-Up", "Statistics"],
+    "redacted": [
+      "GOP",
+      "Wake-Up",
+      "Statistics"
+    ],
     "source": "Daily Wire",
     "context": "Republicans sounded alarms after a Texas state Senate race in a district Trump won by 17 points shifted 14 points toward Democrats.",
     "difficulty": "easy"
@@ -66,7 +94,11 @@
     "id": 8,
     "date": "2026-02-27",
     "headline": "Border Czar Tom Homan Signals ICE May Target Sanctuary Cities Nationwide",
-    "redacted": ["Homan", "Sanctuary", "Nationwide"],
+    "redacted": [
+      "Homan",
+      "Sanctuary",
+      "Nationwide"
+    ],
     "source": "Fox News",
     "context": "After 4,000+ arrests in Minnesota under Operation Metro Surge, Homan left the door open for ICE deployment to other sanctuary cities.",
     "difficulty": "medium"
@@ -75,7 +107,11 @@
     "id": 9,
     "date": "2026-02-28",
     "headline": "Minnesota ICE Protests Allegedly Driven By Outside Actors, CEO Warns",
-    "redacted": ["Minnesota", "Protests", "Actors"],
+    "redacted": [
+      "Minnesota",
+      "Protests",
+      "Actors"
+    ],
     "source": "Fox News",
     "context": "Anti-ICE protests outside the Bishop Henry Whipple Federal Building in St. Paul were allegedly bankrolled by shadowy outside interests.",
     "difficulty": "medium"
@@ -84,7 +120,11 @@
     "id": 10,
     "date": "2026-03-01",
     "headline": "Higher Education Loses 9,000 Jobs As Trump Policies Impact Universities",
-    "redacted": ["Education", "Jobs", "Universities"],
+    "redacted": [
+      "Education",
+      "Jobs",
+      "Universities"
+    ],
     "source": "Fox News",
     "context": "Universities hemorrhaged thousands of jobs as Trump administration policies targeting higher education took effect.",
     "difficulty": "easy"
@@ -93,7 +133,11 @@
     "id": 11,
     "date": "2026-03-02",
     "headline": "Fox News 'Antisemitism Exposed' Newsletter: Trump Tells Harvard, 'Show Me The Money'",
-    "redacted": ["Antisemitism", "Harvard", "Money"],
+    "redacted": [
+      "Antisemitism",
+      "Harvard",
+      "Money"
+    ],
     "source": "Fox News",
     "context": "Trump escalated his battle with Harvard University over federal funding amid antisemitism concerns on campus.",
     "difficulty": "medium"
@@ -102,7 +146,11 @@
     "id": 12,
     "date": "2026-03-03",
     "headline": "Ex-SJSU Volleyball Coach Reacts After Trump Admin Rules School Violated Title IX With Trans Athlete Handling",
-    "redacted": ["Volleyball", "Violated", "Trans"],
+    "redacted": [
+      "Volleyball",
+      "Violated",
+      "Trans"
+    ],
     "source": "Fox News",
     "context": "The Department of Education determined San Jose State University violated Title IX in its handling of a transgender volleyball player.",
     "difficulty": "hard"
@@ -111,7 +159,11 @@
     "id": 13,
     "date": "2026-03-04",
     "headline": "One Year Back In The Oval Office, Trump White House Says Every Major Campaign Promise Delivered",
-    "redacted": ["Year", "Promise", "Delivered"],
+    "redacted": [
+      "Year",
+      "Promise",
+      "Delivered"
+    ],
     "source": "Fox News",
     "context": "On the one-year anniversary of Trump's second term, the White House claimed all major campaign promises had been fulfilled.",
     "difficulty": "easy"
@@ -120,7 +172,11 @@
     "id": 14,
     "date": "2026-03-05",
     "headline": "Top Trump Admin Education Official Exposes Blue State Financial Aid Fraud Offenders",
-    "redacted": ["Education", "Fraud", "Offenders"],
+    "redacted": [
+      "Education",
+      "Fraud",
+      "Offenders"
+    ],
     "source": "Fox News",
     "context": "A top Trump education official exposed blue states that were among the worst for federal student aid fraud.",
     "difficulty": "medium"
@@ -129,7 +185,11 @@
     "id": 15,
     "date": "2026-03-06",
     "headline": "Laura: President Trump Exposes The Haters",
-    "redacted": ["Laura", "Exposes", "Haters"],
+    "redacted": [
+      "Laura",
+      "Exposes",
+      "Haters"
+    ],
     "source": "Fox News",
     "context": "Laura Ingraham called out anti-Americanism among the Left on The Ingraham Angle.",
     "difficulty": "easy"
@@ -138,7 +198,11 @@
     "id": 16,
     "date": "2026-03-07",
     "headline": "Fired Washington Post Staffers Outraged When Not Allowed To Enter Building",
-    "redacted": ["Fired", "Staffers", "Building"],
+    "redacted": [
+      "Fired",
+      "Staffers",
+      "Building"
+    ],
     "source": "Breitbart",
     "context": "Laid-off Washington Post employees were filmed being denied entry to the building, highlighting media industry turmoil.",
     "difficulty": "medium"
@@ -147,7 +211,11 @@
     "id": 17,
     "date": "2026-03-08",
     "headline": "Washington Post Beclowns Itself With Trump National Guard Story",
-    "redacted": ["Beclowns", "Guard", "Story"],
+    "redacted": [
+      "Beclowns",
+      "Guard",
+      "Story"
+    ],
     "source": "Breitbart",
     "context": "Breitbart accused the Washington Post of lying about National Guard troops being quietly withdrawn from US cities.",
     "difficulty": "hard"
@@ -156,7 +224,11 @@
     "id": 18,
     "date": "2026-03-09",
     "headline": "Hassett Slams New York Fed Tariff Study As An 'Embarrassment'",
-    "redacted": ["Hassett", "Tariff", "Embarrassment"],
+    "redacted": [
+      "Hassett",
+      "Tariff",
+      "Embarrassment"
+    ],
     "source": "Breitbart",
     "context": "White House economic advisor Kevin Hassett dismissed a New York Fed study on tariff costs as partisan and poorly analyzed.",
     "difficulty": "hard"
@@ -165,7 +237,11 @@
     "id": 19,
     "date": "2026-03-10",
     "headline": "'The Invisible Coup' Billboard Truck Rolls Up On Mexican Embassy To Expose Consulates Swaying U.S. Elections",
-    "redacted": ["Billboard", "Embassy", "Elections"],
+    "redacted": [
+      "Billboard",
+      "Embassy",
+      "Elections"
+    ],
     "source": "Breitbart",
     "context": "A billboard truck outside the Mexican Embassy promoted Peter Schweizer's book about Mexican consulates influencing American elections.",
     "difficulty": "hard"
@@ -174,7 +250,11 @@
     "id": 20,
     "date": "2026-03-11",
     "headline": "Mexico's Election Plot Unmasked: How Mexico's 50+ Consulates Are Running Shadow Campaign To Sway U.S. Elections",
-    "redacted": ["Consulates", "Shadow", "Sway"],
+    "redacted": [
+      "Consulates",
+      "Shadow",
+      "Sway"
+    ],
     "source": "Breitbart",
     "context": "Peter Schweizer alleged Mexico's 50+ US consulates run shadow campaigns to influence American elections in favor of Mexican interests.",
     "difficulty": "hard"
@@ -183,7 +263,11 @@
     "id": 21,
     "date": "2026-03-12",
     "headline": "Newsom Begs Donors To Dethrone Schweizer's 'Invisible Coup' From NYT Bestseller List",
-    "redacted": ["Newsom", "Dethrone", "Bestseller"],
+    "redacted": [
+      "Newsom",
+      "Dethrone",
+      "Bestseller"
+    ],
     "source": "Breitbart",
     "context": "California Governor Gavin Newsom asked donors to buy competing books to knock The Invisible Coup off the NYT bestseller list.",
     "difficulty": "medium"
@@ -192,7 +276,11 @@
     "id": 22,
     "date": "2026-03-13",
     "headline": "The EU Is Pressuring Big Tech To Silence Americans",
-    "redacted": ["EU", "Tech", "Silence"],
+    "redacted": [
+      "EU",
+      "Tech",
+      "Silence"
+    ],
     "source": "Washington Examiner",
     "context": "The Washington Examiner warned that EU censorship legislation disguised as child protection was targeting American free speech online.",
     "difficulty": "easy"
@@ -201,7 +289,11 @@
     "id": 23,
     "date": "2026-03-14",
     "headline": "The Viral Meltdown Over A Pride Flag Is Much Ado About Nothing",
-    "redacted": ["Meltdown", "Pride", "Nothing"],
+    "redacted": [
+      "Meltdown",
+      "Pride",
+      "Nothing"
+    ],
     "source": "Washington Examiner",
     "context": "The Washington Examiner dismissed outrage over Trump removing pride flags from the Stonewall National Monument as overblown.",
     "difficulty": "easy"
@@ -210,7 +302,11 @@
     "id": 24,
     "date": "2026-03-15",
     "headline": "AI Rejects Truth And Virtue Because Our Culture Taught It To",
-    "redacted": ["AI", "Truth", "Culture"],
+    "redacted": [
+      "AI",
+      "Truth",
+      "Culture"
+    ],
     "source": "The Federalist",
     "context": "The Federalist argued that AI reflects fallen human nature and Christians should approach the technology with care.",
     "difficulty": "medium"
@@ -219,7 +315,11 @@
     "id": 25,
     "date": "2026-03-16",
     "headline": "Colbert's Democrat Extravaganza Collides With FCC's 'Equal Time' Rule",
-    "redacted": ["Colbert", "Extravaganza", "Equal"],
+    "redacted": [
+      "Colbert",
+      "Extravaganza",
+      "Equal"
+    ],
     "source": "The Federalist",
     "context": "The Federalist pushed back on claims that CBS censored Stephen Colbert, arguing the FCC's equal time rule applied to his Democrat-heavy segments.",
     "difficulty": "medium"
@@ -228,7 +328,11 @@
     "id": 26,
     "date": "2026-03-17",
     "headline": "Apple News Boosts Left-Leaning News Outlets, Shuts Out Conservative Sources: Watchdog",
-    "redacted": ["Apple", "Boosts", "Conservative"],
+    "redacted": [
+      "Apple",
+      "Boosts",
+      "Conservative"
+    ],
     "source": "Fox Business",
     "context": "A watchdog report found Apple News systematically favored liberal outlets while excluding conservative media sources.",
     "difficulty": "easy"
@@ -237,7 +341,11 @@
     "id": 27,
     "date": "2026-03-18",
     "headline": "DOGE At One Year: Efficiency Department Sparks Lasting Changes In Federal Spending Habits",
-    "redacted": ["DOGE", "Efficiency", "Spending"],
+    "redacted": [
+      "DOGE",
+      "Efficiency",
+      "Spending"
+    ],
     "source": "Washington Times",
     "context": "One year in, DOGE was credited with stopping $100-200 billion in zombie payments despite Elon Musk's departure from the department.",
     "difficulty": "easy"
@@ -246,7 +354,11 @@
     "id": 28,
     "date": "2026-03-19",
     "headline": "DEI Disaster: Washington D.C. Is Now Literally Flooded With Poop",
-    "redacted": ["DEI", "Flooded", "Poop"],
+    "redacted": [
+      "DEI",
+      "Flooded",
+      "Poop"
+    ],
     "source": "Daily Wire",
     "context": "The Daily Wire blamed DEI-focused leadership at DC Water for the historic Potomac sewage spill.",
     "difficulty": "easy"
@@ -255,7 +367,11 @@
     "id": 29,
     "date": "2026-03-20",
     "headline": "DC Sewage Disaster: Why Are Climate-Obsessed Democrats Silent On This Mess?",
-    "redacted": ["Sewage", "Democrats", "Silent"],
+    "redacted": [
+      "Sewage",
+      "Democrats",
+      "Silent"
+    ],
     "source": "Fox News",
     "context": "Fox News called out Democratic leaders for their silence as Trump called in FEMA to address the Potomac sewage crisis.",
     "difficulty": "medium"
@@ -264,7 +380,11 @@
     "id": 30,
     "date": "2026-03-21",
     "headline": "Mayor Muriel Bowser Declares Disaster Emergency Over Potomac Sewage Spill",
-    "redacted": ["Bowser", "Disaster", "Potomac"],
+    "redacted": [
+      "Bowser",
+      "Disaster",
+      "Potomac"
+    ],
     "source": "Fox News",
     "context": "DC Mayor Bowser declared an emergency after 240 million gallons of sewage were dumped into the Potomac River.",
     "difficulty": "medium"
@@ -273,7 +393,11 @@
     "id": 31,
     "date": "2026-03-22",
     "headline": "Democrats Reveal Their 2026 Strategy",
-    "redacted": ["Democrats", "Reveal", "Strategy"],
+    "redacted": [
+      "Democrats",
+      "Reveal",
+      "Strategy"
+    ],
     "source": "Daily Wire",
     "context": "Daily Wire reported on the emerging Democratic strategy heading into the 2026 midterm elections.",
     "difficulty": "easy"
@@ -282,7 +406,11 @@
     "id": 32,
     "date": "2026-03-23",
     "headline": "US Appeals Court Upholds Trump's Immigration Detention Policy",
-    "redacted": ["Appeals", "Upholds", "Detention"],
+    "redacted": [
+      "Appeals",
+      "Upholds",
+      "Detention"
+    ],
     "source": "Reuters",
     "context": "A conservative 2-1 panel of the 5th Circuit upheld mandatory detention without bond for immigrants arrested in ICE crackdowns.",
     "difficulty": "medium"
@@ -291,7 +419,11 @@
     "id": 33,
     "date": "2026-03-24",
     "headline": "Deporting Censorship: US Targets UK Government Ally Over Free Speech",
-    "redacted": ["Deporting", "Censorship", "Ally"],
+    "redacted": [
+      "Deporting",
+      "Censorship",
+      "Ally"
+    ],
     "source": "RealClearInvestigations",
     "context": "Secretary Rubio moved to deport a British national who led efforts to censor Americans and harm US media outlets including The Federalist.",
     "difficulty": "hard"
@@ -300,7 +432,11 @@
     "id": 34,
     "date": "2026-03-25",
     "headline": "Potomac Sewage Spill Sends E. Coli 12,000 Times Above Safe Limits",
-    "redacted": ["Potomac", "Coli", "Limits"],
+    "redacted": [
+      "Potomac",
+      "Coli",
+      "Limits"
+    ],
     "source": "Fox News",
     "context": "E. coli contamination near the Potomac sewage spill reached 12,000 times above safe levels as 300 million gallons entered the river.",
     "difficulty": "medium"
@@ -309,7 +445,11 @@
     "id": 35,
     "date": "2026-03-26",
     "headline": "'Radical Left' Environmental Hazard? Trump's Potomac Sewage Dare To Dems",
-    "redacted": ["Radical", "Hazard", "Dare"],
+    "redacted": [
+      "Radical",
+      "Hazard",
+      "Dare"
+    ],
     "source": "Daily Wire",
     "context": "Trump blamed the radical left for the Potomac sewage crisis and challenged Democrats to take responsibility.",
     "difficulty": "medium"
@@ -318,7 +458,11 @@
     "id": 36,
     "date": "2026-03-27",
     "headline": "University Presidents Admit Colleges 'Lost Their Mission' As Trump Pushes Education Overhaul",
-    "redacted": ["Presidents", "Mission", "Overhaul"],
+    "redacted": [
+      "Presidents",
+      "Mission",
+      "Overhaul"
+    ],
     "source": "Fox News",
     "context": "Multiple university presidents acknowledged higher education had lost its way as Trump pushed sweeping education reforms.",
     "difficulty": "medium"
@@ -327,7 +471,11 @@
     "id": 37,
     "date": "2026-03-28",
     "headline": "Schumer Melts Down Over Pride Flag Removal At Stonewall National Monument",
-    "redacted": ["Schumer", "Flag", "Stonewall"],
+    "redacted": [
+      "Schumer",
+      "Flag",
+      "Stonewall"
+    ],
     "source": "Conservative Institute",
     "context": "Chuck Schumer introduced legislation to authorize the pride flag's presence at Stonewall after Trump had it removed from federal property.",
     "difficulty": "medium"
@@ -336,9 +484,104 @@
     "id": 38,
     "date": "2026-03-29",
     "headline": "Trump Has Been 'Very Clear' In Message To Iran, State Department Spokesperson Says",
-    "redacted": ["Clear", "Iran", "Spokesperson"],
+    "redacted": [
+      "Clear",
+      "Iran",
+      "Spokesperson"
+    ],
     "source": "Fox News",
     "context": "State Department spokesperson Tommy Pigott discussed possible Trump administration actions amid ongoing protests in Iran.",
+    "difficulty": "medium"
+  },
+  {
+    "id": 39,
+    "date": "2026-03-30",
+    "headline": "Texas DPS Drone Detects Illegal Border Crossing, Migrants Tagged With Cartel Cargo Tags",
+    "redacted": [
+      "Drone",
+      "Migrants",
+      "Cartel"
+    ],
+    "source": "Breitbart",
+    "context": "A Texas DPS drone caught three illegal immigrants moments after crossing the Rio Grande, one wearing colored wristbands used as cartel tracking tags.",
+    "difficulty": "medium"
+  },
+  {
+    "id": 40,
+    "date": "2026-03-31",
+    "headline": "Trump Admin To Re-Vet Refugees Biden Resettled In U.S.",
+    "redacted": [
+      "Refugees",
+      "Biden",
+      "Resettled"
+    ],
+    "source": "Breitbart",
+    "context": "USCIS announced plans to re-vet refugees placed in American communities during the Biden administration over security concerns.",
+    "difficulty": "medium"
+  },
+  {
+    "id": 41,
+    "date": "2026-04-01",
+    "headline": "CIA Yanks 19 Docs Compromised By Leftist Activism Including Threat Assessment Targeting Traditional Motherhood",
+    "redacted": [
+      "Yanks",
+      "Compromised",
+      "Motherhood"
+    ],
+    "source": "The Federalist",
+    "context": "The CIA pulled 19 internal documents found to be influenced by ideological bias, including one that flagged traditional motherhood as a security concern.",
+    "difficulty": "hard"
+  },
+  {
+    "id": 42,
+    "date": "2026-04-02",
+    "headline": "Blackburn Sends Letter To Apple CEO Seeking Answers On News App's Alleged Conservative Bias",
+    "redacted": [
+      "Blackburn",
+      "Apple",
+      "Bias"
+    ],
+    "source": "Fox News",
+    "context": "Senator Marsha Blackburn demanded answers from Tim Cook after reports that Apple News systematically suppressed conservative publications.",
+    "difficulty": "medium"
+  },
+  {
+    "id": 43,
+    "date": "2026-04-03",
+    "headline": "Big Four News Apps Silence Detransitioner's $2 Million Landmark Trial Verdict",
+    "redacted": [
+      "Detransitioner",
+      "Million",
+      "Verdict"
+    ],
+    "source": "NewsBusters",
+    "context": "Major news apps including Apple News ignored a landmark jury verdict awarding $2 million to a detransitioner in a medical malpractice case.",
+    "difficulty": "hard"
+  },
+  {
+    "id": 44,
+    "date": "2026-04-04",
+    "headline": "Trump Imposes New Tariffs, Denounces Supreme Court Justices As A Disgrace After Ruling",
+    "redacted": [
+      "Tariffs",
+      "Justices",
+      "Disgrace"
+    ],
+    "source": "Fox News",
+    "context": "Trump imposed a new 15 percent global tariff and lashed out at the Supreme Court after it struck down his emergency tariffs as exceeding presidential authority.",
+    "difficulty": "medium"
+  },
+  {
+    "id": 45,
+    "date": "2026-04-05",
+    "headline": "Detroit Officers Suspended For Cooperating With Border Patrol On Immigration Enforcement",
+    "redacted": [
+      "Detroit",
+      "Suspended",
+      "Patrol"
+    ],
+    "source": "Breitbart",
+    "context": "Two Detroit police officers were suspended after cooperating with Border Patrol agents, sparking outrage over sanctuary city policies.",
     "difficulty": "medium"
   }
 ]
