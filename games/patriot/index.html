@@ -1,1 +1,105 @@
-Placeholder for PATRIOT game arena
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PATRIOT Prototype</title>
+  <style>
+    body { background: #001845; color: white; font-family: sans-serif; margin: 0; overflow: hidden; }
+    canvas { display: block; margin: 0 auto; }
+    .elixir { position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); background: #FA4616; padding: 10px; border-radius: 20px; font-weight: bold; }
+    .cards { position: absolute; bottom: 60px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; }
+    .card { width: 60px; height: 90px; background: #FFFFFF; color: black; text-align: center; line-height: 90px; border-radius: 10px; cursor: pointer; user-select: none; }
+    .card.disabled { opacity: 0.5; cursor: not-allowed; }
+  </style>
+</head>
+<body>
+  <canvas id="arena" width="360" height="640"></canvas>
+  <div class="elixir">Elixir: <span id="elixir-count">0</span></div>
+  <div class="cards">
+    <div class="card" data-cost="3" data-type="lizard">Lizard (3)</div>
+    <div class="card" data-cost="3" data-type="snake">Snake (3)</div>
+    <div class="card" data-cost="5" data-type="behemoth">Behemoth (5)</div>
+    <div class="card" data-cost="4" data-type="assassin">Assassin (4)</div>
+  </div>
+  <script>
+    const canvas = document.getElementById('arena');
+    const ctx = canvas.getContext('2d');
+    let elixir = 0;
+    const maxElixir = 10;
+    const elixirCount = document.getElementById('elixir-count');
+    const units = [];
+    const towers = [
+      { x: 20, y: 20, hp: 1000, side: 'opponent', type: 'princess' },
+      { x: 300, y: 20, hp: 1000, side: 'opponent', type: 'princess' },
+      { x: 180, y: 20, hp: 2000, side: 'opponent', type: 'king' },
+      { x: 20, y: 540, hp: 1000, side: 'player', type: 'princess' },
+      { x: 300, y: 540, hp: 1000, side: 'player', type: 'princess' },
+      { x: 180, y: 540, hp: 2000, side: 'player', type: 'king' }
+    ];
+
+    function drawArena() {
+      ctx.fillStyle = '#0A0E1A';
+      ctx.fillRect(0, 0, 360, 640);
+      ctx.fillStyle = '#0021A5';
+      ctx.fillRect(0, 320, 360, 40); // River
+      // Draw towers
+      towers.forEach(tower => {
+        ctx.fillStyle = tower.side === 'player' ? '#F0A830' : '#FA4616';
+        ctx.fillRect(tower.x, tower.y, 40, 80);
+        ctx.fillStyle = 'white';
+        ctx.fillText(tower.hp, tower.x + 10, tower.y + 40);
+      });
+    }
+
+    function drawUnits() {
+      units.forEach(unit => {
+        ctx.fillStyle = unit.color;
+        ctx.fillRect(unit.x, unit.y, 20, 20);
+        unit.y -= unit.speed;
+        // Simple collision with towers (placeholder)
+        if (unit.y < 100) unit.y = 600; // Loop for demo
+      });
+    }
+
+    function gameLoop() {
+      drawArena();
+      drawUnits();
+      requestAnimationFrame(gameLoop);
+    }
+
+    setInterval(() => {
+      if (elixir < maxElixir) {
+        elixir += 1;
+        elixirCount.textContent = elixir;
+      }
+      updateCards();
+    }, 1000);
+
+    function updateCards() {
+      document.querySelectorAll('.card').forEach(card => {
+        const cost = parseInt(card.dataset.cost);
+        if (elixir < cost) {
+          card.classList.add('disabled');
+        } else {
+          card.classList.remove('disabled');
+        }
+      });
+    }
+
+    document.querySelectorAll('.card').forEach(card => {
+      card.addEventListener('click', () => {
+        const cost = parseInt(card.dataset.cost);
+        if (elixir >= cost && !card.classList.contains('disabled')) {
+          elixir -= cost;
+          elixirCount.textContent = elixir;
+          units.push({ x: Math.random() * 360, y: 600, color: '#00FF00', speed: 1 });
+          alert(`Deployed ${card.textContent} in a random lane!`);
+        }
+      });
+    });
+
+    gameLoop();
+  </script>
+</body>
+</html>
