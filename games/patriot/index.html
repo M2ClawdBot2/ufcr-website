@@ -370,23 +370,23 @@ function syncGameState() {
 
   const towerState = towers.map(t => ({ hp: Math.round(t.hp) }));
 
-  // Compact unit snapshot with velocity for dead reckoning
+  // Normalize to 0-1 range using actual canvas dimensions
+  // Guest will denormalize using its own W/H
   const unitState = units.map(u => {
-    // Calculate velocity from waypoint movement
     let vx = 0, vy = 0;
     if (u.wpIdx < u.waypoints.length) {
       const wp = u.waypoints[u.wpIdx];
       const dx = wp.x - u.x, dy = wp.y - u.y, d = Math.hypot(dx, dy);
-      if (d > 1) { vx = (dx/d) * u.spd; vy = (dy/d) * u.spd; }
+      if (d > 1) { vx = (dx/d) * u.spd / W; vy = (dy/d) * u.spd / H; }
     }
     return {
       t: u.type,
       s: u.side === 'player' ? 0 : 1,
-      x: +(u.x / W).toFixed(3),
-      y: +(u.y / H).toFixed(3),
+      x: +(u.x / W).toFixed(4),
+      y: +(u.y / H).toFixed(4),
       h: Math.round(u.hp),
-      vx: +vx.toFixed(2),
-      vy: +vy.toFixed(2),
+      vx: +vx.toFixed(4),
+      vy: +vy.toFixed(4),
       id: u.syncId || (u.syncId = ++unitIdCounter)
     };
   });
@@ -469,12 +469,11 @@ function reconcileUnits(hostUnits) {
 
     const local = units.find(u => u.syncId === hu.id);
     if (local) {
-      // Set target position and velocity for dead reckoning
       local.targetX = guestX;
       local.targetY = guestY;
-      // Flip velocity: X stays same, Y flips
-      local.velX = (hu.vx || 0) * (W/360);
-      local.velY = -(hu.vy || 0) * (W/360); // flip Y direction for guest perspective
+      // Velocity: X same, Y flipped (normalized then scaled to guest dims)
+      local.velX = (hu.vx || 0) * W;
+      local.velY = -(hu.vy || 0) * H;
       local.hp = hu.h;
       local.side = guestSide;
     } else {
