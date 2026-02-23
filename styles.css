@@ -961,40 +961,55 @@ a { text-decoration: none; color: inherit; }
 }
 
 .minigame-card {
-  background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(255,255,255,0.12);
-  padding: 40px 32px;
-  text-align: center;
-  transition: all 0.4s var(--ease);
-  backdrop-filter: blur(6px);
+  background: linear-gradient(160deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02));
+  border: 1px solid rgba(255,255,255,0.14);
+  padding: 44px 36px;
+  text-align: left;
+  transition: all 0.45s var(--ease);
+  backdrop-filter: blur(8px);
+  position: relative;
+  overflow: hidden;
+}
+
+.minigame-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(360px 160px at 10% 0%, rgba(255,215,0,0.22), transparent 60%);
+  opacity: 0;
+  transition: opacity 0.45s var(--ease);
 }
 
 .minigame-card:hover {
-  transform: translateY(-6px) scale(1.01);
+  transform: translateY(-6px);
   border-color: var(--gold);
-  box-shadow: 0 20px 50px rgba(255,140,0,0.15);
+  box-shadow: 0 20px 50px rgba(255,140,0,0.18);
 }
+
+.minigame-card:hover::after { opacity: 1; }
 
 .minigame-card.alt:hover { border-color: var(--orange); }
 
 .minigame-icon {
-  font-size: 2.4rem;
+  font-size: 2.2rem;
   color: var(--gold);
-  margin-bottom: 16px;
+  margin-bottom: 18px;
 }
 
 .minigame-card h3 {
   font-family: var(--font-heading);
-  font-size: 1.4rem;
-  letter-spacing: 0.02em;
+  font-size: 1.5rem;
+  letter-spacing: 0.03em;
   margin-bottom: 12px;
 }
 
 .minigame-card p {
-  color: rgba(255,255,255,0.7);
-  margin-bottom: 24px;
+  color: rgba(255,255,255,0.72);
+  margin-bottom: 26px;
   line-height: 1.6;
 }
+
+.minigame-card .btn { position: relative; z-index: 1; }
 
 @keyframes minigameGlow {
   0%, 100% { opacity: 0.7; transform: translateY(0); }
@@ -1013,6 +1028,7 @@ a { text-decoration: none; color: inherit; }
 
 @media (max-width: 768px) {
   .minigames-grid { grid-template-columns: 1fr; }
+  .minigame-card { padding: 36px 28px; }
   .minigames-ring { width: 360px; height: 360px; top: -80px; right: -120px; }
 }
 
