@@ -384,13 +384,19 @@ function listenForHostState() {
   if (isHost || !myMatchId) return;
 
   // Listen for tower state updates from host
+  // Host tower order: [0-2] = host's "ai" (top), [3-5] = host's "player" (bottom)
+  // Guest perspective is flipped: host's "ai" towers are guest's "player" towers
+  // So we swap: host[0-2] -> guest[3-5], host[3-5] -> guest[0-2]
   fbDb.ref('matches/' + myMatchId + '/towerState').on('value', snap => {
     const state = snap.val();
-    if (!state || !Array.isArray(state)) return;
-    // Apply host's tower HP to our local towers
-    for (let i = 0; i < Math.min(state.length, towers.length); i++) {
-      towers[i].hp = state[i].hp;
-    }
+    if (!state || !Array.isArray(state) || state.length < 6) return;
+    // Host's ai towers (0,1,2) = guest's player towers (3,4,5) and vice versa
+    towers[3].hp = state[0].hp; // host ai princess L -> guest player princess L
+    towers[4].hp = state[1].hp; // host ai princess R -> guest player princess R
+    towers[5].hp = state[2].hp; // host ai king -> guest player king
+    towers[0].hp = state[3].hp; // host player princess L -> guest ai princess L
+    towers[1].hp = state[4].hp; // host player princess R -> guest ai princess R
+    towers[2].hp = state[5].hp; // host player king -> guest ai king
   });
 
   // Listen for authoritative game result from host
@@ -1146,8 +1152,13 @@ function updateUnits(dt) {
         const c=tc(t);
         if (dist(u,c) <= u.range+S(28)) {
           u.atkTimer=u.atkSpd; attacked=true;
-          if(u.ranged) projectiles.push({x:u.x,y:u.y,tx:c.x,ty:c.y,towerRef:t,dmg:u.dmg,spd:S(6),color:u.color});
-          else { t.hp-=u.dmg; dmgNums.push({x:c.x,y:c.y-10,val:u.dmg,life:1,color:'#ffab00'}); }
+          if(u.ranged) {
+            if(shouldDamageTower()) projectiles.push({x:u.x,y:u.y,tx:c.x,ty:c.y,towerRef:t,dmg:u.dmg,spd:S(6),color:u.color});
+            else projectiles.push({x:u.x,y:u.y,tx:c.x,ty:c.y,dmg:0,spd:S(6),color:u.color}); // visual only
+          } else {
+            if(shouldDamageTower()) { t.hp-=u.dmg; dmgNums.push({x:c.x,y:c.y-10,val:u.dmg,life:1,color:'#ffab00'}); }
+            else { dmgNums.push({x:c.x,y:c.y-10,val:u.dmg,life:1,color:'#ffab00'}); } // visual only
+          }
           break;
         }
       }
@@ -1180,6 +1191,12 @@ function updateTowers(dt) {
   });
 }
 
+// In online mode as guest, don't let local unit attacks damage towers
+// (host syncs authoritative tower HP). Only tower arrow projectiles still fire for visual.
+function shouldDamageTower() {
+  return !isOnline || isHost;
+}
+
 function updateProjectiles(dt) {
   for(let i=projectiles.length-1;i>=0;i--){
     const p=projectiles[i];
@@ -1188,7 +1205,10 @@ function updateProjectiles(dt) {
     else{tx=(p.target&&p.target.hp>0)?p.target.x:(p.tx||p.x);ty=(p.target&&p.target.hp>0)?p.target.y:(p.ty||p.y);}
     const dx=tx-p.x,dy=ty-p.y,d=Math.hypot(dx,dy);
     if(d<S(8)){
-      if(p.towerRef){p.towerRef.hp-=p.dmg;dmgNums.push({x:tx,y:ty-10,val:p.dmg,life:1,color:'#ffab00'});}
+      if(p.towerRef){
+        if(shouldDamageTower()){p.towerRef.hp-=p.dmg;}
+        dmgNums.push({x:tx,y:ty-10,val:p.dmg,life:1,color:'#ffab00'});
+      }
       else if(p.target&&p.target.hp>0) dealDamage(p.target,p.dmg,p);
       projectiles.splice(i,1);
     } else {const s=p.spd*dt*60;p.x+=(dx/d)*s;p.y+=(dy/d)*s;}
