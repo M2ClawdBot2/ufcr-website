@@ -365,7 +365,7 @@ let unitIdCounter = 0;
 function syncGameState() {
   if (!isHost || !myMatchId || !fbDb) return;
   const now = Date.now();
-  if (now - lastStateSync < 1500) return;
+  if (now - lastStateSync < 500) return;
   lastStateSync = now;
 
   const towerState = towers.map(t => ({ hp: Math.round(t.hp) }));
@@ -439,15 +439,10 @@ function listenForHostState() {
 
 // Reconcile guest's local units with host's snapshot
 function reconcileUnits(hostUnits) {
-  // Build map of host units by syncId
   const hostMap = new Map();
   hostUnits.forEach(hu => hostMap.set(hu.id, hu));
 
-  // Flip perspective: host's "player" (s=0) = guest's "ai", host's "ai" (s=1) = guest's "player"
-  // Also flip Y coordinates
-
-  // Remove local units that don't exist in host state
-  const localIds = new Set(units.map(u => u.syncId).filter(Boolean));
+  // Remove local units that host no longer has (they died)
   for (let i = units.length - 1; i >= 0; i--) {
     if (units[i].syncId && !hostMap.has(units[i].syncId)) {
       spawnDeathFX(units[i].x, units[i].y, units[i].color);
@@ -455,27 +450,27 @@ function reconcileUnits(hostUnits) {
     }
   }
 
-  // Update existing units and add new ones
+  // Update existing and add new units
   hostUnits.forEach(hu => {
     const guestSide = hu.s === 0 ? 'ai' : 'player'; // flip sides
     const guestX = hu.x * W;
     const guestY = (1 - hu.y) * H; // flip Y
 
-    // Find matching local unit
     const local = units.find(u => u.syncId === hu.id);
     if (local) {
-      // Lerp position toward host's authoritative position
-      local.x += (guestX - local.x) * 0.3;
-      local.y += (guestY - local.y) * 0.3;
+      // Set target position for smooth interpolation
+      local.targetX = guestX;
+      local.targetY = guestY;
       local.hp = hu.h;
       local.side = guestSide;
     } else {
-      // New unit — spawn it
+      // New unit — spawn at correct position
       const def = ALL_CARDS[hu.t];
       if (!def) return;
       units.push({
         type: hu.t, side: guestSide,
         x: guestX, y: guestY,
+        targetX: guestX, targetY: guestY,
         hp: hu.h, maxHp: def.hp,
         dmg: def.dmg, spd: def.spd * (W/360),
         range: S(def.range), atkSpd: def.atkSpd,
@@ -1675,6 +1670,26 @@ function initGame() {
   setupInput();
   lastFrameTime=0;
   requestAnimationFrame(gameLoop);
+
+  // Host: also run sim via setInterval so it doesn't pause in background tabs
+  if (isOnline && isHost) {
+    if (window._hostSimInterval) clearInterval(window._hostSimInterval);
+    let lastSim = performance.now();
+    window._hostSimInterval = setInterval(() => {
+      if (gameOver || gameState !== 'playing') { clearInterval(window._hostSimInterval); return; }
+      const now = performance.now();
+      const dt = Math.min((now - lastSim) / 1000, 0.1);
+      lastSim = now;
+      if (document.hidden) {
+        // Tab is backgrounded — run sim without rendering
+        gameTime += dt; elixir = Math.min(MAX_ELIXIR, elixir + elixirRate * dt);
+        if (gameTime >= GAME_DURATION && !overtime) { overtime = true; elixirRate = 2; }
+        updateUnits(dt); updateTowers(dt); updateProjectiles(dt);
+        syncGameState();
+        checkGameEnd();
+      }
+    }, 200);
+  }
 }
 
 function gameLoop(ts) {
@@ -1682,16 +1697,38 @@ function gameLoop(ts) {
   if(!lastFrameTime) lastFrameTime=ts;
   const dt=Math.min((ts-lastFrameTime)/1000,0.05);lastFrameTime=ts;
   if(!gameOver){
-    gameTime+=dt;elixir=Math.min(MAX_ELIXIR,elixir+elixirRate*dt);
-    if(gameTime>=GAME_DURATION&&!overtime){overtime=true;elixirRate=2;}
-    updateUnits(dt);updateTowers(dt);updateProjectiles(dt);
-    if(vsAI) updateAI(dt);
-    if(isOnline && isHost) syncGameState();
-    checkGameEnd();updateTimerUI();updateElixirUI();updateCardDisabled();
+    if (isOnline && !isHost) {
+      // GUEST: Don't run unit/tower sim — just interpolate positions from host snapshots
+      // Only update local elixir for card UI, projectile visuals, and particles
+      elixir=Math.min(MAX_ELIXIR,elixir+elixirRate*dt);
+      if(gameTime>=GAME_DURATION&&!overtime){overtime=true;elixirRate=2;}
+      interpolateGuestUnits(dt);
+      updateProjectiles(dt); // visual only, tower refs removed for guest
+      updateTimerUI();updateElixirUI();updateCardDisabled();
+    } else {
+      // HOST or VS AI: Full simulation
+      gameTime+=dt;elixir=Math.min(MAX_ELIXIR,elixir+elixirRate*dt);
+      if(gameTime>=GAME_DURATION&&!overtime){overtime=true;elixirRate=2;}
+      updateUnits(dt);updateTowers(dt);updateProjectiles(dt);
+      if(vsAI) updateAI(dt);
+      if(isOnline && isHost) syncGameState();
+      checkGameEnd();updateTimerUI();updateElixirUI();updateCardDisabled();
+    }
   }
   drawArena();drawDeployZone();drawTowers();
   units.forEach(drawUnit);drawProjectiles();drawParticles();drawDmgNums();
   requestAnimationFrame(gameLoop);
+}
+
+// Guest interpolation: smoothly move units toward their target positions
+function interpolateGuestUnits(dt) {
+  for (const u of units) {
+    if (u.targetX !== undefined) {
+      const lerpSpeed = 8 * dt; // smooth catch-up
+      u.x += (u.targetX - u.x) * lerpSpeed;
+      u.y += (u.targetY - u.y) * lerpSpeed;
+    }
+  }
 }
 
 function playAgain(){
