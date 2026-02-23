@@ -367,7 +367,7 @@ let unitIdCounter = 0;
 function syncGameState() {
   if (!isHost || !myMatchId || !fbDb) return;
   const now = Date.now();
-  if (now - lastStateSync < 1000) return;
+  if (now - lastStateSync < 333) return; // 3 syncs/sec for smooth guest experience
   lastStateSync = now;
 
   const towerState = towers.map(t => ({ hp: Math.round(t.hp) }));
@@ -474,10 +474,12 @@ function reconcileUnits(hostUnits) {
 
     const local = units.find(u => u.syncId === hu.id);
     if (local) {
-      local.targetX = guestX;
-      local.targetY = guestY;
+      // Snap to host's authoritative position
+      local.x = guestX;
+      local.y = guestY;
+      // Store velocity for extrapolation between syncs
       local.velX = (hu.vx || 0) * SYNC_W * gScaleX;
-      local.velY = -(hu.vy || 0) * SYNC_H * gScaleY; // negate Y velocity for flip
+      local.velY = -(hu.vy || 0) * SYNC_H * gScaleY;
       local.hp = hu.h;
       local.side = guestSide;
     } else {
@@ -1757,33 +1759,13 @@ function gameLoop(ts) {
   requestAnimationFrame(gameLoop);
 }
 
-// Guest dead reckoning: predict unit movement between syncs
+// Guest extrapolation: move units forward using last known velocity
 function interpolateGuestUnits(dt) {
   for (const u of units) {
-    if (u.targetX === undefined) continue;
-    const dx = u.targetX - u.x;
-    const dy = u.targetY - u.y;
-    const d = Math.hypot(dx, dy);
-
-    if (d < S(2)) {
-      // Close enough — snap and use predicted velocity
-      u.x = u.targetX;
-      u.y = u.targetY;
-      // Continue moving in last known direction
-      if (u.velX !== undefined) {
-        u.x += u.velX * dt;
-        u.y += u.velY * dt;
-      }
-    } else if (d > S(80)) {
-      // Too far — teleport (unit probably just spawned or big correction)
-      u.x = u.targetX;
-      u.y = u.targetY;
-    } else {
-      // Move toward target at unit's actual speed (not lerp)
-      const moveSpeed = u.spd * dt * 60;
-      const step = Math.min(moveSpeed * 2, d); // slightly faster than normal to catch up
-      u.x += (dx / d) * step;
-      u.y += (dy / d) * step;
+    // Extrapolate using velocity from last sync
+    if (u.velX !== undefined && (u.velX !== 0 || u.velY !== 0)) {
+      u.x += u.velX * dt * 60;
+      u.y += u.velY * dt * 60;
     }
   }
 }
