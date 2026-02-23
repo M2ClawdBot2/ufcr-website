@@ -168,8 +168,15 @@
   <!-- MATCHMAKING -->
   <div id="matchmaking" class="screen">
     <div class="mm-spinner"></div>
-    <div class="mm-text">Searching for opponent...</div>
+    <div class="mm-text" id="mm-status">Searching for opponent...</div>
     <button class="mm-cancel" onclick="cancelMatchmaking()">CANCEL</button>
+  </div>
+
+  <!-- SERVER FULL -->
+  <div id="full-screen" class="screen">
+    <div style="font-family:Georgia,serif;font-size:28px;color:#c5a44e;margin-bottom:12px;letter-spacing:2px;">ROUNDS FULL</div>
+    <div style="font-size:13px;color:#5a6b5a;margin-bottom:24px;text-align:center;max-width:260px;">All 10 matches are currently in progress. Please try again shortly.</div>
+    <button class="mm-cancel" onclick="showHomeScreen()">BACK TO HOME</button>
   </div>
 
   <!-- GAME OVER -->
@@ -185,7 +192,7 @@
 
 <script>
 // ============================================================
-//  FIREBASE CONFIG
+//  FIREBASE CONFIG — Replace with your project config
 // ============================================================
 const firebaseConfig = {
   apiKey: "AIzaSyDummyKeyReplace",
@@ -193,17 +200,216 @@ const firebaseConfig = {
   databaseURL: "https://patriot-ufcr-default-rtdb.firebaseio.com",
   projectId: "patriot-ufcr"
 };
-let fb, fbDb, matchRef, gameRef, playerId, opponentId;
+const MAX_MATCHES = 10; // 10 concurrent matches = 20 players (free tier)
+let fb, fbDb, matchRef, gameRef, playerId, opponentName;
 let isOnline = false, isHost = false, fbInited = false;
+let myMatchId = null;
+let deployListener = null;
+let disconnectRef = null;
 
 function initFirebase() {
   if (fbInited) return;
   try {
     fb = firebase.initializeApp(firebaseConfig);
     fbDb = firebase.database();
-    playerId = 'p_' + Math.random().toString(36).substr(2, 9);
+    playerId = 'p_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
     fbInited = true;
   } catch(e) { console.warn('Firebase init failed:', e); }
+}
+
+// ============================================================
+//  MULTIPLAYER: Matchmaking with 10-match cap
+// ============================================================
+async function startOnline() {
+  initFirebase();
+  if (!fbInited || firebaseConfig.apiKey === 'AIzaSyDummyKeyReplace') {
+    alert('Online play is being set up. Check back soon!');
+    return;
+  }
+  showScreen('matchmaking');
+  document.getElementById('mm-status').textContent = 'Checking available slots...';
+  gameState = 'matchmaking'; isOnline = true;
+
+  try {
+    // Check how many active matches exist, clean up stale ones
+    const snap = await fbDb.ref('matches').once('value');
+    const matches = snap.val() || {};
+    const now = Date.now();
+    let activeCount = 0;
+    for (const [id, m] of Object.entries(matches)) {
+      const age = now - (m.createdAt || m.startedAt || 0);
+      const isStale = (m.status === 'waiting' && age > 5 * 60 * 1000) ||
+                      (m.status === 'playing' && age > 10 * 60 * 1000);
+      if (isStale) {
+        fbDb.ref('matches/' + id).remove().catch(() => {});
+      } else if (m.status === 'playing' || m.status === 'waiting') {
+        activeCount++;
+      }
+    }
+
+    if (activeCount >= MAX_MATCHES) {
+      showScreen('full-screen');
+      return;
+    }
+
+    document.getElementById('mm-status').textContent = 'Searching for opponent...';
+
+    // Look for a waiting lobby
+    const lobbySnap = await fbDb.ref('matches').orderByChild('status').equalTo('waiting').limitToFirst(1).once('value');
+    const lobbies = lobbySnap.val();
+
+    if (lobbies) {
+      // Join existing match
+      const matchId = Object.keys(lobbies)[0];
+      const lobby = lobbies[matchId];
+      myMatchId = matchId;
+      isHost = false;
+      opponentName = lobby.hostName || 'Opponent';
+      gameRef = fbDb.ref('matches/' + matchId);
+
+      await gameRef.update({
+        guest: playerId,
+        guestName: username,
+        guestDeck: playerDeck,
+        status: 'playing',
+        startedAt: firebase.database.ServerValue.TIMESTAMP
+      });
+
+      // Set up disconnect cleanup
+      setupDisconnect();
+
+      // Start the game
+      beginOnlineGame(lobby.hostDeck || []);
+    } else {
+      // Create new lobby
+      matchRef = fbDb.ref('matches').push();
+      myMatchId = matchRef.key;
+      isHost = true;
+      gameRef = matchRef;
+
+      await matchRef.set({
+        host: playerId,
+        hostName: username,
+        hostDeck: playerDeck,
+        status: 'waiting',
+        createdAt: firebase.database.ServerValue.TIMESTAMP
+      });
+
+      // Set up disconnect cleanup
+      setupDisconnect();
+
+      document.getElementById('mm-status').textContent = 'Waiting for opponent...';
+
+      // Listen for guest to join
+      matchRef.on('value', snap => {
+        const data = snap.val();
+        if (!data) { cancelMatchmaking(); return; }
+        if (data.guest && data.status === 'playing') {
+          matchRef.off('value');
+          opponentName = data.guestName || 'Opponent';
+          beginOnlineGame(data.guestDeck || []);
+        }
+      });
+    }
+  } catch(e) {
+    console.error('Matchmaking error:', e);
+    alert('Connection error. Try again.');
+    showHomeScreen();
+  }
+}
+
+function setupDisconnect() {
+  if (!gameRef || !myMatchId) return;
+  // On disconnect: clean up the match
+  disconnectRef = fbDb.ref('matches/' + myMatchId);
+  if (isHost) {
+    // If host disconnects while waiting, remove match
+    disconnectRef.onDisconnect().remove();
+  }
+  // Mark player as disconnected
+  const myRole = isHost ? 'hostDisconnected' : 'guestDisconnected';
+  fbDb.ref('matches/' + myMatchId + '/' + myRole).onDisconnect().set(true);
+}
+
+function cancelMatchmaking() {
+  if (myMatchId) {
+    fbDb.ref('matches/' + myMatchId).remove().catch(() => {});
+  }
+  if (gameRef) { gameRef.off(); gameRef = null; }
+  if (matchRef) { matchRef.off(); matchRef = null; }
+  if (disconnectRef) { disconnectRef.onDisconnect().cancel(); }
+  myMatchId = null;
+  deployListener = null;
+  showHomeScreen();
+  isOnline = false;
+}
+
+// ============================================================
+//  MULTIPLAYER: Game sync
+// ============================================================
+// Both players run their own simulation. We sync DEPLOYMENTS only:
+// When you deploy a unit, write it to Firebase.
+// Opponent reads your deployments and spawns them mirrored on their board.
+// Tower damage is computed locally — both simulations are deterministic enough.
+
+function sendDeploy(type, x, y) {
+  if (!gameRef || !myMatchId) return;
+  const role = isHost ? 'hostDeploys' : 'guestDeploys';
+  fbDb.ref('matches/' + myMatchId + '/' + role).push({
+    type, x: x / W, y: y / H, // normalized 0-1
+    t: firebase.database.ServerValue.TIMESTAMP
+  });
+}
+
+function listenForOpponentDeploys() {
+  const role = isHost ? 'guestDeploys' : 'hostDeploys';
+  const ref = fbDb.ref('matches/' + myMatchId + '/' + role);
+  // Only listen for NEW deploys (after we start listening)
+  deployListener = ref.orderByChild('t').startAt(Date.now());
+  ref.on('child_added', snap => {
+    const d = snap.val();
+    if (!d) return;
+    // Mirror: opponent's x stays same, but y is flipped
+    const mx = d.x * W;
+    const my = (1 - d.y) * H; // flip vertically
+    spawnUnit(d.type, mx, my, 'ai');
+  });
+}
+
+function listenForOpponentDisconnect() {
+  if (!myMatchId) return;
+  const otherRole = isHost ? 'guestDisconnected' : 'hostDisconnected';
+  fbDb.ref('matches/' + myMatchId + '/' + otherRole).on('value', snap => {
+    if (snap.val() === true && gameState === 'playing' && !gameOver) {
+      // Opponent disconnected — you win
+      endGame(true, 'Opponent disconnected');
+      cleanupMatch();
+    }
+  });
+}
+
+function cleanupMatch() {
+  if (myMatchId) {
+    fbDb.ref('matches/' + myMatchId).remove().catch(() => {});
+  }
+  if (gameRef) { gameRef.off(); }
+  if (disconnectRef) { disconnectRef.onDisconnect().cancel(); }
+  const role = isHost ? 'guestDeploys' : 'hostDeploys';
+  if (myMatchId) fbDb.ref('matches/' + myMatchId + '/' + role).off();
+  myMatchId = null;
+  deployListener = null;
+}
+
+function beginOnlineGame(opponentDeck) {
+  showScreen(null); // hide all screens
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('show'));
+  vsAI = false;
+  isOnline = true;
+  // Store opponent deck for AI reference (not used in online, AI is disabled)
+  initGame();
+  // Start listening for opponent deploys and disconnects
+  listenForOpponentDeploys();
+  listenForOpponentDisconnect();
 }
 
 // ============================================================
@@ -1261,12 +1467,14 @@ function checkGameEnd() {
     if(!overtime){overtime=true;elixirRate=2;return;}endGame(false);
   }
 }
-function endGame(won) {
+function endGame(won, reason) {
   gameOver=true;gameState='gameover';
   document.getElementById('overlay').classList.add('show');
   document.getElementById('result-text').textContent=won?'VICTORY':'DEFEAT';
   document.getElementById('result-text').style.color=won?'#ffd600':'#f44336';
-  document.getElementById('result-sub').textContent=won?'The swamp has been drained.':'The deep state wins... for now.';
+  const defaultMsg = won ? 'The swamp has been drained.' : 'The deep state wins... for now.';
+  document.getElementById('result-sub').textContent = reason || defaultMsg;
+  if (isOnline) cleanupMatch();
 }
 
 function updateTimerUI(){
@@ -1301,6 +1509,7 @@ function setupInput() {
     const def=ALL_CARDS[selectedCard.type]; if(elixir<def.cost) return;
     elixir -= def.cost;
     spawnUnit(selectedCard.type, cx, cy, 'player');
+    if (isOnline) sendDeploy(selectedCard.type, cx, cy);
     useGameCard(selectedCard.handIdx);
     document.querySelectorAll('.card').forEach(c=>c.classList.remove('selected'));
     selectedCard = null;
@@ -1310,21 +1519,7 @@ function setupInput() {
   canvas.addEventListener('touchstart', handler, {passive:false});
 }
 
-// ============================================================
-//  MATCHMAKING
-// ============================================================
-function startOnline() {
-  initFirebase();
-  if (!fbInited) { alert('Online play coming soon! Play vs AI for now.'); return; }
-  showScreen('matchmaking');
-  gameState = 'matchmaking'; isOnline = true;
-  // ... firebase matchmaking logic same as before
-}
-function cancelMatchmaking() {
-  if(matchRef){matchRef.remove();matchRef=null;}
-  if(gameRef){gameRef.off();gameRef=null;}
-  showHomeScreen(); isOnline=false;
-}
+// (matchmaking functions defined above with Firebase logic)
 
 // ============================================================
 //  GAME INIT & LOOP
@@ -1370,7 +1565,7 @@ function initGame() {
   });
   document.getElementById('overlay').classList.remove('show');
   document.getElementById('player-name-hud').textContent = username;
-  document.getElementById('ai-name-hud').textContent = vsAI ? 'CPU' : 'Opponent';
+  document.getElementById('ai-name-hud').textContent = vsAI ? 'CPU' : (opponentName || 'Opponent');
 
   buildInGameCards();
   setupInput();
@@ -1396,14 +1591,20 @@ function gameLoop(ts) {
 
 function playAgain(){
   document.getElementById('overlay').classList.remove('show');
-  initGame();
+  if (isOnline) {
+    isOnline = false;
+    startOnline(); // re-queue for another match
+  } else {
+    initGame();
+  }
 }
 
 function returnHome(){
   gameState='home';
   document.getElementById('overlay').classList.remove('show');
+  if (isOnline) cleanupMatch();
+  isOnline = false;
   showHomeScreen();
-  if(gameRef){gameRef.off();if(isHost&&matchRef)matchRef.remove();}
 }
 
 // ============================================================
