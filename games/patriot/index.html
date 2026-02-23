@@ -359,15 +359,33 @@ function sendDeploy(type, x, y) {
   });
 }
 
-// Host sends tower HP snapshot every 2 seconds
-let lastTowerSync = 0;
-function syncTowerState() {
+// Host sends game state snapshot every 1.5 seconds (towers + units)
+let lastStateSync = 0;
+let unitIdCounter = 0;
+function syncGameState() {
   if (!isHost || !myMatchId || !fbDb) return;
   const now = Date.now();
-  if (now - lastTowerSync < 2000) return;
-  lastTowerSync = now;
-  const state = towers.map(t => ({ hp: Math.round(t.hp), side: t.side, type: t.type }));
-  fbDb.ref('matches/' + myMatchId + '/towerState').set(state).catch(() => {});
+  if (now - lastStateSync < 1500) return;
+  lastStateSync = now;
+
+  const towerState = towers.map(t => ({ hp: Math.round(t.hp) }));
+
+  // Compact unit snapshot: [type, side, x/W, y/H, hp, id]
+  const unitState = units.map(u => ({
+    t: u.type,
+    s: u.side === 'player' ? 0 : 1,
+    x: +(u.x / W).toFixed(3),
+    y: +(u.y / H).toFixed(3),
+    h: Math.round(u.hp),
+    id: u.syncId || (u.syncId = ++unitIdCounter)
+  }));
+
+  fbDb.ref('matches/' + myMatchId + '/gameState').set({
+    towers: towerState,
+    units: unitState,
+    time: Math.round(gameTime),
+    elixir: Math.round(elixir)
+  }).catch(() => {});
 }
 
 // Host sends game result — single source of truth
@@ -379,24 +397,35 @@ function sendGameResult(hostWon) {
   }).catch(() => {});
 }
 
-// Guest listens for host's tower state and game result
+// Guest listens for host's game state and result
 function listenForHostState() {
   if (isHost || !myMatchId) return;
 
-  // Listen for tower state updates from host
-  // Host tower order: [0-2] = host's "ai" (top), [3-5] = host's "player" (bottom)
-  // Guest perspective is flipped: host's "ai" towers are guest's "player" towers
-  // So we swap: host[0-2] -> guest[3-5], host[3-5] -> guest[0-2]
-  fbDb.ref('matches/' + myMatchId + '/towerState').on('value', snap => {
+  // Listen for combined game state (towers + units)
+  fbDb.ref('matches/' + myMatchId + '/gameState').on('value', snap => {
     const state = snap.val();
-    if (!state || !Array.isArray(state) || state.length < 6) return;
-    // Host's ai towers (0,1,2) = guest's player towers (3,4,5) and vice versa
-    towers[3].hp = state[0].hp; // host ai princess L -> guest player princess L
-    towers[4].hp = state[1].hp; // host ai princess R -> guest player princess R
-    towers[5].hp = state[2].hp; // host ai king -> guest player king
-    towers[0].hp = state[3].hp; // host player princess L -> guest ai princess L
-    towers[1].hp = state[4].hp; // host player princess R -> guest ai princess R
-    towers[2].hp = state[5].hp; // host player king -> guest ai king
+    if (!state) return;
+
+    // Apply tower HP (flipped perspective)
+    if (state.towers && state.towers.length >= 6) {
+      const t = state.towers;
+      towers[3].hp = t[0].hp; // host ai -> guest player
+      towers[4].hp = t[1].hp;
+      towers[5].hp = t[2].hp;
+      towers[0].hp = t[3].hp; // host player -> guest ai
+      towers[1].hp = t[4].hp;
+      towers[2].hp = t[5].hp;
+    }
+
+    // Reconcile units with host's authoritative state
+    if (state.units) {
+      reconcileUnits(state.units);
+    }
+
+    // Sync game timer
+    if (state.time !== undefined) {
+      gameTime = state.time;
+    }
   });
 
   // Listen for authoritative game result from host
@@ -405,6 +434,61 @@ function listenForHostState() {
     if (!result || gameOver) return;
     const iWon = (result.winner === 'guest');
     endGame(iWon, iWon ? 'The swamp has been drained.' : 'The deep state wins... for now.');
+  });
+}
+
+// Reconcile guest's local units with host's snapshot
+function reconcileUnits(hostUnits) {
+  // Build map of host units by syncId
+  const hostMap = new Map();
+  hostUnits.forEach(hu => hostMap.set(hu.id, hu));
+
+  // Flip perspective: host's "player" (s=0) = guest's "ai", host's "ai" (s=1) = guest's "player"
+  // Also flip Y coordinates
+
+  // Remove local units that don't exist in host state
+  const localIds = new Set(units.map(u => u.syncId).filter(Boolean));
+  for (let i = units.length - 1; i >= 0; i--) {
+    if (units[i].syncId && !hostMap.has(units[i].syncId)) {
+      spawnDeathFX(units[i].x, units[i].y, units[i].color);
+      units.splice(i, 1);
+    }
+  }
+
+  // Update existing units and add new ones
+  hostUnits.forEach(hu => {
+    const guestSide = hu.s === 0 ? 'ai' : 'player'; // flip sides
+    const guestX = hu.x * W;
+    const guestY = (1 - hu.y) * H; // flip Y
+
+    // Find matching local unit
+    const local = units.find(u => u.syncId === hu.id);
+    if (local) {
+      // Lerp position toward host's authoritative position
+      local.x += (guestX - local.x) * 0.3;
+      local.y += (guestY - local.y) * 0.3;
+      local.hp = hu.h;
+      local.side = guestSide;
+    } else {
+      // New unit — spawn it
+      const def = ALL_CARDS[hu.t];
+      if (!def) return;
+      units.push({
+        type: hu.t, side: guestSide,
+        x: guestX, y: guestY,
+        hp: hu.h, maxHp: def.hp,
+        dmg: def.dmg, spd: def.spd * (W/360),
+        range: S(def.range), atkSpd: def.atkSpd,
+        atkTimer: 0, color: def.color,
+        poison: def.poison||0, splash: S(def.splash||0),
+        ranged: def.ranged||false, shield: def.shield||0,
+        splits: def.splits||false,
+        waypoints:[], wpIdx:0, poisonTimer:0,
+        animPhase: Math.random()*Math.PI*2,
+        lastTargetCalc: 0,
+        syncId: hu.id
+      });
+    }
   });
 }
 
@@ -434,7 +518,7 @@ function listenForOpponentDisconnect() {
 function cleanupMatch() {
   if (myMatchId) {
     // Remove all listeners
-    fbDb.ref('matches/' + myMatchId + '/towerState').off();
+    fbDb.ref('matches/' + myMatchId + '/gameState').off();
     fbDb.ref('matches/' + myMatchId + '/result').off();
     const role = isHost ? 'guestDeploys' : 'hostDeploys';
     fbDb.ref('matches/' + myMatchId + '/' + role).off();
@@ -1086,7 +1170,8 @@ function spawnUnit(type, x, y, side) {
       splits: def.splits||false,
       waypoints:[], wpIdx:0, poisonTimer:0,
       animPhase: Math.random()*Math.PI*2,
-      lastTargetCalc: 0
+      lastTargetCalc: 0,
+      syncId: isOnline && isHost ? ++unitIdCounter : 0
     });
   }
 }
@@ -1572,7 +1657,7 @@ function initGame() {
   units=[];projectiles=[];particles=[];dmgNums=[];
   towers=makeTowers();selectedCard=null;
   gameTime=0;overtime=false;gameOver=false;lastFrameTime=0;aiDeployTimer=2;
-  lastTowerSync=0;
+  lastStateSync=0;unitIdCounter=0;
 
   buildGameDeck();
   if(vsAI) aiInit();
@@ -1599,7 +1684,7 @@ function gameLoop(ts) {
     if(gameTime>=GAME_DURATION&&!overtime){overtime=true;elixirRate=2;}
     updateUnits(dt);updateTowers(dt);updateProjectiles(dt);
     if(vsAI) updateAI(dt);
-    if(isOnline && isHost) syncTowerState();
+    if(isOnline && isHost) syncGameState();
     checkGameEnd();updateTimerUI();updateElixirUI();updateCardDisabled();
   }
   drawArena();drawDeployZone();drawTowers();
