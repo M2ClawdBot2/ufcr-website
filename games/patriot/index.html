@@ -370,15 +370,26 @@ function syncGameState() {
 
   const towerState = towers.map(t => ({ hp: Math.round(t.hp) }));
 
-  // Compact unit snapshot: [type, side, x/W, y/H, hp, id]
-  const unitState = units.map(u => ({
-    t: u.type,
-    s: u.side === 'player' ? 0 : 1,
-    x: +(u.x / W).toFixed(3),
-    y: +(u.y / H).toFixed(3),
-    h: Math.round(u.hp),
-    id: u.syncId || (u.syncId = ++unitIdCounter)
-  }));
+  // Compact unit snapshot with velocity for dead reckoning
+  const unitState = units.map(u => {
+    // Calculate velocity from waypoint movement
+    let vx = 0, vy = 0;
+    if (u.wpIdx < u.waypoints.length) {
+      const wp = u.waypoints[u.wpIdx];
+      const dx = wp.x - u.x, dy = wp.y - u.y, d = Math.hypot(dx, dy);
+      if (d > 1) { vx = (dx/d) * u.spd; vy = (dy/d) * u.spd; }
+    }
+    return {
+      t: u.type,
+      s: u.side === 'player' ? 0 : 1,
+      x: +(u.x / W).toFixed(3),
+      y: +(u.y / H).toFixed(3),
+      h: Math.round(u.hp),
+      vx: +vx.toFixed(2),
+      vy: +vy.toFixed(2),
+      id: u.syncId || (u.syncId = ++unitIdCounter)
+    };
+  });
 
   fbDb.ref('matches/' + myMatchId + '/gameState').set({
     towers: towerState,
@@ -458,9 +469,12 @@ function reconcileUnits(hostUnits) {
 
     const local = units.find(u => u.syncId === hu.id);
     if (local) {
-      // Set target position for smooth interpolation
+      // Set target position and velocity for dead reckoning
       local.targetX = guestX;
       local.targetY = guestY;
+      // Flip velocity: X stays same, Y flips
+      local.velX = (hu.vx || 0) * (W/360);
+      local.velY = -(hu.vy || 0) * (W/360); // flip Y direction for guest perspective
       local.hp = hu.h;
       local.side = guestSide;
     } else {
@@ -1725,13 +1739,33 @@ function gameLoop(ts) {
   requestAnimationFrame(gameLoop);
 }
 
-// Guest interpolation: smoothly move units toward their target positions
+// Guest dead reckoning: predict unit movement between syncs
 function interpolateGuestUnits(dt) {
   for (const u of units) {
-    if (u.targetX !== undefined) {
-      const lerpSpeed = 8 * dt; // smooth catch-up
-      u.x += (u.targetX - u.x) * lerpSpeed;
-      u.y += (u.targetY - u.y) * lerpSpeed;
+    if (u.targetX === undefined) continue;
+    const dx = u.targetX - u.x;
+    const dy = u.targetY - u.y;
+    const d = Math.hypot(dx, dy);
+
+    if (d < S(2)) {
+      // Close enough — snap and use predicted velocity
+      u.x = u.targetX;
+      u.y = u.targetY;
+      // Continue moving in last known direction
+      if (u.velX !== undefined) {
+        u.x += u.velX * dt;
+        u.y += u.velY * dt;
+      }
+    } else if (d > S(80)) {
+      // Too far — teleport (unit probably just spawned or big correction)
+      u.x = u.targetX;
+      u.y = u.targetY;
+    } else {
+      // Move toward target at unit's actual speed (not lerp)
+      const moveSpeed = u.spd * dt * 60;
+      const step = Math.min(moveSpeed * 2, d); // slightly faster than normal to catch up
+      u.x += (dx / d) * step;
+      u.y += (dy / d) * step;
     }
   }
 }
