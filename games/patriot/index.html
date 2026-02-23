@@ -12,7 +12,7 @@
     #game-container { position: relative; width: 100%; height: 100%; }
     canvas { display: block; touch-action: none; width: 100%; height: 100%; }
 
-    .screen { position: absolute; inset: 0; display: none; flex-direction: column; align-items: center; z-index: 200; overflow-y: auto; overflow-x: hidden; }
+    .screen { position: fixed; inset: 0; display: none; flex-direction: column; align-items: center; z-index: 200; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; }
     .screen.show { display: flex; }
 
     /* ===== WELCOME ===== */
@@ -27,7 +27,7 @@
     .welcome-go:hover { background: #d4b45e; }
 
     /* ===== DECK BUILDER ===== */
-    #deck-screen { background: #0a0f0a; padding: 16px 10px; justify-content: flex-start; max-width: 100vw; width: 100%; overflow-y: auto !important; -webkit-overflow-scrolling: touch; touch-action: pan-y; }
+    #deck-screen { background: #0a0f0a; padding: 16px 10px 40px; justify-content: flex-start; touch-action: pan-y; }
     .deck-header { text-align: center; margin-bottom: 6px; }
     .deck-header h2 { font-size: 20px; color: #c5a44e; letter-spacing: 3px; font-family: Georgia, serif; }
     .deck-header p { font-size: 11px; color: #5a6b5a; margin-top: 2px; }
@@ -53,7 +53,6 @@
     .cat-special h3 { border-color: #b71c1c; }
 
     .catalog-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; max-width: 100%; }
-    .catalog-section { max-width: 100%; overflow: hidden; }
     .cat-card { background: #111a11; border: 1px solid #1e2e1e; border-radius: 2px; padding: 7px; cursor: pointer; transition: all 0.12s; display: flex; gap: 7px; align-items: center; }
     .cat-card:hover { border-color: #3a4a3a; background: #141e14; }
     .cat-card.in-deck { border-color: #c5a44e; background: #1a2410; opacity: 0.7; }
@@ -175,7 +174,7 @@
   <!-- SERVER FULL -->
   <div id="full-screen" class="screen">
     <div style="font-family:Georgia,serif;font-size:28px;color:#c5a44e;margin-bottom:12px;letter-spacing:2px;">ROUNDS FULL</div>
-    <div style="font-size:13px;color:#5a6b5a;margin-bottom:24px;text-align:center;max-width:260px;">All 10 matches are currently in progress. Please try again shortly.</div>
+    <div style="font-size:13px;color:#5a6b5a;margin-bottom:24px;text-align:center;max-width:260px;">All 50 matches are currently in progress. Please try again shortly.</div>
     <button class="mm-cancel" onclick="showHomeScreen()">BACK TO HOME</button>
   </div>
 
@@ -192,7 +191,7 @@
 
 <script>
 // ============================================================
-//  FIREBASE CONFIG — Replace with your project config
+//  FIREBASE CONFIG
 // ============================================================
 const firebaseConfig = {
   apiKey: "AIzaSyA0w9Ec_5pQ8K-cJYY-5piyoZ9xLJfTFIM",
@@ -203,7 +202,7 @@ const firebaseConfig = {
   messagingSenderId: "813225836179",
   appId: "1:813225836179:web:1cdd98560f7bb1d9099766"
 };
-const MAX_MATCHES = 50; // 50 concurrent matches = 100 players (100 connections max)
+const MAX_MATCHES = 50;
 let fb, fbDb, matchRef, gameRef, playerId, opponentName;
 let isOnline = false, isHost = false, fbInited = false;
 let myMatchId = null;
@@ -225,7 +224,7 @@ function initFirebase() {
 // ============================================================
 async function startOnline() {
   initFirebase();
-  if (!fbInited || firebaseConfig.apiKey === 'AIzaSyDummyKeyReplace') {
+  if (!fbInited) {
     alert('Online play is being set up. Check back soon!');
     return;
   }
@@ -234,7 +233,6 @@ async function startOnline() {
   gameState = 'matchmaking'; isOnline = true;
 
   try {
-    // Check how many active matches exist, clean up stale ones
     const snap = await fbDb.ref('matches').once('value');
     const matches = snap.val() || {};
     const now = Date.now();
@@ -257,14 +255,17 @@ async function startOnline() {
 
     document.getElementById('mm-status').textContent = 'Searching for opponent...';
 
-    // Look for a waiting lobby
     const lobbySnap = await fbDb.ref('matches').orderByChild('status').equalTo('waiting').limitToFirst(1).once('value');
     const lobbies = lobbySnap.val();
 
     if (lobbies) {
-      // Join existing match
       const matchId = Object.keys(lobbies)[0];
       const lobby = lobbies[matchId];
+      // Don't join our own lobby
+      if (lobby.host === playerId) {
+        createLobby();
+        return;
+      }
       myMatchId = matchId;
       isHost = false;
       opponentName = lobby.hostName || 'Opponent';
@@ -278,41 +279,10 @@ async function startOnline() {
         startedAt: firebase.database.ServerValue.TIMESTAMP
       });
 
-      // Set up disconnect cleanup
       setupDisconnect();
-
-      // Start the game
       beginOnlineGame(lobby.hostDeck || []);
     } else {
-      // Create new lobby
-      matchRef = fbDb.ref('matches').push();
-      myMatchId = matchRef.key;
-      isHost = true;
-      gameRef = matchRef;
-
-      await matchRef.set({
-        host: playerId,
-        hostName: username,
-        hostDeck: playerDeck,
-        status: 'waiting',
-        createdAt: firebase.database.ServerValue.TIMESTAMP
-      });
-
-      // Set up disconnect cleanup
-      setupDisconnect();
-
-      document.getElementById('mm-status').textContent = 'Waiting for opponent...';
-
-      // Listen for guest to join
-      matchRef.on('value', snap => {
-        const data = snap.val();
-        if (!data) { cancelMatchmaking(); return; }
-        if (data.guest && data.status === 'playing') {
-          matchRef.off('value');
-          opponentName = data.guestName || 'Opponent';
-          beginOnlineGame(data.guestDeck || []);
-        }
-      });
+      createLobby();
     }
   } catch(e) {
     console.error('Matchmaking error:', e);
@@ -321,15 +291,41 @@ async function startOnline() {
   }
 }
 
+function createLobby() {
+  matchRef = fbDb.ref('matches').push();
+  myMatchId = matchRef.key;
+  isHost = true;
+  gameRef = matchRef;
+
+  matchRef.set({
+    host: playerId,
+    hostName: username,
+    hostDeck: playerDeck,
+    status: 'waiting',
+    createdAt: firebase.database.ServerValue.TIMESTAMP
+  });
+
+  setupDisconnect();
+
+  document.getElementById('mm-status').textContent = 'Waiting for opponent...';
+
+  matchRef.on('value', snap => {
+    const data = snap.val();
+    if (!data) { cancelMatchmaking(); return; }
+    if (data.guest && data.status === 'playing') {
+      matchRef.off('value');
+      opponentName = data.guestName || 'Opponent';
+      beginOnlineGame(data.guestDeck || []);
+    }
+  });
+}
+
 function setupDisconnect() {
   if (!gameRef || !myMatchId) return;
-  // On disconnect: clean up the match
   disconnectRef = fbDb.ref('matches/' + myMatchId);
   if (isHost) {
-    // If host disconnects while waiting, remove match
     disconnectRef.onDisconnect().remove();
   }
-  // Mark player as disconnected
   const myRole = isHost ? 'hostDisconnected' : 'guestDisconnected';
   fbDb.ref('matches/' + myMatchId + '/' + myRole).onDisconnect().set(true);
 }
@@ -348,33 +344,71 @@ function cancelMatchmaking() {
 }
 
 // ============================================================
-//  MULTIPLAYER: Game sync
+//  MULTIPLAYER: Game sync — HOST IS AUTHORITATIVE
 // ============================================================
-// Both players run their own simulation. We sync DEPLOYMENTS only:
-// When you deploy a unit, write it to Firebase.
-// Opponent reads your deployments and spawns them mirrored on their board.
-// Tower damage is computed locally — both simulations are deterministic enough.
+// Both players sync deploys. Host also syncs tower HP periodically
+// and game result. Guest reads host's tower state as ground truth.
 
 function sendDeploy(type, x, y) {
   if (!gameRef || !myMatchId) return;
   const role = isHost ? 'hostDeploys' : 'guestDeploys';
   fbDb.ref('matches/' + myMatchId + '/' + role).push({
-    type, x: x / W, y: y / H, // normalized 0-1
+    type, x: x / W, y: y / H,
     t: firebase.database.ServerValue.TIMESTAMP
+  });
+}
+
+// Host sends tower HP snapshot every 2 seconds
+let lastTowerSync = 0;
+function syncTowerState() {
+  if (!isHost || !myMatchId || !fbDb) return;
+  const now = Date.now();
+  if (now - lastTowerSync < 2000) return;
+  lastTowerSync = now;
+  const state = towers.map(t => ({ hp: Math.round(t.hp), side: t.side, type: t.type }));
+  fbDb.ref('matches/' + myMatchId + '/towerState').set(state).catch(() => {});
+}
+
+// Host sends game result — single source of truth
+function sendGameResult(hostWon) {
+  if (!isHost || !myMatchId || !fbDb) return;
+  fbDb.ref('matches/' + myMatchId + '/result').set({
+    winner: hostWon ? 'host' : 'guest',
+    t: firebase.database.ServerValue.TIMESTAMP
+  }).catch(() => {});
+}
+
+// Guest listens for host's tower state and game result
+function listenForHostState() {
+  if (isHost || !myMatchId) return;
+
+  // Listen for tower state updates from host
+  fbDb.ref('matches/' + myMatchId + '/towerState').on('value', snap => {
+    const state = snap.val();
+    if (!state || !Array.isArray(state)) return;
+    // Apply host's tower HP to our local towers
+    for (let i = 0; i < Math.min(state.length, towers.length); i++) {
+      towers[i].hp = state[i].hp;
+    }
+  });
+
+  // Listen for authoritative game result from host
+  fbDb.ref('matches/' + myMatchId + '/result').on('value', snap => {
+    const result = snap.val();
+    if (!result || gameOver) return;
+    const iWon = (result.winner === 'guest');
+    endGame(iWon, iWon ? 'The swamp has been drained.' : 'The deep state wins... for now.');
   });
 }
 
 function listenForOpponentDeploys() {
   const role = isHost ? 'guestDeploys' : 'hostDeploys';
   const ref = fbDb.ref('matches/' + myMatchId + '/' + role);
-  // Only listen for NEW deploys (after we start listening)
-  deployListener = ref.orderByChild('t').startAt(Date.now());
   ref.on('child_added', snap => {
     const d = snap.val();
     if (!d) return;
-    // Mirror: opponent's x stays same, but y is flipped
     const mx = d.x * W;
-    const my = (1 - d.y) * H; // flip vertically
+    const my = (1 - d.y) * H;
     spawnUnit(d.type, mx, my, 'ai');
   });
 }
@@ -384,7 +418,6 @@ function listenForOpponentDisconnect() {
   const otherRole = isHost ? 'guestDisconnected' : 'hostDisconnected';
   fbDb.ref('matches/' + myMatchId + '/' + otherRole).on('value', snap => {
     if (snap.val() === true && gameState === 'playing' && !gameOver) {
-      // Opponent disconnected — you win
       endGame(true, 'Opponent disconnected');
       cleanupMatch();
     }
@@ -393,26 +426,30 @@ function listenForOpponentDisconnect() {
 
 function cleanupMatch() {
   if (myMatchId) {
+    // Remove all listeners
+    fbDb.ref('matches/' + myMatchId + '/towerState').off();
+    fbDb.ref('matches/' + myMatchId + '/result').off();
+    const role = isHost ? 'guestDeploys' : 'hostDeploys';
+    fbDb.ref('matches/' + myMatchId + '/' + role).off();
+    const otherRole = isHost ? 'guestDisconnected' : 'hostDisconnected';
+    fbDb.ref('matches/' + myMatchId + '/' + otherRole).off();
     fbDb.ref('matches/' + myMatchId).remove().catch(() => {});
   }
   if (gameRef) { gameRef.off(); }
   if (disconnectRef) { disconnectRef.onDisconnect().cancel(); }
-  const role = isHost ? 'guestDeploys' : 'hostDeploys';
-  if (myMatchId) fbDb.ref('matches/' + myMatchId + '/' + role).off();
   myMatchId = null;
   deployListener = null;
 }
 
 function beginOnlineGame(opponentDeck) {
-  showScreen(null); // hide all screens
+  showScreen(null);
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('show'));
   vsAI = false;
   isOnline = true;
-  // Store opponent deck for AI reference (not used in online, AI is disabled)
   initGame();
-  // Start listening for opponent deploys and disconnects
   listenForOpponentDeploys();
   listenForOpponentDisconnect();
+  if (!isHost) listenForHostState();
 }
 
 // ============================================================
@@ -432,7 +469,6 @@ function loadCookie(key) {
 //  CONSTANTS
 // ============================================================
 let W = 360, H = 640;
-// All layout values computed relative to W/H — recalc on resize
 let RIVER_TOP, RIVER_BOT, RIVER_MID, BRIDGE_L, BRIDGE_R, DEPLOY_MIN_Y, DEPLOY_MAX_Y;
 function recalcLayout() {
   RIVER_TOP = H * 0.441;
@@ -455,14 +491,14 @@ const ALL_CARDS = {
     color: '#4caf50', count: 3,
     category: 'swarm', tag: 'Swarm', tagClass: 'tag-swarm',
     desc: 'Deploys 3 fast lizards that overwhelm with numbers. Weak alone but deadly in packs.',
-    flavorStats: 'HP 180 · DMG 16 · SPD Fast · ×3 units'
+    flavorStats: 'HP 180 · DMG 16 · SPD Fast · x3 units'
   },
   viper: {
     name: 'Venom Viper', cost: 3, hp: 200, dmg: 10, spd: 0.9, range: 28, atkSpd: 0.6,
     color: '#8bc34a', count: 2, poison: 6,
     category: 'offense', tag: 'Offense', tagClass: 'tag-offense',
     desc: 'Twin vipers with toxic bite. Poison continues damaging enemies after the attack.',
-    flavorStats: 'HP 200 · DMG 10+poison · SPD Med · ×2 units'
+    flavorStats: 'HP 200 · DMG 10+poison · SPD Med · x2 units'
   },
   behemoth: {
     name: 'Bureaucrat Behemoth', cost: 5, hp: 700, dmg: 40, spd: 0.4, range: 22, atkSpd: 1.3,
@@ -482,7 +518,7 @@ const ALL_CARDS = {
     name: 'Swamp Gator', cost: 4, hp: 450, dmg: 28, spd: 0.7, range: 20, atkSpd: 1.0,
     color: '#00796b', count: 1,
     category: 'tank', tag: 'Heavy', tagClass: 'tag-tank',
-    desc: 'Tough mid-cost bruiser. Good HP and decent damage — reliable frontline fighter.',
+    desc: 'Tough mid-cost bruiser. Good HP and decent damage -- reliable frontline fighter.',
     flavorStats: 'HP 450 · DMG 28 · SPD Med'
   },
   filibuster: {
@@ -490,7 +526,7 @@ const ALL_CARDS = {
     color: '#26c6da', count: 4,
     category: 'swarm', tag: 'Swarm', tagClass: 'tag-swarm',
     desc: 'Cheapest card. Spawns 4 tiny frogs that swarm and distract. Great cycle card.',
-    flavorStats: 'HP 100 · DMG 8 · SPD Fast · ×4 units'
+    flavorStats: 'HP 100 · DMG 8 · SPD Fast · x4 units'
   },
   sniper: {
     name: 'Sniper Salamander', cost: 4, hp: 160, dmg: 65, spd: 0.5, range: 100, atkSpd: 2.0,
@@ -517,8 +553,8 @@ const ALL_CARDS = {
     name: 'Insider Iguana', cost: 3, hp: 250, dmg: 22, spd: 0.85, range: 22, atkSpd: 0.8,
     color: '#558b2f', count: 2,
     category: 'offense', tag: 'Offense', tagClass: 'tag-offense',
-    desc: 'Well-rounded pair of fighters. Jack of all trades — solid in any deck.',
-    flavorStats: 'HP 250 · DMG 22 · SPD Med · ×2 units'
+    desc: 'Well-rounded pair of fighters. Jack of all trades -- solid in any deck.',
+    flavorStats: 'HP 250 · DMG 22 · SPD Med · x2 units'
   },
   sentinel: {
     name: 'Sentinel Shell', cost: 6, hp: 900, dmg: 15, spd: 0.35, range: 20, atkSpd: 1.5,
@@ -531,8 +567,8 @@ const ALL_CARDS = {
     name: 'Gerrymander', cost: 4, hp: 200, dmg: 25, spd: 1.0, range: 20, atkSpd: 0.8,
     color: '#e65100', count: 1, splits: true,
     category: 'special', tag: 'Special', tagClass: 'tag-special',
-    desc: 'Splits into 2 smaller units on death. Hard to fully remove — they just keep coming.',
-    flavorStats: 'HP 200 · DMG 25 · Splits into ×2 on death'
+    desc: 'Splits into 2 smaller units on death. Hard to fully remove -- they just keep coming.',
+    flavorStats: 'HP 200 · DMG 25 · Splits into x2 on death'
   }
 };
 
@@ -552,7 +588,7 @@ let canvas, ctx;
 let gameState = 'welcome';
 let vsAI = true;
 let username = '';
-let playerDeck = []; // 8 chosen card keys
+let playerDeck = [];
 
 let elixir, aiElixir, elixirRate;
 let units, projectiles, particles, dmgNums;
@@ -589,7 +625,6 @@ function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('show'));
   const el = document.getElementById(id);
   if (el) el.classList.add('show');
-  // Hide game HUD elements
   ['hud','timer','next-card','next-card-label','player-name-hud','ai-name-hud'].forEach(x => {
     const e = document.getElementById(x);
     if (e) e.style.display = 'none';
@@ -627,6 +662,8 @@ function showDeckBuilder(fromHome) {
   showScreen('deck-screen');
   gameState = 'deck';
   buildDeckUI(fromHome);
+  // Scroll to top when opening
+  document.getElementById('deck-screen').scrollTop = 0;
 }
 
 function buildDeckUI(fromHome) {
@@ -672,7 +709,6 @@ function buildDeckUI(fromHome) {
 
   screen.innerHTML = html;
 
-  // Draw all card icons
   screen.querySelectorAll('canvas[data-icon]').forEach(cvs => {
     drawDetailedIcon(cvs, cvs.dataset.icon, 48);
   });
@@ -688,7 +724,6 @@ function toggleDeckCard(key) {
     playerDeck.push(key);
   }
   saveProfile();
-  // Update UI without full rebuild
   document.querySelectorAll('.cat-card').forEach(el => {
     el.classList.toggle('in-deck', playerDeck.includes(el.dataset.key));
   });
@@ -745,7 +780,7 @@ function changeUsername() {
 function drawDetailedIcon(cvs, type, size) {
   const c = cvs.getContext('2d');
   c.clearRect(0, 0, size, size);
-  const s = size / 48; // scale factor
+  const s = size / 48;
   c.save();
   c.translate(size/2, size/2);
   c.scale(s, s);
@@ -754,14 +789,11 @@ function drawDetailedIcon(cvs, type, size) {
 
   switch(type) {
     case 'lobbyist': {
-      // 3 little lizards in formation
       [[-8,-6],[0,4],[8,-6]].forEach(([ox,oy]) => {
         c.fillStyle = col;
         c.beginPath(); c.ellipse(ox, oy, 6, 4, 0, 0, Math.PI*2); c.fill();
-        // Tail
         c.strokeStyle = col; c.lineWidth = 1.5;
         c.beginPath(); c.moveTo(ox-3, oy+3); c.quadraticCurveTo(ox-8, oy+7, ox-5, oy+10); c.stroke();
-        // Eyes
         c.fillStyle = '#ffeb3b';
         c.beginPath(); c.arc(ox-2, oy-2, 1.5, 0, Math.PI*2); c.arc(ox+2, oy-2, 1.5, 0, Math.PI*2); c.fill();
         c.fillStyle = '#000';
@@ -770,67 +802,53 @@ function drawDetailedIcon(cvs, type, size) {
       break;
     }
     case 'viper': {
-      // Coiled snake body
       c.strokeStyle = col; c.lineWidth = 5; c.lineCap = 'round';
       c.beginPath(); c.moveTo(-8, 10);
       c.quadraticCurveTo(-14, 0, -6, -6);
       c.quadraticCurveTo(2, -12, 8, -4);
       c.quadraticCurveTo(14, 4, 6, 10);
       c.stroke();
-      // Head
       c.fillStyle = col;
       c.beginPath(); c.arc(-8, 10, 6, 0, Math.PI*2); c.fill();
-      // Poison drip
       c.fillStyle = '#76ff03';
       c.beginPath(); c.arc(-6, 15, 2, 0, Math.PI*2); c.fill();
       c.beginPath(); c.arc(-3, 18, 1.2, 0, Math.PI*2); c.fill();
-      // Eyes
       c.fillStyle = '#f44336';
       c.beginPath(); c.arc(-10, 8, 2, 0, Math.PI*2); c.arc(-6, 8, 2, 0, Math.PI*2); c.fill();
-      // Fangs
       c.fillStyle = '#fff';
       c.beginPath(); c.moveTo(-9, 13); c.lineTo(-8, 17); c.lineTo(-7, 13); c.fill();
       c.beginPath(); c.moveTo(-6, 13); c.lineTo(-5, 17); c.lineTo(-4, 13); c.fill();
       break;
     }
     case 'behemoth': {
-      // Large angular body
       c.fillStyle = col;
       c.beginPath(); c.moveTo(0, -18); c.lineTo(16, -6); c.lineTo(14, 14);
       c.lineTo(-14, 14); c.lineTo(-16, -6); c.closePath(); c.fill();
-      // Armor plates
       c.strokeStyle = '#4e342e'; c.lineWidth = 1;
       c.beginPath(); c.moveTo(-12, -2); c.lineTo(12, -2); c.stroke();
       c.beginPath(); c.moveTo(-10, 6); c.lineTo(10, 6); c.stroke();
-      // Horns
       c.strokeStyle = '#8d6e63'; c.lineWidth = 3; c.lineCap = 'round';
       c.beginPath(); c.moveTo(-10, -12); c.lineTo(-16, -22); c.stroke();
       c.beginPath(); c.moveTo(10, -12); c.lineTo(16, -22); c.stroke();
-      // Eyes (angry)
       c.fillStyle = '#ffab00';
       c.beginPath(); c.arc(-5, -8, 3, 0, Math.PI*2); c.arc(5, -8, 3, 0, Math.PI*2); c.fill();
       c.fillStyle = '#000';
       c.beginPath(); c.arc(-5, -8, 1.5, 0, Math.PI*2); c.arc(5, -8, 1.5, 0, Math.PI*2); c.fill();
-      // Mouth
       c.strokeStyle = '#3e2723'; c.lineWidth = 1.5;
       c.beginPath(); c.moveTo(-6, 2); c.lineTo(0, 5); c.lineTo(6, 2); c.stroke();
       break;
     }
     case 'assassin': {
-      // Sleek diamond body with cloak
       c.fillStyle = '#1a0030';
       c.beginPath(); c.moveTo(0, -16); c.lineTo(14, 0); c.lineTo(0, 16); c.lineTo(-14, 0); c.closePath(); c.fill();
       c.fillStyle = col;
       c.beginPath(); c.moveTo(0, -12); c.lineTo(10, 0); c.lineTo(0, 12); c.lineTo(-10, 0); c.closePath(); c.fill();
-      // Blades
       c.strokeStyle = '#ce93d8'; c.lineWidth = 2;
       c.beginPath(); c.moveTo(-10, 0); c.lineTo(-18, -6); c.stroke();
       c.beginPath(); c.moveTo(10, 0); c.lineTo(18, -6); c.stroke();
-      // Blade tips
       c.fillStyle = '#e1bee7';
       c.beginPath(); c.arc(-18, -6, 1.5, 0, Math.PI*2); c.fill();
       c.beginPath(); c.arc(18, -6, 1.5, 0, Math.PI*2); c.fill();
-      // Glowing eyes
       c.fillStyle = '#e040fb';
       c.beginPath(); c.arc(-3, -3, 2.5, 0, Math.PI*2); c.arc(3, -3, 2.5, 0, Math.PI*2); c.fill();
       c.fillStyle = '#fff';
@@ -838,36 +856,28 @@ function drawDetailedIcon(cvs, type, size) {
       break;
     }
     case 'gator': {
-      // Big gator with jaw
       c.fillStyle = col;
       c.beginPath(); c.ellipse(0, 2, 14, 10, 0, 0, Math.PI*2); c.fill();
-      // Snout
       c.fillStyle = '#004d40';
       c.beginPath(); c.ellipse(0, -8, 10, 5, 0, 0, Math.PI*2); c.fill();
-      // Jaw line (teeth)
       c.fillStyle = '#fff'; c.strokeStyle = '#00695c'; c.lineWidth = 1;
       for (let i = -6; i <= 6; i += 3) {
         c.beginPath(); c.moveTo(i, -5); c.lineTo(i, -2); c.lineTo(i+1.5, -5); c.fill();
       }
-      // Eyes on top
       c.fillStyle = '#ffeb3b';
       c.beginPath(); c.arc(-5, -11, 2.5, 0, Math.PI*2); c.arc(5, -11, 2.5, 0, Math.PI*2); c.fill();
       c.fillStyle = '#000';
       c.beginPath(); c.arc(-5, -11, 1, 0, Math.PI*2); c.arc(5, -11, 1, 0, Math.PI*2); c.fill();
-      // Tail
       c.strokeStyle = col; c.lineWidth = 4; c.lineCap = 'round';
       c.beginPath(); c.moveTo(0, 10); c.quadraticCurveTo(10, 16, 4, 20); c.stroke();
       break;
     }
     case 'filibuster': {
-      // 4 tiny frogs
       [[-8,-6],[8,-6],[-4,6],[4,6]].forEach(([ox,oy]) => {
         c.fillStyle = col;
         c.beginPath(); c.arc(ox, oy, 5, 0, Math.PI*2); c.fill();
-        // Big eyes
         c.fillStyle = '#000';
         c.beginPath(); c.arc(ox-2, oy-2, 1.2, 0, Math.PI*2); c.arc(ox+2, oy-2, 1.2, 0, Math.PI*2); c.fill();
-        // Legs
         c.strokeStyle = col; c.lineWidth = 1;
         c.beginPath(); c.moveTo(ox-3, oy+4); c.lineTo(ox-6, oy+8);
         c.moveTo(ox+3, oy+4); c.lineTo(ox+6, oy+8); c.stroke();
@@ -875,94 +885,74 @@ function drawDetailedIcon(cvs, type, size) {
       break;
     }
     case 'sniper': {
-      // Lizard with scope/gun
       c.fillStyle = col;
       c.beginPath(); c.moveTo(0, -10); c.lineTo(8, -2); c.lineTo(6, 10);
       c.lineTo(-6, 10); c.lineTo(-8, -2); c.closePath(); c.fill();
-      // Rifle
       c.strokeStyle = '#555'; c.lineWidth = 2;
       c.beginPath(); c.moveTo(8, 0); c.lineTo(20, -8); c.stroke();
-      // Scope
       c.strokeStyle = '#fff'; c.lineWidth = 1.5;
       c.beginPath(); c.arc(20, -8, 3, 0, Math.PI*2); c.stroke();
       c.fillStyle = '#f44336';
       c.beginPath(); c.arc(20, -8, 1.2, 0, Math.PI*2); c.fill();
-      // Eye
       c.fillStyle = '#ffa000';
       c.beginPath(); c.arc(-2, -4, 2.5, 0, Math.PI*2); c.fill();
       c.fillStyle = '#000';
       c.beginPath(); c.arc(-2, -4, 1, 0, Math.PI*2); c.fill();
-      // Hat
       c.fillStyle = '#5d4037';
       c.fillRect(-6, -13, 12, 3);
       c.fillRect(-4, -16, 8, 4);
       break;
     }
     case 'cobra': {
-      // Cobra with hood expanded
       c.fillStyle = col;
       c.beginPath(); c.moveTo(0, -14);
       c.quadraticCurveTo(18, -6, 12, 8);
       c.lineTo(-12, 8);
       c.quadraticCurveTo(-18, -6, 0, -14);
       c.fill();
-      // Inner hood pattern
       c.fillStyle = '#e53935';
       c.beginPath(); c.moveTo(0, -8); c.lineTo(6, 0); c.lineTo(0, 6); c.lineTo(-6, 0); c.closePath(); c.fill();
-      // Eyes
       c.fillStyle = '#ff0';
       c.beginPath(); c.arc(-5, -6, 2, 0, Math.PI*2); c.arc(5, -6, 2, 0, Math.PI*2); c.fill();
       c.fillStyle = '#000';
       c.beginPath(); c.arc(-5, -6, 0.8, 0, Math.PI*2); c.arc(5, -6, 0.8, 0, Math.PI*2); c.fill();
-      // Fangs
       c.fillStyle = '#fff';
       c.beginPath(); c.moveTo(-3, 4); c.lineTo(-2, 10); c.lineTo(-1, 4); c.fill();
       c.beginPath(); c.moveTo(1, 4); c.lineTo(2, 10); c.lineTo(3, 4); c.fill();
-      // Poison mist
       c.fillStyle = 'rgba(118,255,3,0.3)';
       c.beginPath(); c.arc(0, 14, 8, 0, Math.PI*2); c.fill();
       break;
     }
     case 'drake': {
-      // Dragon with wings
       c.fillStyle = col;
       c.beginPath(); c.moveTo(0, -16); c.lineTo(14, -4); c.lineTo(12, 14);
       c.lineTo(-12, 14); c.lineTo(-14, -4); c.closePath(); c.fill();
-      // Wings
       c.fillStyle = 'rgba(74,20,140,0.7)';
       c.beginPath(); c.moveTo(-12, -4); c.lineTo(-22, -14); c.lineTo(-20, -2); c.lineTo(-14, 4); c.closePath(); c.fill();
       c.beginPath(); c.moveTo(12, -4); c.lineTo(22, -14); c.lineTo(20, -2); c.lineTo(14, 4); c.closePath(); c.fill();
-      // Wing bones
       c.strokeStyle = '#7b1fa2'; c.lineWidth = 1;
       c.beginPath(); c.moveTo(-12, -4); c.lineTo(-22, -14); c.moveTo(-14, 0); c.lineTo(-20, -6); c.stroke();
       c.beginPath(); c.moveTo(12, -4); c.lineTo(22, -14); c.moveTo(14, 0); c.lineTo(20, -6); c.stroke();
-      // Eyes
       c.fillStyle = '#e040fb';
       c.beginPath(); c.arc(-4, -6, 3, 0, Math.PI*2); c.arc(4, -6, 3, 0, Math.PI*2); c.fill();
       c.fillStyle = '#fff';
       c.beginPath(); c.arc(-4, -6, 1.2, 0, Math.PI*2); c.arc(4, -6, 1.2, 0, Math.PI*2); c.fill();
-      // Horns
       c.strokeStyle = '#9c27b0'; c.lineWidth = 2;
       c.beginPath(); c.moveTo(-6, -14); c.lineTo(-8, -22); c.moveTo(6, -14); c.lineTo(8, -22); c.stroke();
-      // Fire breath
       c.fillStyle = 'rgba(255,152,0,0.4)';
       c.beginPath(); c.arc(0, 16, 6, 0, Math.PI*2); c.fill();
       break;
     }
     case 'insider': {
-      // Two iguanas with ties
       [[-7, 0], [7, 0]].forEach(([ox, oy]) => {
         c.fillStyle = col;
         c.beginPath(); c.ellipse(ox, oy, 7, 6, 0, 0, Math.PI*2); c.fill();
-        // Tie
         c.fillStyle = '#d32f2f';
         c.beginPath(); c.moveTo(ox, oy+2); c.lineTo(ox-2, oy+8); c.lineTo(ox+2, oy+8); c.closePath(); c.fill();
-        // Eyes
         c.fillStyle = '#c0ca33';
         c.beginPath(); c.arc(ox-2, oy-3, 2, 0, Math.PI*2); c.arc(ox+2, oy-3, 2, 0, Math.PI*2); c.fill();
         c.fillStyle = '#000';
         c.beginPath(); c.arc(ox-2, oy-3, 0.8, 0, Math.PI*2); c.arc(ox+2, oy-3, 0.8, 0, Math.PI*2); c.fill();
-        // Briefcase
         c.fillStyle = '#3e2723';
         c.fillRect(ox-4, oy+9, 8, 5);
         c.strokeStyle = '#5d4037'; c.lineWidth = 0.5;
@@ -971,38 +961,29 @@ function drawDetailedIcon(cvs, type, size) {
       break;
     }
     case 'sentinel': {
-      // Armored shell/fortress
       c.fillStyle = col;
       c.fillRect(-14, -12, 28, 26);
-      // Armor layers
       c.strokeStyle = '#546e7a'; c.lineWidth = 2;
       c.strokeRect(-14, -12, 28, 26);
       c.strokeRect(-10, -8, 20, 18);
-      // Shield glow
       c.strokeStyle = 'rgba(100,200,255,0.5)'; c.lineWidth = 2;
       c.beginPath(); c.arc(0, 0, 18, 0, Math.PI*2); c.stroke();
-      // Cross emblem
       c.fillStyle = '#90a4ae';
       c.fillRect(-2, -8, 4, 16);
       c.fillRect(-8, -2, 16, 4);
-      // Eyes
       c.fillStyle = '#64ffda';
       c.beginPath(); c.arc(-5, -4, 2, 0, Math.PI*2); c.arc(5, -4, 2, 0, Math.PI*2); c.fill();
       break;
     }
     case 'splitter': {
-      // Triangle with split line, two mini triangles
       c.fillStyle = col;
       c.beginPath(); c.moveTo(0, -14); c.lineTo(12, 8); c.lineTo(-12, 8); c.closePath(); c.fill();
-      // Split line
       c.strokeStyle = '#ffab00'; c.lineWidth = 2; c.setLineDash([3, 3]);
       c.beginPath(); c.moveTo(0, -12); c.lineTo(0, 8); c.stroke();
       c.setLineDash([]);
-      // Mini split previews
       c.fillStyle = 'rgba(230,81,0,0.4)';
       c.beginPath(); c.moveTo(-8, 12); c.lineTo(-2, 12); c.lineTo(-5, 18); c.closePath(); c.fill();
       c.beginPath(); c.moveTo(2, 12); c.lineTo(8, 12); c.lineTo(5, 18); c.closePath(); c.fill();
-      // Eyes
       c.fillStyle = '#ff0';
       c.beginPath(); c.arc(-3, -2, 2, 0, Math.PI*2); c.arc(3, -2, 2, 0, Math.PI*2); c.fill();
       c.fillStyle = '#000';
@@ -1047,7 +1028,7 @@ function useGameCard(handIdx) {
 // ============================================================
 function makeTowers() {
   const tw = W*0.1, th = H*0.075, kw = W*0.111, kh = H*0.081;
-  const ar = W*0.3; // atkRange scales with map
+  const ar = W*0.3;
   return [
     { x:W*0.144, y:H*0.075, w:tw, h:th, hp:1000, maxHp:1000, side:'ai', type:'princess', atkRange:ar, atkDmg:22, atkCd:1.5, atkTimer:0 },
     { x:W*0.756, y:H*0.075, w:tw, h:th, hp:1000, maxHp:1000, side:'ai', type:'princess', atkRange:ar, atkDmg:22, atkCd:1.5, atkTimer:0 },
@@ -1078,7 +1059,7 @@ function getWaypoints(ux,uy,tx,ty) {
 // ============================================================
 //  UNIT LOGIC
 // ============================================================
-function S(v) { return v * (W / 360); } // scale factor relative to base 360 width
+function S(v) { return v * (W / 360); }
 
 function spawnUnit(type, x, y, side) {
   const def = ALL_CARDS[type];
@@ -1247,27 +1228,20 @@ function updateAI(dt) {
 //  DRAWING
 // ============================================================
 function drawArena() {
-  // DC dark marble ground
   ctx.fillStyle='#141a14';ctx.fillRect(0,0,W,H);
-  // Enemy half — darker, corporate
   ctx.fillStyle='#0f140f';ctx.fillRect(0,0,W,RIVER_TOP);
-  // Player half — slightly warmer
   ctx.fillStyle='#161c16';ctx.fillRect(0,RIVER_BOT,W,H-RIVER_BOT);
 
-  // Stone tile grid (marble floor feel)
   ctx.strokeStyle='rgba(197,164,78,0.03)';ctx.lineWidth=1;
   const gs=S(36);
   for(let x=0;x<W;x+=gs){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
   for(let y=0;y<H;y+=gs){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
 
-  // Reflecting pool (Potomac)
   const t=performance.now()/1000;
   ctx.fillStyle='#0a1e2a';ctx.fillRect(0,RIVER_TOP,W,RIVER_BOT-RIVER_TOP);
-  // Subtle ripples
   ctx.fillStyle='rgba(40,80,100,0.2)';
   for(let x=0;x<W;x+=S(16)){const wy=Math.sin(t*1.8+x*0.1)*S(2);ctx.fillRect(x,RIVER_MID-S(1)+wy,S(10),S(2));}
 
-  // Stone bridges (monument style)
   ctx.fillStyle='#3a3a30';
   ctx.fillRect(BRIDGE_L.x1,RIVER_TOP-S(3),BRIDGE_L.x2-BRIDGE_L.x1,RIVER_BOT-RIVER_TOP+S(6));
   ctx.fillRect(BRIDGE_R.x1,RIVER_TOP-S(3),BRIDGE_R.x2-BRIDGE_R.x1,RIVER_BOT-RIVER_TOP+S(6));
@@ -1282,7 +1256,6 @@ function drawArena() {
   ctx.fillRect(BRIDGE_R.x1,RIVER_TOP-S(3),BRIDGE_R.x2-BRIDGE_R.x1,S(2));
   ctx.fillRect(BRIDGE_R.x1,RIVER_BOT+S(1),BRIDGE_R.x2-BRIDGE_R.x1,S(2));
 
-  // Center line — territory border
   ctx.strokeStyle='rgba(197,164,78,0.08)';ctx.setLineDash([S(6),S(10)]);
   ctx.beginPath();ctx.moveTo(0,H/2);ctx.lineTo(W,H/2);ctx.stroke();ctx.setLineDash([]);
 
@@ -1300,11 +1273,8 @@ function drawTowers() {
     if(t.side==='player'){g.addColorStop(0,'#c5a44e');g.addColorStop(1,'#8a7030');}
     else{g.addColorStop(0,'#8b3a3a');g.addColorStop(1,'#5a1a1a');}
     ctx.fillStyle=g;
-    // Monument-style rectangular tower
     ctx.fillRect(t.x+2,t.y+t.h*0.2,t.w-4,t.h*0.8);
-    // Pointed top
     ctx.beginPath();ctx.moveTo(cx,t.y);ctx.lineTo(t.x+t.w-2,t.y+t.h*0.2);ctx.lineTo(t.x+2,t.y+t.h*0.2);ctx.closePath();ctx.fill();
-    // Stone lines
     ctx.strokeStyle=t.side==='player'?'rgba(100,80,30,0.3)':'rgba(60,20,20,0.3)';ctx.lineWidth=1;
     for(let ly=t.y+t.h*0.3;ly<t.y+t.h;ly+=S(8)){ctx.beginPath();ctx.moveTo(t.x+S(3),ly);ctx.lineTo(t.x+t.w-S(3),ly);ctx.stroke();}
     if(t.type==='king'){
@@ -1458,19 +1428,43 @@ function updateCardDisabled() {
 //  WIN / LOSS
 // ============================================================
 function checkGameEnd() {
+  // In online mode, only HOST determines game result
+  if (isOnline && !isHost) return;
+
   const pk=towers.find(t=>t.side==='player'&&t.type==='king');
   const ak=towers.find(t=>t.side==='ai'&&t.type==='king');
-  if(pk.hp<=0) return endGame(false);
-  if(ak.hp<=0) return endGame(true);
+
+  if(pk.hp<=0) {
+    if (isOnline) { sendGameResult(false); endGame(false); }
+    else endGame(false);
+    return;
+  }
+  if(ak.hp<=0) {
+    if (isOnline) { sendGameResult(true); endGame(true); }
+    else endGame(true);
+    return;
+  }
+
   const mx=GAME_DURATION+(overtime?OT_DURATION:0);
   if(gameTime>=mx){
     const php=towers.filter(t=>t.side==='player').reduce((s,t)=>s+Math.max(0,t.hp),0);
     const ahp=towers.filter(t=>t.side==='ai').reduce((s,t)=>s+Math.max(0,t.hp),0);
-    if(php>ahp)return endGame(true);if(ahp>php)return endGame(false);
-    if(!overtime){overtime=true;elixirRate=2;return;}endGame(false);
+    if(php>ahp) {
+      if (isOnline) { sendGameResult(true); endGame(true); }
+      else endGame(true);
+    } else if(ahp>php) {
+      if (isOnline) { sendGameResult(false); endGame(false); }
+      else endGame(false);
+    } else {
+      if(!overtime){overtime=true;elixirRate=2;return;}
+      if (isOnline) { sendGameResult(false); endGame(false, 'Draw — defender wins.'); }
+      else endGame(false);
+    }
   }
 }
+
 function endGame(won, reason) {
+  if (gameOver) return; // prevent double-end
   gameOver=true;gameState='gameover';
   document.getElementById('overlay').classList.add('show');
   document.getElementById('result-text').textContent=won?'VICTORY':'DEFEAT';
@@ -1501,7 +1495,10 @@ function setupInput() {
   if (inputBound) return;
   inputBound = true;
   const handler = (e) => {
+    // Only handle input during active gameplay
     if (!selectedCard || gameOver || gameState !== 'playing') return;
+    // Don't intercept if a screen overlay is visible
+    if (document.querySelector('.screen.show')) return;
     e.preventDefault();
     const rect = canvas.getBoundingClientRect();
     const sx = W/rect.width, sy = H/rect.height;
@@ -1522,26 +1519,21 @@ function setupInput() {
   canvas.addEventListener('touchstart', handler, {passive:false});
 }
 
-// (matchmaking functions defined above with Firebase logic)
-
 // ============================================================
 //  GAME INIT & LOOP
 // ============================================================
 function sizeCanvas() {
   const vw = window.innerWidth, vh = window.innerHeight;
-  // Use full viewport; internal res matches aspect ratio but at higher detail
   const aspect = 9/16;
   let cw, ch;
   if (vw/vh < aspect) { cw = vw; ch = vw / aspect; }
   else { ch = vh; cw = ch * aspect; }
-  // Internal resolution — scale up for HD feel
   const dpr = Math.min(window.devicePixelRatio || 1, 3);
   W = Math.round(cw * dpr);
   H = Math.round(ch * dpr);
   canvas.width = W; canvas.height = H;
   canvas.style.width = cw + 'px';
   canvas.style.height = ch + 'px';
-  // Center canvas
   canvas.style.position = 'absolute';
   canvas.style.left = ((vw - cw)/2) + 'px';
   canvas.style.top = ((vh - ch)/2) + 'px';
@@ -1559,6 +1551,7 @@ function initGame() {
   units=[];projectiles=[];particles=[];dmgNums=[];
   towers=makeTowers();selectedCard=null;
   gameTime=0;overtime=false;gameOver=false;lastFrameTime=0;aiDeployTimer=2;
+  lastTowerSync=0;
 
   buildGameDeck();
   if(vsAI) aiInit();
@@ -1585,6 +1578,7 @@ function gameLoop(ts) {
     if(gameTime>=GAME_DURATION&&!overtime){overtime=true;elixirRate=2;}
     updateUnits(dt);updateTowers(dt);updateProjectiles(dt);
     if(vsAI) updateAI(dt);
+    if(isOnline && isHost) syncTowerState();
     checkGameEnd();updateTimerUI();updateElixirUI();updateCardDisabled();
   }
   drawArena();drawDeployZone();drawTowers();
@@ -1596,7 +1590,7 @@ function playAgain(){
   document.getElementById('overlay').classList.remove('show');
   if (isOnline) {
     isOnline = false;
-    startOnline(); // re-queue for another match
+    startOnline();
   } else {
     initGame();
   }
@@ -1628,13 +1622,10 @@ window.addEventListener('load', () => {
   loadProfile();
 
   if (username && playerDeck.length === DECK_SIZE) {
-    // Returning player
     showHomeScreen();
   } else if (username) {
-    // Has username but no deck
     showDeckBuilder(false);
   } else {
-    // New player
     showScreen('welcome-screen');
     initWelcome();
   }
