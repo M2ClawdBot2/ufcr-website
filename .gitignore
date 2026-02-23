@@ -1,0 +1,12 @@
+.env
+.env.*
+**/.env*
+*.key
+*.pem
+auth-profiles.json
+*.sqlite
+*.db
+logs/
+*.log
+.DS_Store
+.vscode/

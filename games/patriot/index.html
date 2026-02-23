@@ -25,7 +25,7 @@
   <script>
     const canvas = document.getElementById('arena');
     const ctx = canvas.getContext('2d');
-    let elixir = 0;
+    let elixir = 0; // Updated for push test
     const maxElixir = 10;
     const elixirCount = document.getElementById('elixir-count');
     const units = [];
@@ -52,15 +52,36 @@
       });
     }
 
-    function drawUnits() {
-      units.forEach(unit => {
-        ctx.fillStyle = unit.color;
-        ctx.fillRect(unit.x, unit.y, 20, 20);
-        unit.y -= unit.speed;
-        // Simple collision with towers (placeholder)
-        if (unit.y < 100) unit.y = 600; // Loop for demo
-      });
-    }
+    function drawLizard(x, y) {
+        ctx.fillStyle = '#00FF00'; // Green body
+        ctx.beginPath();
+        ctx.ellipse(x + 10, y + 10, 8, 5, 0, 0, 2 * Math.PI); // Body
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(x + 10, y + 10);
+        ctx.lineTo(x + 5, y + 20); // Tail
+        ctx.lineTo(x + 15, y + 20);
+        ctx.fill();
+        ctx.fillStyle = '#000000'; // Eyes
+        ctx.beginPath();
+        ctx.arc(x + 6, y + 8, 1, 0, 2 * Math.PI);
+        ctx.arc(x + 14, y + 8, 1, 0, 2 * Math.PI);
+        ctx.fill();
+      }
+
+      function drawUnits() {
+        units.forEach(unit => {
+          if (unit.type === 'lizard') {
+            drawLizard(unit.x, unit.y);
+          } else {
+            ctx.fillStyle = unit.color;
+            ctx.fillRect(unit.x, unit.y, 20, 20);
+          }
+          unit.y -= unit.speed;
+          // Simple collision with towers (placeholder)
+          if (unit.y < 100) unit.y = 600; // Loop for demo
+        });
+      }
 
     function gameLoop() {
       drawArena();
