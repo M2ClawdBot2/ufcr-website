@@ -8,9 +8,9 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { background: #0a0f0a; color: white; font-family: 'Segoe UI', sans-serif; overflow-x: hidden; display: flex; align-items: center; justify-content: center; min-height: 100vh; width: 100vw; }
-    #game-container { position: relative; display: flex; flex-direction: column; align-items: center; }
-    canvas { display: block; touch-action: none; }
+    body { background: #0a0f0a; color: white; font-family: 'Segoe UI', sans-serif; overflow: hidden; width: 100vw; height: 100vh; height: 100dvh; }
+    #game-container { position: relative; width: 100%; height: 100%; }
+    canvas { display: block; touch-action: none; width: 100%; height: 100%; }
 
     .screen { position: absolute; inset: 0; display: none; flex-direction: column; align-items: center; z-index: 200; overflow-y: auto; }
     .screen.show { display: flex; }
@@ -221,11 +221,18 @@ function loadCookie(key) {
 // ============================================================
 //  CONSTANTS
 // ============================================================
-const W = 360, H = 640;
-const RIVER_TOP = 282, RIVER_BOT = 318, RIVER_MID = 300;
-const BRIDGE_L = { x1: 40, x2: 120, cy: RIVER_MID };
-const BRIDGE_R = { x1: 240, x2: 320, cy: RIVER_MID };
-const DEPLOY_MIN_Y = H / 2 + 10, DEPLOY_MAX_Y = H - 120;
+let W = 360, H = 640;
+// All layout values computed relative to W/H — recalc on resize
+let RIVER_TOP, RIVER_BOT, RIVER_MID, BRIDGE_L, BRIDGE_R, DEPLOY_MIN_Y, DEPLOY_MAX_Y;
+function recalcLayout() {
+  RIVER_TOP = H * 0.441;
+  RIVER_BOT = H * 0.497;
+  RIVER_MID = (RIVER_TOP + RIVER_BOT) / 2;
+  BRIDGE_L = { x1: W * 0.111, x2: W * 0.333, cy: RIVER_MID };
+  BRIDGE_R = { x1: W * 0.667, x2: W * 0.889, cy: RIVER_MID };
+  DEPLOY_MIN_Y = H / 2 + H * 0.016;
+  DEPLOY_MAX_Y = H - H * 0.188;
+}
 const MAX_ELIXIR = 10, GAME_DURATION = 180, OT_DURATION = 60;
 const DECK_SIZE = 8;
 
@@ -829,13 +836,15 @@ function useGameCard(handIdx) {
 //  TOWERS
 // ============================================================
 function makeTowers() {
+  const tw = W*0.1, th = H*0.075, kw = W*0.111, kh = H*0.081;
+  const ar = W*0.3; // atkRange scales with map
   return [
-    { x:52, y:48, w:36, h:48, hp:1000, maxHp:1000, side:'ai', type:'princess', atkRange:110, atkDmg:22, atkCd:1.5, atkTimer:0 },
-    { x:272, y:48, w:36, h:48, hp:1000, maxHp:1000, side:'ai', type:'princess', atkRange:110, atkDmg:22, atkCd:1.5, atkTimer:0 },
-    { x:160, y:16, w:40, h:52, hp:2000, maxHp:2000, side:'ai', type:'king', atkRange:120, atkDmg:28, atkCd:1.8, atkTimer:0 },
-    { x:52, y:440, w:36, h:48, hp:1000, maxHp:1000, side:'player', type:'princess', atkRange:110, atkDmg:22, atkCd:1.5, atkTimer:0 },
-    { x:272, y:440, w:36, h:48, hp:1000, maxHp:1000, side:'player', type:'princess', atkRange:110, atkDmg:22, atkCd:1.5, atkTimer:0 },
-    { x:160, y:462, w:40, h:52, hp:2000, maxHp:2000, side:'player', type:'king', atkRange:120, atkDmg:28, atkCd:1.8, atkTimer:0 },
+    { x:W*0.144, y:H*0.075, w:tw, h:th, hp:1000, maxHp:1000, side:'ai', type:'princess', atkRange:ar, atkDmg:22, atkCd:1.5, atkTimer:0 },
+    { x:W*0.756, y:H*0.075, w:tw, h:th, hp:1000, maxHp:1000, side:'ai', type:'princess', atkRange:ar, atkDmg:22, atkCd:1.5, atkTimer:0 },
+    { x:W*0.444, y:H*0.025, w:kw, h:kh, hp:2000, maxHp:2000, side:'ai', type:'king', atkRange:ar*1.1, atkDmg:28, atkCd:1.8, atkTimer:0 },
+    { x:W*0.144, y:H*0.672, w:tw, h:th, hp:1000, maxHp:1000, side:'player', type:'princess', atkRange:ar, atkDmg:22, atkCd:1.5, atkTimer:0 },
+    { x:W*0.756, y:H*0.672, w:tw, h:th, hp:1000, maxHp:1000, side:'player', type:'princess', atkRange:ar, atkDmg:22, atkCd:1.5, atkTimer:0 },
+    { x:W*0.444, y:H*0.706, w:kw, h:kh, hp:2000, maxHp:2000, side:'player', type:'king', atkRange:ar*1.1, atkDmg:28, atkCd:1.8, atkTimer:0 },
   ];
 }
 function tc(t) { return { x: t.x+t.w/2, y: t.y+t.h/2 }; }
@@ -851,28 +860,30 @@ function nearestBridge(x) {
 function getWaypoints(ux,uy,tx,ty) {
   if (!needsBridge(uy,ty)) return [{x:tx,y:ty}];
   const b = nearestBridge(ux);
-  const enterY = uy > RIVER_MID ? RIVER_BOT+4 : RIVER_TOP-4;
-  const exitY = uy > RIVER_MID ? RIVER_TOP-4 : RIVER_BOT+4;
+  const enterY = uy > RIVER_MID ? RIVER_BOT+S(4) : RIVER_TOP-S(4);
+  const exitY = uy > RIVER_MID ? RIVER_TOP-S(4) : RIVER_BOT+S(4);
   return [{x:b.x,y:enterY},{x:b.x,y:b.y},{x:b.x,y:exitY},{x:tx,y:ty}];
 }
 
 // ============================================================
 //  UNIT LOGIC
 // ============================================================
+function S(v) { return v * (W / 360); } // scale factor relative to base 360 width
+
 function spawnUnit(type, x, y, side) {
   const def = ALL_CARDS[type];
   const count = def.count || 1;
   for (let i = 0; i < count; i++) {
-    const ox = count > 1 ? (i-(count-1)/2)*16 : 0;
-    const oy = count > 1 ? ((i%2)*10-5) : 0;
+    const ox = count > 1 ? (i-(count-1)/2)*S(16) : 0;
+    const oy = count > 1 ? ((i%2)*S(10)-S(5)) : 0;
     units.push({
       type, side,
-      x: Math.max(15, Math.min(W-15, x+ox)), y: y+oy,
+      x: Math.max(S(15), Math.min(W-S(15), x+ox)), y: y+oy,
       hp: def.hp, maxHp: def.hp,
-      dmg: def.dmg, spd: def.spd,
-      range: def.range, atkSpd: def.atkSpd,
+      dmg: def.dmg, spd: def.spd * (W/360),
+      range: S(def.range), atkSpd: def.atkSpd,
       atkTimer: 0, color: def.color,
-      poison: def.poison||0, splash: def.splash||0,
+      poison: def.poison||0, splash: S(def.splash||0),
       ranged: def.ranged||false, shield: def.shield||0,
       splits: def.splits||false,
       waypoints:[], wpIdx:0, poisonTimer:0,
@@ -916,7 +927,7 @@ function updateUnits(dt) {
       const nearU = findNearestEnemy(u);
       const nearT = findNearestEnemyTower(u);
       let tp = null;
-      if (nearU && dist(u,nearU) <= u.range+10) { tp = {x:nearU.x,y:nearU.y}; }
+      if (nearU && dist(u,nearU) <= u.range+S(10)) { tp = {x:nearU.x,y:nearU.y}; }
       else {
         const ud = nearU ? dist(u,nearU) : Infinity;
         if (nearT) {
@@ -931,9 +942,9 @@ function updateUnits(dt) {
     let attacked = false;
     if (u.atkTimer <= 0) {
       const nearU = findNearestEnemy(u);
-      if (nearU && dist(u,nearU) <= u.range+10) {
+      if (nearU && dist(u,nearU) <= u.range+S(10)) {
         u.atkTimer = u.atkSpd; attacked = true;
-        if (u.ranged) projectiles.push({x:u.x,y:u.y,target:nearU,dmg:u.dmg,spd:6,color:u.color,poison:u.poison,splash:u.splash});
+        if (u.ranged) projectiles.push({x:u.x,y:u.y,target:nearU,dmg:u.dmg,spd:S(6),color:u.color,poison:u.poison,splash:u.splash});
         else dealDamage(nearU,u.dmg,u);
       }
     }
@@ -941,9 +952,9 @@ function updateUnits(dt) {
       for (const t of towers) {
         if(t.side===u.side||t.hp<=0) continue;
         const c=tc(t);
-        if (dist(u,c) <= u.range+28) {
+        if (dist(u,c) <= u.range+S(28)) {
           u.atkTimer=u.atkSpd; attacked=true;
-          if(u.ranged) projectiles.push({x:u.x,y:u.y,tx:c.x,ty:c.y,towerRef:t,dmg:u.dmg,spd:6,color:u.color});
+          if(u.ranged) projectiles.push({x:u.x,y:u.y,tx:c.x,ty:c.y,towerRef:t,dmg:u.dmg,spd:S(6),color:u.color});
           else { t.hp-=u.dmg; dmgNums.push({x:c.x,y:c.y-10,val:u.dmg,life:1,color:'#ffab00'}); }
           break;
         }
@@ -953,7 +964,7 @@ function updateUnits(dt) {
     if (u.wpIdx < u.waypoints.length) {
       const wp=u.waypoints[u.wpIdx];
       const dx=wp.x-u.x, dy=wp.y-u.y, d=Math.hypot(dx,dy);
-      if (d<4) u.wpIdx++;
+      if (d<S(4)) u.wpIdx++;
       else { const step=u.spd*dt*60; u.x+=(dx/d)*step; u.y+=(dy/d)*step; }
     }
   }
@@ -973,7 +984,7 @@ function updateTowers(dt) {
     if(t.atkTimer>0)return;
     const c=tc(t); let cl=null,cd=Infinity;
     units.forEach(u=>{if(u.side===t.side)return;const d=dist(c,u);if(d<t.atkRange&&d<cd){cd=d;cl=u;}});
-    if(cl){t.atkTimer=t.atkCd;projectiles.push({x:c.x,y:c.y,target:cl,dmg:t.atkDmg,spd:5,color:t.side==='player'?'#ffd600':'#ff5252'});}
+    if(cl){t.atkTimer=t.atkCd;projectiles.push({x:c.x,y:c.y,target:cl,dmg:t.atkDmg,spd:S(5),color:t.side==='player'?'#ffd600':'#ff5252'});}
   });
 }
 
@@ -984,7 +995,7 @@ function updateProjectiles(dt) {
     if(p.towerRef){tx=p.tx;ty=p.ty;}
     else{tx=(p.target&&p.target.hp>0)?p.target.x:(p.tx||p.x);ty=(p.target&&p.target.hp>0)?p.target.y:(p.ty||p.y);}
     const dx=tx-p.x,dy=ty-p.y,d=Math.hypot(dx,dy);
-    if(d<8){
+    if(d<S(8)){
       if(p.towerRef){p.towerRef.hp-=p.dmg;dmgNums.push({x:tx,y:ty-10,val:p.dmg,life:1,color:'#ffab00'});}
       else if(p.target&&p.target.hp>0) dealDamage(p.target,p.dmg,p);
       projectiles.splice(i,1);
@@ -1012,14 +1023,14 @@ function updateAI(dt) {
   const aff=[]; aiHand.forEach((k,i)=>{if(ALL_CARDS[k].cost<=aiElixir)aff.push(i);});
   if(!aff.length)return;
   aiDeployTimer=1.5+Math.random()*2;
-  const push=units.filter(u=>u.side==='player'&&u.y<RIVER_TOP+40);
+  const push=units.filter(u=>u.side==='player'&&u.y<RIVER_TOP+S(40));
   const def=push.length>0;
   const idx=aff[Math.floor(Math.random()*aff.length)];
   const ck=aiUseCard(idx); const cd=ALL_CARDS[ck]; aiElixir-=cd.cost;
   let dx,dy;
-  if(def){const th=push[0];dx=th.x+(Math.random()-0.5)*40;dy=80+Math.random()*100;}
-  else{dx=Math.random()<0.5?60+Math.random()*80:220+Math.random()*80;dy=100+Math.random()*120;}
-  spawnUnit(ck,Math.max(20,Math.min(W-20,dx)),dy,'ai');
+  if(def){const th=push[0];dx=th.x+(Math.random()-0.5)*S(40);dy=H*0.125+Math.random()*H*0.156;}
+  else{dx=Math.random()<0.5?W*0.167+Math.random()*W*0.222:W*0.611+Math.random()*W*0.222;dy=H*0.156+Math.random()*H*0.188;}
+  spawnUnit(ck,Math.max(S(20),Math.min(W-S(20),dx)),dy,'ai');
 }
 
 // ============================================================
@@ -1035,50 +1046,46 @@ function drawArena() {
 
   // Stone tile grid (marble floor feel)
   ctx.strokeStyle='rgba(197,164,78,0.03)';ctx.lineWidth=1;
-  for(let x=0;x<W;x+=36){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
-  for(let y=0;y<H;y+=36){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+  const gs=S(36);
+  for(let x=0;x<W;x+=gs){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
+  for(let y=0;y<H;y+=gs){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
 
   // Reflecting pool (Potomac)
   const t=performance.now()/1000;
   ctx.fillStyle='#0a1e2a';ctx.fillRect(0,RIVER_TOP,W,RIVER_BOT-RIVER_TOP);
   // Subtle ripples
   ctx.fillStyle='rgba(40,80,100,0.2)';
-  for(let x=0;x<W;x+=16){const wy=Math.sin(t*1.8+x*0.1)*2;ctx.fillRect(x,RIVER_MID-1+wy,10,2);}
+  for(let x=0;x<W;x+=S(16)){const wy=Math.sin(t*1.8+x*0.1)*S(2);ctx.fillRect(x,RIVER_MID-S(1)+wy,S(10),S(2));}
 
   // Stone bridges (monument style)
   ctx.fillStyle='#3a3a30';
-  ctx.fillRect(BRIDGE_L.x1,RIVER_TOP-3,BRIDGE_L.x2-BRIDGE_L.x1,RIVER_BOT-RIVER_TOP+6);
-  ctx.fillRect(BRIDGE_R.x1,RIVER_TOP-3,BRIDGE_R.x2-BRIDGE_R.x1,RIVER_BOT-RIVER_TOP+6);
-  // Bridge stone lines
+  ctx.fillRect(BRIDGE_L.x1,RIVER_TOP-S(3),BRIDGE_L.x2-BRIDGE_L.x1,RIVER_BOT-RIVER_TOP+S(6));
+  ctx.fillRect(BRIDGE_R.x1,RIVER_TOP-S(3),BRIDGE_R.x2-BRIDGE_R.x1,RIVER_BOT-RIVER_TOP+S(6));
   ctx.strokeStyle='#2a2a22';ctx.lineWidth=1;
-  for(let y=RIVER_TOP;y<RIVER_BOT;y+=8){
+  for(let y=RIVER_TOP;y<RIVER_BOT;y+=S(8)){
     ctx.beginPath();ctx.moveTo(BRIDGE_L.x1,y);ctx.lineTo(BRIDGE_L.x2,y);ctx.stroke();
     ctx.beginPath();ctx.moveTo(BRIDGE_R.x1,y);ctx.lineTo(BRIDGE_R.x2,y);ctx.stroke();
   }
-  // Bridge railings
   ctx.fillStyle='#4a4a3e';
-  ctx.fillRect(BRIDGE_L.x1,RIVER_TOP-3,BRIDGE_L.x2-BRIDGE_L.x1,2);
-  ctx.fillRect(BRIDGE_L.x1,RIVER_BOT+1,BRIDGE_L.x2-BRIDGE_L.x1,2);
-  ctx.fillRect(BRIDGE_R.x1,RIVER_TOP-3,BRIDGE_R.x2-BRIDGE_R.x1,2);
-  ctx.fillRect(BRIDGE_R.x1,RIVER_BOT+1,BRIDGE_R.x2-BRIDGE_R.x1,2);
+  ctx.fillRect(BRIDGE_L.x1,RIVER_TOP-S(3),BRIDGE_L.x2-BRIDGE_L.x1,S(2));
+  ctx.fillRect(BRIDGE_L.x1,RIVER_BOT+S(1),BRIDGE_L.x2-BRIDGE_L.x1,S(2));
+  ctx.fillRect(BRIDGE_R.x1,RIVER_TOP-S(3),BRIDGE_R.x2-BRIDGE_R.x1,S(2));
+  ctx.fillRect(BRIDGE_R.x1,RIVER_BOT+S(1),BRIDGE_R.x2-BRIDGE_R.x1,S(2));
 
   // Center line — territory border
-  ctx.strokeStyle='rgba(197,164,78,0.08)';ctx.setLineDash([6,10]);
+  ctx.strokeStyle='rgba(197,164,78,0.08)';ctx.setLineDash([S(6),S(10)]);
   ctx.beginPath();ctx.moveTo(0,H/2);ctx.lineTo(W,H/2);ctx.stroke();ctx.setLineDash([]);
 
-  // Subtle monument silhouettes in background (decorative)
   ctx.fillStyle='rgba(197,164,78,0.02)';
-  // Washington Monument hint (enemy side)
-  ctx.beginPath();ctx.moveTo(180,2);ctx.lineTo(176,40);ctx.lineTo(184,40);ctx.closePath();ctx.fill();
-  // Capitol dome hint (player side)
-  ctx.beginPath();ctx.arc(180,H-8,20,Math.PI,0);ctx.fill();
+  ctx.beginPath();ctx.moveTo(W/2,S(2));ctx.lineTo(W/2-S(4),S(40));ctx.lineTo(W/2+S(4),S(40));ctx.closePath();ctx.fill();
+  ctx.beginPath();ctx.arc(W/2,H-S(8),S(20),Math.PI,0);ctx.fill();
 }
 
 function drawTowers() {
   towers.forEach(t=>{
-    if(t.hp<=0){ctx.fillStyle='rgba(100,100,100,0.3)';ctx.fillRect(t.x+5,t.y+10,t.w-10,t.h-10);return;}
+    if(t.hp<=0){ctx.fillStyle='rgba(100,100,100,0.3)';ctx.fillRect(t.x+S(5),t.y+S(10),t.w-S(10),t.h-S(10));return;}
     const cx=t.x+t.w/2,cy=t.y+t.h/2;
-    ctx.fillStyle='rgba(0,0,0,0.25)';ctx.beginPath();ctx.ellipse(cx,t.y+t.h+3,t.w/2,4,0,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='rgba(0,0,0,0.25)';ctx.beginPath();ctx.ellipse(cx,t.y+t.h+S(3),t.w/2,S(4),0,0,Math.PI*2);ctx.fill();
     const g=ctx.createLinearGradient(t.x,t.y,t.x,t.y+t.h);
     if(t.side==='player'){g.addColorStop(0,'#c5a44e');g.addColorStop(1,'#8a7030');}
     else{g.addColorStop(0,'#8b3a3a');g.addColorStop(1,'#5a1a1a');}
@@ -1089,27 +1096,27 @@ function drawTowers() {
     ctx.beginPath();ctx.moveTo(cx,t.y);ctx.lineTo(t.x+t.w-2,t.y+t.h*0.2);ctx.lineTo(t.x+2,t.y+t.h*0.2);ctx.closePath();ctx.fill();
     // Stone lines
     ctx.strokeStyle=t.side==='player'?'rgba(100,80,30,0.3)':'rgba(60,20,20,0.3)';ctx.lineWidth=1;
-    for(let ly=t.y+t.h*0.3;ly<t.y+t.h;ly+=8){ctx.beginPath();ctx.moveTo(t.x+3,ly);ctx.lineTo(t.x+t.w-3,ly);ctx.stroke();}
+    for(let ly=t.y+t.h*0.3;ly<t.y+t.h;ly+=S(8)){ctx.beginPath();ctx.moveTo(t.x+S(3),ly);ctx.lineTo(t.x+t.w-S(3),ly);ctx.stroke();}
     if(t.type==='king'){
-      // Star emblem instead of crown
       ctx.fillStyle=t.side==='player'?'#e8d48a':'#c06060';
-      const crY=t.y-4;
+      const crY=t.y-S(4);
       for(let a=0;a<5;a++){const ang=a*Math.PI*2/5-Math.PI/2;
-        ctx.beginPath();ctx.arc(cx+Math.cos(ang)*6,crY+4+Math.sin(ang)*6,2,0,Math.PI*2);ctx.fill();}
-      ctx.beginPath();ctx.arc(cx,crY+4,3,0,Math.PI*2);ctx.fill();
+        ctx.beginPath();ctx.arc(cx+Math.cos(ang)*S(6),crY+S(4)+Math.sin(ang)*S(6),S(2),0,Math.PI*2);ctx.fill();}
+      ctx.beginPath();ctx.arc(cx,crY+S(4),S(3),0,Math.PI*2);ctx.fill();
     }
-    const bw=t.w+6,bh=5,bx=t.x-3,by=t.y-12;
+    const bw=t.w+S(6),bh=S(5),bx=t.x-S(3),by=t.y-S(12);
     ctx.fillStyle='#1a1a1a';ctx.fillRect(bx,by,bw,bh);
     const r=t.hp/t.maxHp;ctx.fillStyle=r>0.5?'#4caf50':r>0.25?'#ff9800':'#f44336';
     ctx.fillRect(bx,by,bw*r,bh);
-    ctx.fillStyle='white';ctx.font='bold 8px sans-serif';ctx.textAlign='center';
-    ctx.fillText(Math.ceil(t.hp),cx,by-2);
+    ctx.fillStyle='white';ctx.font=`bold ${S(8)}px sans-serif`;ctx.textAlign='center';
+    ctx.fillText(Math.ceil(t.hp),cx,by-S(2));
   });
 }
 
 function drawUnit(u) {
-  const t=performance.now()/1000, bob=Math.sin(t*4+u.animPhase)*1.5;
+  const t=performance.now()/1000, bob=Math.sin(t*4+u.animPhase)*S(1.5);
   ctx.save();ctx.translate(u.x,u.y+bob);
+  const sc=W/360; ctx.scale(sc,sc);
   const s=u.side==='player'?1:-1;
   const fn={
     lobbyist(){ctx.fillStyle=u.color;ctx.beginPath();ctx.ellipse(0,0,7,5,0,0,Math.PI*2);ctx.fill();
@@ -1155,28 +1162,28 @@ function drawUnit(u) {
   (fn[u.type]||fn.lobbyist)();
   ctx.restore();
   ctx.strokeStyle=u.side==='player'?'rgba(255,215,0,0.35)':'rgba(255,60,60,0.3)';ctx.lineWidth=1;
-  ctx.beginPath();ctx.ellipse(u.x,u.y+9+bob,9,3.5,0,0,Math.PI*2);ctx.stroke();
-  if(u.hp<u.maxHp){const bw=18,bh=3;ctx.fillStyle='#111';ctx.fillRect(u.x-bw/2,u.y-16,bw,bh);
-    ctx.fillStyle=u.side==='player'?'#4caf50':'#f44336';ctx.fillRect(u.x-bw/2,u.y-16,bw*Math.max(0,u.hp/u.maxHp),bh);}
+  ctx.beginPath();ctx.ellipse(u.x,u.y+S(9)+bob,S(9),S(3.5),0,0,Math.PI*2);ctx.stroke();
+  if(u.hp<u.maxHp){const bw=S(18),bh=S(3);ctx.fillStyle='#111';ctx.fillRect(u.x-bw/2,u.y-S(16),bw,bh);
+    ctx.fillStyle=u.side==='player'?'#4caf50':'#f44336';ctx.fillRect(u.x-bw/2,u.y-S(16),bw*Math.max(0,u.hp/u.maxHp),bh);}
   if(u.shield>0&&ALL_CARDS[u.type].shield){ctx.fillStyle='rgba(100,200,255,0.7)';
-    ctx.fillRect(u.x-9,u.y-19,18*(u.shield/ALL_CARDS[u.type].shield),2);}
+    ctx.fillRect(u.x-S(9),u.y-S(19),S(18)*(u.shield/ALL_CARDS[u.type].shield),S(2));}
 }
 
-function drawProjectiles(){projectiles.forEach(p=>{ctx.fillStyle=p.color||'#ffeb3b';ctx.beginPath();ctx.arc(p.x,p.y,3,0,Math.PI*2);ctx.fill();
-  ctx.fillStyle=(p.color||'#ffeb3b')+'44';ctx.beginPath();ctx.arc(p.x,p.y,6,0,Math.PI*2);ctx.fill();});}
+function drawProjectiles(){projectiles.forEach(p=>{ctx.fillStyle=p.color||'#ffeb3b';ctx.beginPath();ctx.arc(p.x,p.y,S(3),0,Math.PI*2);ctx.fill();
+  ctx.fillStyle=(p.color||'#ffeb3b')+'44';ctx.beginPath();ctx.arc(p.x,p.y,S(6),0,Math.PI*2);ctx.fill();});}
 
-function spawnDeathFX(x,y,color){for(let i=0;i<6;i++)particles.push({x,y,vx:(Math.random()-0.5)*4,vy:(Math.random()-0.5)*4-2,color,life:1});}
+function spawnDeathFX(x,y,color){for(let i=0;i<6;i++)particles.push({x,y,vx:(Math.random()-0.5)*S(4),vy:(Math.random()-0.5)*S(4)-S(2),color,life:1});}
 
 function drawParticles(){for(let i=particles.length-1;i>=0;i--){const p=particles[i];p.life-=0.025;if(p.life<=0){particles.splice(i,1);continue;}
-  p.x+=p.vx;p.y+=p.vy;p.vy+=0.08;ctx.globalAlpha=p.life;ctx.fillStyle=p.color;ctx.fillRect(p.x-2,p.y-2,4,4);}ctx.globalAlpha=1;}
+  p.x+=p.vx;p.y+=p.vy;p.vy+=S(0.08);ctx.globalAlpha=p.life;ctx.fillStyle=p.color;const ps=S(2);ctx.fillRect(p.x-ps,p.y-ps,ps*2,ps*2);}ctx.globalAlpha=1;}
 
-function drawDmgNums(){for(let i=dmgNums.length-1;i>=0;i--){const d=dmgNums[i];d.life-=0.03;d.y-=0.7;
+function drawDmgNums(){for(let i=dmgNums.length-1;i>=0;i--){const d=dmgNums[i];d.life-=0.03;d.y-=S(0.7);
   if(d.life<=0){dmgNums.splice(i,1);continue;}ctx.globalAlpha=d.life;ctx.fillStyle=d.color||'#ff5252';
-  ctx.font='bold 10px sans-serif';ctx.textAlign='center';ctx.fillText('-'+d.val,d.x,d.y);}ctx.globalAlpha=1;}
+  ctx.font=`bold ${S(10)}px sans-serif`;ctx.textAlign='center';ctx.fillText('-'+d.val,d.x,d.y);}ctx.globalAlpha=1;}
 
 function drawDeployZone(){if(!selectedCard)return;ctx.fillStyle='rgba(197,164,78,0.05)';
   ctx.fillRect(0,DEPLOY_MIN_Y,W,DEPLOY_MAX_Y-DEPLOY_MIN_Y);ctx.strokeStyle='rgba(197,164,78,0.2)';
-  ctx.setLineDash([5,5]);ctx.beginPath();ctx.moveTo(0,DEPLOY_MIN_Y);ctx.lineTo(W,DEPLOY_MIN_Y);ctx.stroke();ctx.setLineDash([]);}
+  ctx.setLineDash([S(5),S(5)]);ctx.beginPath();ctx.moveTo(0,DEPLOY_MIN_Y);ctx.lineTo(W,DEPLOY_MIN_Y);ctx.stroke();ctx.setLineDash([]);}
 
 // ============================================================
 //  IN-GAME HUD
@@ -1321,16 +1328,33 @@ function cancelMatchmaking() {
 // ============================================================
 //  GAME INIT & LOOP
 // ============================================================
+function sizeCanvas() {
+  const vw = window.innerWidth, vh = window.innerHeight;
+  // Use full viewport; internal res matches aspect ratio but at higher detail
+  const aspect = 9/16;
+  let cw, ch;
+  if (vw/vh < aspect) { cw = vw; ch = vw / aspect; }
+  else { ch = vh; cw = ch * aspect; }
+  // Internal resolution — scale up for HD feel
+  const dpr = Math.min(window.devicePixelRatio || 1, 3);
+  W = Math.round(cw * dpr);
+  H = Math.round(ch * dpr);
+  canvas.width = W; canvas.height = H;
+  canvas.style.width = cw + 'px';
+  canvas.style.height = ch + 'px';
+  // Center canvas
+  canvas.style.position = 'absolute';
+  canvas.style.left = ((vw - cw)/2) + 'px';
+  canvas.style.top = ((vh - ch)/2) + 'px';
+}
+
 function initGame() {
   gameState = 'playing';
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('show'));
   canvas = document.getElementById('arena');
   ctx = canvas.getContext('2d');
-  const maxH = window.innerHeight;
-  const scale = Math.min(1,(maxH-10)/H);
-  canvas.style.width=(W*scale)+'px';canvas.style.height=(H*scale)+'px';
-  canvas.width=W;canvas.height=H;
-  document.getElementById('game-container').style.width=(W*scale)+'px';
+  sizeCanvas();
+  recalcLayout();
 
   elixir=5;aiElixir=5;elixirRate=1;
   units=[];projectiles=[];particles=[];dmgNums=[];
@@ -1393,10 +1417,8 @@ document.getElementById('btn-deck').addEventListener('click', ()=>showDeckBuilde
 // ============================================================
 window.addEventListener('load', () => {
   canvas = document.getElementById('arena');
-  const scale = Math.min(1,(window.innerHeight-10)/H);
-  canvas.style.width=(W*scale)+'px';canvas.style.height=(H*scale)+'px';
-  canvas.width=W;canvas.height=H;
-  document.getElementById('game-container').style.width=(W*scale)+'px';
+  sizeCanvas();
+  recalcLayout();
 
   loadProfile();
 
@@ -1413,8 +1435,11 @@ window.addEventListener('load', () => {
   }
 });
 
-// Also init welcome listeners on DOMContentLoaded in case load already fired
 document.addEventListener('DOMContentLoaded', initWelcome);
+window.addEventListener('resize', () => {
+  canvas = document.getElementById('arena');
+  sizeCanvas(); recalcLayout();
+});
 </script>
 </body>
 </html>
