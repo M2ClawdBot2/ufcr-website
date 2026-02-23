@@ -501,10 +501,14 @@ function reconcileUnits(hostUnits) {
   });
 }
 
+let processedDeploys = new Set();
 function listenForOpponentDeploys() {
   const role = isHost ? 'guestDeploys' : 'hostDeploys';
   const ref = fbDb.ref('matches/' + myMatchId + '/' + role);
   ref.on('child_added', snap => {
+    // Deduplicate — child_added fires for historical entries too
+    if (processedDeploys.has(snap.key)) return;
+    processedDeploys.add(snap.key);
     const d = snap.val();
     if (!d) return;
     const mx = d.x * W;
@@ -1630,8 +1634,13 @@ function setupInput() {
     if(cy<DEPLOY_MIN_Y||cy>DEPLOY_MAX_Y) return;
     const def=ALL_CARDS[selectedCard.type]; if(elixir<def.cost) return;
     elixir -= def.cost;
-    spawnUnit(selectedCard.type, cx, cy, 'player');
-    if (isOnline) sendDeploy(selectedCard.type, cx, cy);
+    if (isOnline && !isHost) {
+      // Guest: send deploy to host — unit appears via next state sync
+      sendDeploy(selectedCard.type, cx, cy);
+    } else {
+      // Host or VS AI: spawn locally (host's sim is authoritative)
+      spawnUnit(selectedCard.type, cx, cy, 'player');
+    }
     useGameCard(selectedCard.handIdx);
     document.querySelectorAll('.card').forEach(c=>c.classList.remove('selected'));
     selectedCard = null;
@@ -1673,7 +1682,7 @@ function initGame() {
   units=[];projectiles=[];particles=[];dmgNums=[];
   towers=makeTowers();selectedCard=null;
   gameTime=0;overtime=false;gameOver=false;lastFrameTime=0;aiDeployTimer=1;
-  lastStateSync=0;unitIdCounter=0;
+  lastStateSync=0;unitIdCounter=0;processedDeploys=new Set();
 
   buildGameDeck();
   if(vsAI) aiInit();
