@@ -469,15 +469,15 @@ function reconcileUnits(hostUnits) {
   const gScaleX = W / SYNC_W, gScaleY = H / SYNC_H;
   hostUnits.forEach(hu => {
     const guestSide = hu.s === 0 ? 'ai' : 'player'; // flip sides
-    const guestX = hu.x * SYNC_W * gScaleX;   // 0-1 → guest pixels
-    const guestY = (1 - hu.y) * SYNC_H * gScaleY; // 0-1 flipped → guest pixels
+    const guestX = hu.x * SYNC_W * gScaleX;
+    const guestY = (FLIP_Y_AXIS - hu.y) * SYNC_H * gScaleY; // flip around board center
 
     const local = units.find(u => u.syncId === hu.id);
     if (local) {
       local.targetX = guestX;
       local.targetY = guestY;
       local.velX = (hu.vx || 0) * SYNC_W * gScaleX;
-      local.velY = -(hu.vy || 0) * SYNC_H * gScaleY;
+      local.velY = -(hu.vy || 0) * SYNC_H * gScaleY; // negate Y velocity for flip
       local.hp = hu.h;
       local.side = guestSide;
     } else {
@@ -516,7 +516,7 @@ function listenForOpponentDeploys() {
     // Denormalize from 0-1 to host's actual canvas dimensions
     const hScaleX = W / SYNC_W, hScaleY = H / SYNC_H;
     const mx = d.x * SYNC_W * hScaleX;
-    const my = (1 - d.y) * SYNC_H * hScaleY;
+    const my = (FLIP_Y_AXIS - d.y) * SYNC_H * hScaleY;
     spawnUnit(d.type, mx, my, 'ai');
   });
 }
@@ -584,6 +584,9 @@ function loadCookie(key) {
 let W = 360, H = 640;
 // Fixed reference resolution for network sync (never changes)
 const SYNC_W = 360, SYNC_H = 640;
+// Board flip axis — average of AI king center (0.0655) and Player king center (0.7465)
+// Used to mirror Y positions between host and guest perspectives
+const FLIP_Y_AXIS = 0.812; // sum of the two centers; flipped = FLIP_Y_AXIS - y
 let RIVER_TOP, RIVER_BOT, RIVER_MID, BRIDGE_L, BRIDGE_R, DEPLOY_MIN_Y, DEPLOY_MAX_Y;
 function recalcLayout() {
   RIVER_TOP = H * 0.441;
