@@ -162,9 +162,9 @@
     <div class="home-title">PATRIOT</div>
     <div class="home-sub">DRAIN THE SWAMP</div>
     <div class="home-username" id="home-user"></div>
-    <button class="home-btn" id="btn-ai">⚔ VS COMPUTER</button>
-    <button class="home-btn" id="btn-online">🌐 PLAY ONLINE</button>
-    <button class="home-btn" id="btn-deck">✎ EDIT DECK</button>
+    <button class="home-btn" id="btn-ai">VS COMPUTER</button>
+    <button class="home-btn" id="btn-online">PLAY ONLINE</button>
+    <button class="home-btn" id="btn-deck">EDIT DECK</button>
     <div class="home-footer">UFCR.ONLINE</div>
   </div>
 
@@ -238,84 +238,84 @@ const DECK_SIZE = 8;
 // ============================================================
 const ALL_CARDS = {
   lobbyist: {
-    name: 'Lobbyist Lizard', cost: 3, hp: 180, dmg: 16, spd: 2.0, range: 22, atkSpd: 0.7,
+    name: 'Lobbyist Lizard', cost: 3, hp: 180, dmg: 16, spd: 1.1, range: 22, atkSpd: 0.7,
     color: '#4caf50', count: 3,
     category: 'swarm', tag: 'Swarm', tagClass: 'tag-swarm',
     desc: 'Deploys 3 fast lizards that overwhelm with numbers. Weak alone but deadly in packs.',
     flavorStats: 'HP 180 · DMG 16 · SPD Fast · ×3 units'
   },
   viper: {
-    name: 'Venom Viper', cost: 3, hp: 200, dmg: 10, spd: 1.6, range: 28, atkSpd: 0.6,
+    name: 'Venom Viper', cost: 3, hp: 200, dmg: 10, spd: 0.9, range: 28, atkSpd: 0.6,
     color: '#8bc34a', count: 2, poison: 6,
     category: 'offense', tag: 'Offense', tagClass: 'tag-offense',
     desc: 'Twin vipers with toxic bite. Poison continues damaging enemies after the attack.',
     flavorStats: 'HP 200 · DMG 10+poison · SPD Med · ×2 units'
   },
   behemoth: {
-    name: 'Bureaucrat Behemoth', cost: 5, hp: 700, dmg: 40, spd: 0.7, range: 22, atkSpd: 1.3,
+    name: 'Bureaucrat Behemoth', cost: 5, hp: 700, dmg: 40, spd: 0.4, range: 22, atkSpd: 1.3,
     color: '#795548', count: 1, splash: 45,
     category: 'tank', tag: 'Heavy', tagClass: 'tag-tank',
     desc: 'Massive armored beast. Slow but devastating splash damage crushes groups.',
     flavorStats: 'HP 700 · DMG 40 splash · SPD Slow'
   },
   assassin: {
-    name: 'Shadow Assassin', cost: 4, hp: 130, dmg: 55, spd: 2.8, range: 18, atkSpd: 0.9,
+    name: 'Shadow Assassin', cost: 4, hp: 130, dmg: 55, spd: 1.5, range: 18, atkSpd: 0.9,
     color: '#9c27b0', count: 1,
     category: 'offense', tag: 'Offense', tagClass: 'tag-offense',
     desc: 'Lightning-fast glass cannon. Insane damage but paper-thin HP. Use to snipe key targets.',
     flavorStats: 'HP 130 · DMG 55 · SPD Very Fast'
   },
   gator: {
-    name: 'Swamp Gator', cost: 4, hp: 450, dmg: 28, spd: 1.2, range: 20, atkSpd: 1.0,
+    name: 'Swamp Gator', cost: 4, hp: 450, dmg: 28, spd: 0.7, range: 20, atkSpd: 1.0,
     color: '#00796b', count: 1,
     category: 'tank', tag: 'Heavy', tagClass: 'tag-tank',
     desc: 'Tough mid-cost bruiser. Good HP and decent damage — reliable frontline fighter.',
     flavorStats: 'HP 450 · DMG 28 · SPD Med'
   },
   filibuster: {
-    name: 'Filibuster Frog', cost: 2, hp: 100, dmg: 8, spd: 2.5, range: 18, atkSpd: 0.5,
+    name: 'Filibuster Frog', cost: 2, hp: 100, dmg: 8, spd: 1.3, range: 18, atkSpd: 0.5,
     color: '#26c6da', count: 4,
     category: 'swarm', tag: 'Swarm', tagClass: 'tag-swarm',
     desc: 'Cheapest card. Spawns 4 tiny frogs that swarm and distract. Great cycle card.',
     flavorStats: 'HP 100 · DMG 8 · SPD Fast · ×4 units'
   },
   sniper: {
-    name: 'Sniper Salamander', cost: 4, hp: 160, dmg: 65, spd: 0.9, range: 100, atkSpd: 2.0,
+    name: 'Sniper Salamander', cost: 4, hp: 160, dmg: 65, spd: 0.5, range: 100, atkSpd: 2.0,
     color: '#ffa000', count: 1, ranged: true,
     category: 'ranged', tag: 'Ranged', tagClass: 'tag-ranged',
     desc: 'Extreme range, extreme damage, extreme vulnerability. Place behind tanks for max value.',
     flavorStats: 'HP 160 · DMG 65 · RNG Long · SPD Slow'
   },
   cobra: {
-    name: 'Corruption Cobra', cost: 5, hp: 300, dmg: 20, spd: 1.0, range: 60, atkSpd: 1.2,
+    name: 'Corruption Cobra', cost: 5, hp: 300, dmg: 20, spd: 0.55, range: 60, atkSpd: 1.2,
     color: '#c62828', count: 1, ranged: true, poison: 8, splash: 35,
     category: 'ranged', tag: 'Ranged', tagClass: 'tag-ranged',
     desc: 'Ranged area-of-effect poison. Melts groups from a distance. The ultimate support unit.',
     flavorStats: 'HP 300 · DMG 20+poison AoE · RNG Long'
   },
   drake: {
-    name: 'Deep State Drake', cost: 7, hp: 800, dmg: 50, spd: 1.0, range: 25, atkSpd: 1.4,
+    name: 'Deep State Drake', cost: 7, hp: 800, dmg: 50, spd: 0.55, range: 25, atkSpd: 1.4,
     color: '#4a148c', count: 1, splash: 50,
     category: 'special', tag: 'Boss', tagClass: 'tag-special',
     desc: 'The ultimate weapon. Massive HP, huge splash damage. Worth every drop of elixir.',
     flavorStats: 'HP 800 · DMG 50 splash · SPD Med'
   },
   insider: {
-    name: 'Insider Iguana', cost: 3, hp: 250, dmg: 22, spd: 1.5, range: 22, atkSpd: 0.8,
+    name: 'Insider Iguana', cost: 3, hp: 250, dmg: 22, spd: 0.85, range: 22, atkSpd: 0.8,
     color: '#558b2f', count: 2,
     category: 'offense', tag: 'Offense', tagClass: 'tag-offense',
     desc: 'Well-rounded pair of fighters. Jack of all trades — solid in any deck.',
     flavorStats: 'HP 250 · DMG 22 · SPD Med · ×2 units'
   },
   sentinel: {
-    name: 'Sentinel Shell', cost: 6, hp: 900, dmg: 15, spd: 0.6, range: 20, atkSpd: 1.5,
+    name: 'Sentinel Shell', cost: 6, hp: 900, dmg: 15, spd: 0.35, range: 20, atkSpd: 1.5,
     color: '#37474f', count: 1, shield: 200,
     category: 'tank', tag: 'Defense', tagClass: 'tag-tank',
     desc: 'The wall. Energy shield absorbs the first 200 damage. Slow but nearly unkillable.',
     flavorStats: 'HP 900 + 200 shield · DMG 15 · SPD Slow'
   },
   splitter: {
-    name: 'Gerrymander', cost: 4, hp: 200, dmg: 25, spd: 1.8, range: 20, atkSpd: 0.8,
+    name: 'Gerrymander', cost: 4, hp: 200, dmg: 25, spd: 1.0, range: 20, atkSpd: 0.8,
     color: '#e65100', count: 1, splits: true,
     category: 'special', tag: 'Special', tagClass: 'tag-special',
     desc: 'Splits into 2 smaller units on death. Hard to fully remove — they just keep coming.',
@@ -423,7 +423,7 @@ function buildDeckUI(fromHome) {
       <h2>BUILD YOUR DECK</h2>
       <p>Select ${DECK_SIZE} cards for battle</p>
     </div>
-    <div class="deck-username" onclick="changeUsername()">Playing as: <b>${username}</b> ✎</div>
+    <div class="deck-username" onclick="changeUsername()">Playing as: <b>${username}</b> [edit]</div>
     <div id="my-deck"></div>
     <div id="deck-count">${playerDeck.length} / ${DECK_SIZE} selected</div>
     <div id="deck-avg"></div>
@@ -806,7 +806,7 @@ function drawDetailedIcon(cvs, type, size) {
 function showHomeScreen() {
   showScreen('home-screen');
   gameState = 'home';
-  document.getElementById('home-user').textContent = `⚔ ${username}`;
+  document.getElementById('home-user').textContent = username;
 }
 
 // ============================================================
@@ -837,9 +837,9 @@ function makeTowers() {
     { x:52, y:48, w:36, h:48, hp:1000, maxHp:1000, side:'ai', type:'princess', atkRange:110, atkDmg:22, atkCd:1.5, atkTimer:0 },
     { x:272, y:48, w:36, h:48, hp:1000, maxHp:1000, side:'ai', type:'princess', atkRange:110, atkDmg:22, atkCd:1.5, atkTimer:0 },
     { x:160, y:16, w:40, h:52, hp:2000, maxHp:2000, side:'ai', type:'king', atkRange:120, atkDmg:28, atkCd:1.8, atkTimer:0 },
-    { x:52, y:480, w:36, h:48, hp:1000, maxHp:1000, side:'player', type:'princess', atkRange:110, atkDmg:22, atkCd:1.5, atkTimer:0 },
-    { x:272, y:480, w:36, h:48, hp:1000, maxHp:1000, side:'player', type:'princess', atkRange:110, atkDmg:22, atkCd:1.5, atkTimer:0 },
-    { x:160, y:508, w:40, h:52, hp:2000, maxHp:2000, side:'player', type:'king', atkRange:120, atkDmg:28, atkCd:1.8, atkTimer:0 },
+    { x:52, y:440, w:36, h:48, hp:1000, maxHp:1000, side:'player', type:'princess', atkRange:110, atkDmg:22, atkCd:1.5, atkTimer:0 },
+    { x:272, y:440, w:36, h:48, hp:1000, maxHp:1000, side:'player', type:'princess', atkRange:110, atkDmg:22, atkCd:1.5, atkTimer:0 },
+    { x:160, y:462, w:40, h:52, hp:2000, maxHp:2000, side:'player', type:'king', atkRange:120, atkDmg:28, atkCd:1.8, atkTimer:0 },
   ];
 }
 function tc(t) { return { x: t.x+t.w/2, y: t.y+t.h/2 }; }
