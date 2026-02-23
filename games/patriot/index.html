@@ -365,7 +365,7 @@ let unitIdCounter = 0;
 function syncGameState() {
   if (!isHost || !myMatchId || !fbDb) return;
   const now = Date.now();
-  if (now - lastStateSync < 500) return;
+  if (now - lastStateSync < 1000) return;
   lastStateSync = now;
 
   const towerState = towers.map(t => ({ hp: Math.round(t.hp) }));
@@ -533,9 +533,14 @@ function beginOnlineGame(opponentDeck) {
   vsAI = false;
   isOnline = true;
   initGame();
-  listenForOpponentDeploys();
+  if (isHost) {
+    // Host listens for guest deploys to spawn them into its simulation
+    listenForOpponentDeploys();
+  } else {
+    // Guest gets ALL state from host's gameState sync — no deploy listener needed
+    listenForHostState();
+  }
   listenForOpponentDisconnect();
-  if (!isHost) listenForHostState();
 }
 
 // ============================================================
