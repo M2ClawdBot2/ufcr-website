@@ -30,11 +30,11 @@
     const elixirCount = document.getElementById('elixir-count');
     const units = [];
     const towers = [
-      { x: 20, y: 20, hp: 1000, side: 'opponent', type: 'princess' },
-      { x: 300, y: 20, hp: 1000, side: 'opponent', type: 'princess' },
+      { x: 90, y: 20, hp: 1000, side: 'opponent', type: 'princess', lane: 'left' },
+      { x: 250, y: 20, hp: 1000, side: 'opponent', type: 'princess', lane: 'right' },
       { x: 180, y: 20, hp: 2000, side: 'opponent', type: 'king' },
-      { x: 20, y: 540, hp: 1000, side: 'player', type: 'princess' },
-      { x: 300, y: 540, hp: 1000, side: 'player', type: 'princess' },
+      { x: 90, y: 540, hp: 1000, side: 'player', type: 'princess', lane: 'left' },
+      { x: 250, y: 540, hp: 1000, side: 'player', type: 'princess', lane: 'right' },
       { x: 180, y: 540, hp: 2000, side: 'player', type: 'king' }
     ];
 
@@ -42,7 +42,10 @@
       ctx.fillStyle = '#0A0E1A';
       ctx.fillRect(0, 0, 360, 640);
       ctx.fillStyle = '#0021A5';
-      ctx.fillRect(0, 320, 360, 40); // River
+      ctx.fillRect(0, 240, 360, 160); // Wider lake
+      ctx.fillStyle = '#808080';
+      ctx.fillRect(60, 300, 80, 40); // Left bridge
+      ctx.fillRect(220, 300, 80, 40); // Right bridge
       // Draw towers
       towers.forEach(tower => {
         ctx.fillStyle = tower.side === 'player' ? '#F0A830' : '#FA4616';
@@ -108,17 +111,32 @@
       });
     }
 
-    document.querySelectorAll('.card').forEach(card => {
-      card.addEventListener('click', () => {
-        const cost = parseInt(card.dataset.cost);
-        if (elixir >= cost && !card.classList.contains('disabled')) {
-          elixir -= cost;
-          elixirCount.textContent = elixir;
-          units.push({ x: Math.random() * 360, y: 600, color: '#00FF00', speed: 1 });
-          alert(`Deployed ${card.textContent} in a random lane!`);
-        }
-      });
-    });
+    let selectedCard = null;
+
+document.querySelectorAll('.card').forEach(card => {
+  card.addEventListener('click', () => {
+    const cost = parseInt(card.dataset.cost);
+    if (elixir >= cost && !card.classList.contains('disabled')) {
+      selectedCard = { cost, type: card.dataset.type };
+      // Highlight selected card (optional)
+    }
+  });
+});
+
+canvas.addEventListener('click', (e) => {
+  if (selectedCard) {
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    if (y > canvas.height / 2) { // Player's side
+      const lane = x < canvas.width / 2 ? 'left' : 'right';
+      elixir -= selectedCard.cost;
+      elixirCount.textContent = elixir;
+      units.push({ x: lane === 'left' ? 90 : 250, y, type: selectedCard.type, side: 'player', speed: 1, hp: 100, damage: 10, lane });
+      selectedCard = null;
+    }
+  }
+});
 
     gameLoop();
   </script>
