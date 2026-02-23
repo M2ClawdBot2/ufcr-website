@@ -1562,9 +1562,11 @@ function checkGameEnd() {
       if (isOnline) { sendGameResult(false); endGame(false); }
       else endGame(false);
     } else {
+      // Tied — go to overtime first, then sudden death
       if(!overtime){overtime=true;elixirRate=2;return;}
-      if (isOnline) { sendGameResult(false); endGame(false, 'Draw — defender wins.'); }
-      else endGame(false);
+      // Still tied after OT — it's a draw
+      if (isOnline) { sendGameResult(false); endGame(false, 'Draw after overtime.'); }
+      else endGame(false, 'Draw after overtime.');
     }
   }
 }
@@ -1656,7 +1658,7 @@ function initGame() {
   elixir=5;aiElixir=5;elixirRate=1;
   units=[];projectiles=[];particles=[];dmgNums=[];
   towers=makeTowers();selectedCard=null;
-  gameTime=0;overtime=false;gameOver=false;lastFrameTime=0;aiDeployTimer=2;
+  gameTime=0;overtime=false;gameOver=false;lastFrameTime=0;aiDeployTimer=1;
   lastStateSync=0;unitIdCounter=0;
 
   buildGameDeck();
