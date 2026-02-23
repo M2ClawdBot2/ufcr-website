@@ -888,6 +888,134 @@ a { text-decoration: none; color: inherit; }
   .featured-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
+/* ========== MINIGAMES ========== */
+.minigames-section {
+  position: relative;
+  overflow: hidden;
+}
+
+.minigames-bg {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(600px 300px at 10% 20%, rgba(255,215,0,0.18), transparent 60%),
+    radial-gradient(500px 240px at 90% 30%, rgba(255,80,20,0.18), transparent 60%),
+    linear-gradient(120deg, rgba(255,255,255,0.04), rgba(255,255,255,0));
+  filter: blur(0.5px);
+  animation: minigameGlow 12s ease-in-out infinite;
+  z-index: 0;
+}
+
+.minigames-ring {
+  position: absolute;
+  width: 520px;
+  height: 520px;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,0.15);
+  top: -120px;
+  right: -120px;
+  box-shadow: 0 0 60px rgba(255,215,0,0.15);
+  animation: ringSpin 26s linear infinite;
+  z-index: 0;
+}
+
+.minigames-orbit {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.minigames-orbit .orb {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #ffd700 0%, rgba(255,215,0,0.1) 70%);
+  box-shadow: 0 0 18px rgba(255,215,0,0.7);
+  animation: orbFloat 6s ease-in-out infinite;
+}
+
+.minigames-orbit .orb-1 { top: 20%; left: 12%; animation-delay: 0s; }
+.minigames-orbit .orb-2 { top: 55%; left: 85%; animation-delay: 1.5s; }
+.minigames-orbit .orb-3 { top: 75%; left: 30%; animation-delay: 3s; }
+
+.minigames-section .container {
+  position: relative;
+  z-index: 1;
+}
+
+.minigames-sub {
+  text-align: center;
+  color: rgba(255,255,255,0.7);
+  max-width: 680px;
+  margin: 0 auto 40px;
+}
+
+.minigames-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 28px;
+  position: relative;
+  z-index: 1;
+}
+
+.minigame-card {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.12);
+  padding: 40px 32px;
+  text-align: center;
+  transition: all 0.4s var(--ease);
+  backdrop-filter: blur(6px);
+}
+
+.minigame-card:hover {
+  transform: translateY(-6px) scale(1.01);
+  border-color: var(--gold);
+  box-shadow: 0 20px 50px rgba(255,140,0,0.15);
+}
+
+.minigame-card.alt:hover { border-color: var(--orange); }
+
+.minigame-icon {
+  font-size: 2.4rem;
+  color: var(--gold);
+  margin-bottom: 16px;
+}
+
+.minigame-card h3 {
+  font-family: var(--font-heading);
+  font-size: 1.4rem;
+  letter-spacing: 0.02em;
+  margin-bottom: 12px;
+}
+
+.minigame-card p {
+  color: rgba(255,255,255,0.7);
+  margin-bottom: 24px;
+  line-height: 1.6;
+}
+
+@keyframes minigameGlow {
+  0%, 100% { opacity: 0.7; transform: translateY(0); }
+  50% { opacity: 1; transform: translateY(10px); }
+}
+
+@keyframes ringSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes orbFloat {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-14px) scale(1.2); }
+}
+
+@media (max-width: 768px) {
+  .minigames-grid { grid-template-columns: 1fr; }
+  .minigames-ring { width: 360px; height: 360px; top: -80px; right: -120px; }
+}
+
 /* ========== SOCIALS ========== */
 .socials-grid {
   display: grid;
