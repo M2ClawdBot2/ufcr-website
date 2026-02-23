@@ -83,7 +83,12 @@
     #home-screen { background: linear-gradient(180deg, #0d1a0d, #0a0f0a); justify-content: center; }
     .home-title { font-size: 48px; font-weight: 900; letter-spacing: 6px; color: #c5a44e; text-shadow: 0 2px 8px rgba(160,130,50,0.3); font-family: Georgia, serif; }
     .home-sub { font-size: 11px; color: #5a6b5a; letter-spacing: 4px; margin: 4px 0 6px; text-transform: uppercase; }
-    .home-username { font-size: 13px; color: #7a8a7a; margin-bottom: 24px; }
+    .home-username { font-size: 13px; color: #7a8a7a; margin-bottom: 6px; }
+    .home-trophies { font-size: 16px; color: #c5a44e; margin-bottom: 20px; letter-spacing: 1px; font-weight: bold; }
+    .trophy-gain { font-size: 15px; color: #c5a44e; margin-top: 4px; margin-bottom: 8px; font-weight: bold; letter-spacing: 1px; }
+    .cat-card.locked { opacity: 0.5; border-color: #2a2a2a; background: #0a0e0a; }
+    .cat-card.locked:hover { border-color: #c5a44e; }
+    .lock-overlay { font-size: 9px; color: #c5a44e; font-weight: bold; text-align: center; margin-top: 2px; }
     .home-btn { width: 220px; padding: 13px; margin: 5px; font-size: 14px; font-weight: bold; border: none; border-radius: 2px; cursor: pointer; letter-spacing: 2px; text-transform: uppercase; transition: all 0.12s; }
     .home-btn:hover { transform: scale(1.02); }
     #btn-ai { background: #c5a44e; color: #0a0f0a; }
@@ -159,9 +164,11 @@
     <div class="home-title">PATRIOT</div>
     <div class="home-sub">DRAIN THE SWAMP</div>
     <div class="home-username" id="home-user"></div>
+    <div class="home-trophies" id="home-trophies">0 TROPHIES</div>
     <button class="home-btn" id="btn-ai">VS COMPUTER</button>
     <button class="home-btn" id="btn-online">PLAY ONLINE</button>
     <button class="home-btn" id="btn-deck">EDIT DECK</button>
+    <a href="/games/" class="home-btn" id="btn-games" style="text-decoration:none;text-align:center;background:#0a0f0a;color:#3a4a3a;border:1px solid #1e2e1e;">BACK TO GAMES</a>
     <div class="home-footer">UFCR.ONLINE</div>
   </div>
 
@@ -183,6 +190,7 @@
   <div id="overlay">
     <h1 id="result-text"></h1>
     <p id="result-sub"></p>
+    <div class="trophy-gain" id="trophy-gain"></div>
     <div class="overlay-btns">
       <button onclick="playAgain()">PLAY AGAIN</button>
       <button class="secondary" onclick="returnHome()">HOME</button>
@@ -629,7 +637,7 @@ const ALL_CARDS = {
   },
   assassin: {
     name: 'Shadow Assassin', cost: 4, hp: 130, dmg: 55, spd: 1.5, range: 18, atkSpd: 0.9,
-    color: '#9c27b0', count: 1,
+    color: '#9c27b0', count: 1, unlockCost: 50,
     category: 'offense', tag: 'Offense', tagClass: 'tag-offense',
     desc: 'Lightning-fast glass cannon. Insane damage but paper-thin HP. Use to snipe key targets.',
     flavorStats: 'HP 130 · DMG 55 · SPD Very Fast'
@@ -657,14 +665,14 @@ const ALL_CARDS = {
   },
   cobra: {
     name: 'Corruption Cobra', cost: 5, hp: 300, dmg: 20, spd: 0.55, range: 60, atkSpd: 1.2,
-    color: '#c62828', count: 1, ranged: true, poison: 8, splash: 35,
+    color: '#c62828', count: 1, ranged: true, poison: 8, splash: 35, unlockCost: 50,
     category: 'ranged', tag: 'Ranged', tagClass: 'tag-ranged',
     desc: 'Ranged area-of-effect poison. Melts groups from a distance. The ultimate support unit.',
     flavorStats: 'HP 300 · DMG 20+poison AoE · RNG Long'
   },
   drake: {
     name: 'Deep State Drake', cost: 7, hp: 800, dmg: 50, spd: 0.55, range: 25, atkSpd: 1.4,
-    color: '#4a148c', count: 1, splash: 50,
+    color: '#4a148c', count: 1, splash: 50, unlockCost: 100,
     category: 'special', tag: 'Boss', tagClass: 'tag-special',
     desc: 'The ultimate weapon. Massive HP, huge splash damage. Worth every drop of elixir.',
     flavorStats: 'HP 800 · DMG 50 splash · SPD Med'
@@ -678,7 +686,7 @@ const ALL_CARDS = {
   },
   sentinel: {
     name: 'Sentinel Shell', cost: 6, hp: 900, dmg: 15, spd: 0.35, range: 20, atkSpd: 1.5,
-    color: '#37474f', count: 1, shield: 200,
+    color: '#37474f', count: 1, shield: 200, unlockCost: 100,
     category: 'tank', tag: 'Defense', tagClass: 'tag-tank',
     desc: 'The wall. Energy shield absorbs the first 200 damage. Slow but nearly unkillable.',
     flavorStats: 'HP 900 + 200 shield · DMG 15 · SPD Slow'
@@ -689,6 +697,34 @@ const ALL_CARDS = {
     category: 'special', tag: 'Special', tagClass: 'tag-special',
     desc: 'Splits into 2 smaller units on death. Hard to fully remove -- they just keep coming.',
     flavorStats: 'HP 200 · DMG 25 · Splits into x2 on death'
+  },
+  pac_dragon: {
+    name: 'PAC Dragon', cost: 6, hp: 500, dmg: 35, spd: 0.5, range: 70, atkSpd: 1.5,
+    color: '#d4af37', count: 1, ranged: true, splash: 40, unlockCost: 100,
+    category: 'special', tag: 'Boss', tagClass: 'tag-special',
+    desc: 'Dark money takes flight. Ranged splash damage from a safe distance. A lighter, cheaper drake alternative.',
+    flavorStats: 'HP 500 · DMG 35 splash · RNG Long · SPD Slow'
+  },
+  earmark: {
+    name: 'Earmark Eel', cost: 3, hp: 80, dmg: 12, spd: 1.4, range: 18, atkSpd: 0.4,
+    color: '#00acc1', count: 5, unlockCost: 100,
+    category: 'swarm', tag: 'Swarm', tagClass: 'tag-swarm',
+    desc: 'Five slippery eels burrow through the budget. The cheapest swarm with the most bodies.',
+    flavorStats: 'HP 80 · DMG 12 · SPD Very Fast · x5 units'
+  },
+  raptor: {
+    name: 'Recall Raptor', cost: 5, hp: 350, dmg: 45, spd: 1.2, range: 20, atkSpd: 1.0,
+    color: '#bf360c', count: 1, unlockCost: 100,
+    category: 'offense', tag: 'Offense', tagClass: 'tag-offense',
+    desc: 'Blazing fast with devastating strikes. Gets in, deals massive damage, and forces a response.',
+    flavorStats: 'HP 350 · DMG 45 · SPD Very Fast'
+  },
+  sphinx: {
+    name: 'Shutdown Sphinx', cost: 4, hp: 280, dmg: 18, spd: 0.6, range: 65, atkSpd: 1.3,
+    color: '#6a1b9a', count: 1, ranged: true, unlockCost: 100,
+    category: 'ranged', tag: 'Ranged', tagClass: 'tag-ranged',
+    desc: 'Government shutdown specialist. Long-range attacks from the shadows.',
+    flavorStats: 'HP 280 · DMG 18 · RNG Long · SPD Slow'
   }
 };
 
@@ -709,6 +745,8 @@ let gameState = 'welcome';
 let vsAI = true;
 let username = '';
 let playerDeck = [];
+let trophies = 0;
+let unlockedCards = [];
 
 let elixir, aiElixir, elixirRate;
 let units, projectiles, particles, dmgNums;
@@ -727,15 +765,42 @@ let aiDeck = [], aiHand = [], aiNext = null, aiQueue = [], aiDeployTimer = 0;
 function loadProfile() {
   const u = loadCookie('username');
   const d = loadCookie('deck');
+  const t = loadCookie('trophies');
+  const uc = loadCookie('unlocked');
   if (u) username = u;
   if (d && Array.isArray(d) && d.length === DECK_SIZE && d.every(k => ALL_CARDS[k])) {
     playerDeck = d;
   }
+  if (typeof t === 'number') trophies = t;
+  if (Array.isArray(uc)) unlockedCards = uc;
 }
 
 function saveProfile() {
   saveCookie('username', username);
   saveCookie('deck', playerDeck);
+  saveCookie('trophies', trophies);
+  saveCookie('unlocked', unlockedCards);
+}
+
+function isCardUnlocked(key) {
+  const c = ALL_CARDS[key];
+  if (!c.unlockCost) return true; // free card
+  return unlockedCards.includes(key);
+}
+
+function tryUnlockCard(key) {
+  const c = ALL_CARDS[key];
+  if (!c.unlockCost || isCardUnlocked(key)) return;
+  if (trophies < c.unlockCost) {
+    alert('Need ' + c.unlockCost + ' trophies to unlock ' + c.name + '. You have ' + trophies + '.');
+    return;
+  }
+  if (confirm('Unlock ' + c.name + ' for ' + c.unlockCost + ' trophies? (You have ' + trophies + ')')) {
+    trophies -= c.unlockCost;
+    unlockedCards.push(key);
+    saveProfile();
+    buildDeckUI(true);
+  }
 }
 
 // ============================================================
@@ -793,7 +858,7 @@ function buildDeckUI(fromHome) {
       <h2>BUILD YOUR DECK</h2>
       <p>Select ${DECK_SIZE} cards for battle</p>
     </div>
-    <div class="deck-username" onclick="changeUsername()">Playing as: <b>${username}</b> [edit]</div>
+    <div class="deck-username" onclick="changeUsername()">Playing as: <b>${username}</b> [edit] | <span style="color:#c5a44e">${trophies} trophies</span></div>
     <div id="my-deck"></div>
     <div id="deck-count">${playerDeck.length} / ${DECK_SIZE} selected</div>
     <div id="deck-avg"></div>
@@ -805,8 +870,10 @@ function buildDeckUI(fromHome) {
     cards.forEach(key => {
       const c = ALL_CARDS[key];
       const inDeck = playerDeck.includes(key);
+      const locked = !isCardUnlocked(key);
+      const clickFn = locked ? `tryUnlockCard('${key}')` : `toggleDeckCard('${key}')`;
       html += `
-        <div class="cat-card ${inDeck ? 'in-deck' : ''}" data-key="${key}" onclick="toggleDeckCard('${key}')">
+        <div class="cat-card ${inDeck ? 'in-deck' : ''} ${locked ? 'locked' : ''}" data-key="${key}" onclick="${clickFn}">
           <div class="cat-card-icon"><canvas width="48" height="48" data-icon="${key}"></canvas></div>
           <div class="cat-card-info">
             <div class="cat-card-top">
@@ -814,8 +881,8 @@ function buildDeckUI(fromHome) {
               <span class="cat-card-cost">${c.cost}</span>
               <span class="cat-card-tag ${c.tagClass}">${c.tag}</span>
             </div>
-            <div class="cat-card-desc">${c.desc}</div>
-            <div class="cat-card-stats">${c.flavorStats}</div>
+            <div class="cat-card-desc">${locked ? 'LOCKED' : c.desc}</div>
+            <div class="cat-card-stats">${locked ? c.unlockCost + ' TROPHIES TO UNLOCK' : c.flavorStats}</div>
           </div>
         </div>`;
     });
@@ -837,6 +904,7 @@ function buildDeckUI(fromHome) {
 }
 
 function toggleDeckCard(key) {
+  if (!isCardUnlocked(key)) return;
   const idx = playerDeck.indexOf(key);
   if (idx >= 0) {
     playerDeck.splice(idx, 1);
@@ -1110,6 +1178,77 @@ function drawDetailedIcon(cvs, type, size) {
       c.beginPath(); c.arc(-3, -2, 0.8, 0, Math.PI*2); c.arc(3, -2, 0.8, 0, Math.PI*2); c.fill();
       break;
     }
+    case 'pac_dragon': {
+      // Golden dragon, smaller than drake, with coin motif
+      c.fillStyle = col;
+      c.beginPath(); c.moveTo(0, -14); c.lineTo(12, -2); c.lineTo(10, 12);
+      c.lineTo(-10, 12); c.lineTo(-12, -2); c.closePath(); c.fill();
+      // Wings
+      c.fillStyle = 'rgba(212,175,55,0.5)';
+      c.beginPath(); c.moveTo(-10, -2); c.lineTo(-18, -10); c.lineTo(-12, 4); c.closePath(); c.fill();
+      c.beginPath(); c.moveTo(10, -2); c.lineTo(18, -10); c.lineTo(12, 4); c.closePath(); c.fill();
+      // Dollar sign
+      c.fillStyle = '#0a0f0a'; c.font = 'bold 12px sans-serif'; c.textAlign = 'center';
+      c.fillText('$', 0, 6);
+      // Eyes
+      c.fillStyle = '#fff';
+      c.beginPath(); c.arc(-3, -5, 2.5, 0, Math.PI*2); c.arc(3, -5, 2.5, 0, Math.PI*2); c.fill();
+      c.fillStyle = '#000';
+      c.beginPath(); c.arc(-3, -5, 1, 0, Math.PI*2); c.arc(3, -5, 1, 0, Math.PI*2); c.fill();
+      break;
+    }
+    case 'earmark': {
+      // 5 tiny eels
+      [[-8,-8],[8,-8],[0,0],[-6,8],[6,8]].forEach(([ox,oy]) => {
+        c.strokeStyle = col; c.lineWidth = 3; c.lineCap = 'round';
+        c.beginPath(); c.moveTo(ox-4, oy); c.quadraticCurveTo(ox, oy-4, ox+4, oy); c.stroke();
+        c.fillStyle = '#000';
+        c.beginPath(); c.arc(ox+3, oy-1, 0.8, 0, Math.PI*2); c.fill();
+      });
+      break;
+    }
+    case 'raptor': {
+      // Angular bird of prey
+      c.fillStyle = col;
+      c.beginPath(); c.moveTo(0, -16); c.lineTo(14, -2); c.lineTo(8, 12);
+      c.lineTo(-8, 12); c.lineTo(-14, -2); c.closePath(); c.fill();
+      // Beak
+      c.fillStyle = '#ff6f00';
+      c.beginPath(); c.moveTo(0, -16); c.lineTo(3, -10); c.lineTo(-3, -10); c.closePath(); c.fill();
+      // Wings spread
+      c.strokeStyle = '#d84315'; c.lineWidth = 2;
+      c.beginPath(); c.moveTo(-10, 0); c.lineTo(-20, -8); c.stroke();
+      c.beginPath(); c.moveTo(10, 0); c.lineTo(20, -8); c.stroke();
+      // Talons
+      c.strokeStyle = '#5d4037'; c.lineWidth = 1.5;
+      c.beginPath(); c.moveTo(-4, 12); c.lineTo(-6, 18); c.moveTo(4, 12); c.lineTo(6, 18); c.stroke();
+      // Eye
+      c.fillStyle = '#ff0';
+      c.beginPath(); c.arc(-3, -8, 2, 0, Math.PI*2); c.arc(3, -8, 2, 0, Math.PI*2); c.fill();
+      c.fillStyle = '#000';
+      c.beginPath(); c.arc(-3, -8, 0.8, 0, Math.PI*2); c.arc(3, -8, 0.8, 0, Math.PI*2); c.fill();
+      break;
+    }
+    case 'sphinx': {
+      // Mysterious sphinx
+      c.fillStyle = col;
+      c.beginPath(); c.moveTo(0, -14); c.lineTo(10, -6); c.lineTo(12, 10);
+      c.lineTo(-12, 10); c.lineTo(-10, -6); c.closePath(); c.fill();
+      // Headdress
+      c.fillStyle = '#8e24aa';
+      c.beginPath(); c.moveTo(-12, -6); c.lineTo(0, -20); c.lineTo(12, -6); c.closePath(); c.fill();
+      // Mystical eye
+      c.fillStyle = '#e040fb';
+      c.beginPath(); c.arc(0, -2, 4, 0, Math.PI*2); c.fill();
+      c.fillStyle = '#fff';
+      c.beginPath(); c.arc(0, -2, 2, 0, Math.PI*2); c.fill();
+      c.fillStyle = '#000';
+      c.beginPath(); c.arc(0, -2, 1, 0, Math.PI*2); c.fill();
+      // Base/paws
+      c.fillStyle = '#4a148c';
+      c.fillRect(-10, 10, 20, 4);
+      break;
+    }
   }
   c.restore();
 }
@@ -1121,6 +1260,7 @@ function showHomeScreen() {
   showScreen('home-screen');
   gameState = 'home';
   document.getElementById('home-user').textContent = username;
+  document.getElementById('home-trophies').textContent = trophies + ' TROPHIES';
 }
 
 // ============================================================
@@ -1472,7 +1612,23 @@ function drawUnit(u) {
       ctx.fillStyle='#90a4ae';ctx.beginPath();ctx.arc(-4,-3,2,0,Math.PI*2);ctx.arc(4,-3,2,0,Math.PI*2);ctx.fill();},
     splitter(){ctx.fillStyle=u.color;ctx.beginPath();ctx.moveTo(0,-8);ctx.lineTo(9,4);ctx.lineTo(-9,4);ctx.closePath();ctx.fill();
       ctx.strokeStyle='#ffab00';ctx.lineWidth=1;ctx.setLineDash([2,2]);ctx.beginPath();ctx.moveTo(0,-6);ctx.lineTo(0,4);ctx.stroke();ctx.setLineDash([]);
-      ctx.fillStyle='#ff0';ctx.beginPath();ctx.arc(-3,-2,1.5,0,Math.PI*2);ctx.arc(3,-2,1.5,0,Math.PI*2);ctx.fill();}
+      ctx.fillStyle='#ff0';ctx.beginPath();ctx.arc(-3,-2,1.5,0,Math.PI*2);ctx.arc(3,-2,1.5,0,Math.PI*2);ctx.fill();},
+    pac_dragon(){ctx.fillStyle=u.color;ctx.beginPath();ctx.moveTo(0,-12);ctx.lineTo(10,-2);ctx.lineTo(8,10);ctx.lineTo(-8,10);ctx.lineTo(-10,-2);ctx.closePath();ctx.fill();
+      ctx.fillStyle='rgba(212,175,55,0.5)';ctx.beginPath();ctx.moveTo(-8,-2);ctx.lineTo(-16,-8);ctx.lineTo(-10,4);ctx.closePath();ctx.fill();
+      ctx.beginPath();ctx.moveTo(8,-2);ctx.lineTo(16,-8);ctx.lineTo(10,4);ctx.closePath();ctx.fill();
+      ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(-3,-4,2,0,Math.PI*2);ctx.arc(3,-4,2,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle='#000';ctx.beginPath();ctx.arc(-3,-4,0.8,0,Math.PI*2);ctx.arc(3,-4,0.8,0,Math.PI*2);ctx.fill();},
+    earmark(){ctx.strokeStyle=u.color;ctx.lineWidth=3;ctx.lineCap='round';
+      ctx.beginPath();ctx.moveTo(-3,0);ctx.quadraticCurveTo(0,-4,3,0);ctx.stroke();
+      ctx.fillStyle='#000';ctx.beginPath();ctx.arc(2,-1,0.7,0,Math.PI*2);ctx.fill();},
+    raptor(){ctx.fillStyle=u.color;ctx.beginPath();ctx.moveTo(0,-10);ctx.lineTo(10,-2);ctx.lineTo(6,8);ctx.lineTo(-6,8);ctx.lineTo(-10,-2);ctx.closePath();ctx.fill();
+      ctx.fillStyle='#ff6f00';ctx.beginPath();ctx.moveTo(0,-10);ctx.lineTo(2,-6);ctx.lineTo(-2,-6);ctx.closePath();ctx.fill();
+      ctx.strokeStyle='#d84315';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(-8,0);ctx.lineTo(-14,-5);ctx.moveTo(8,0);ctx.lineTo(14,-5);ctx.stroke();
+      ctx.fillStyle='#ff0';ctx.beginPath();ctx.arc(-2,-5,1.5,0,Math.PI*2);ctx.arc(2,-5,1.5,0,Math.PI*2);ctx.fill();},
+    sphinx(){ctx.fillStyle=u.color;ctx.beginPath();ctx.moveTo(0,-10);ctx.lineTo(8,-4);ctx.lineTo(9,8);ctx.lineTo(-9,8);ctx.lineTo(-8,-4);ctx.closePath();ctx.fill();
+      ctx.fillStyle='#8e24aa';ctx.beginPath();ctx.moveTo(-8,-4);ctx.lineTo(0,-14);ctx.lineTo(8,-4);ctx.closePath();ctx.fill();
+      ctx.fillStyle='#e040fb';ctx.beginPath();ctx.arc(0,-1,3,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(0,-1,1.5,0,Math.PI*2);ctx.fill();}
   };
   (fn[u.type]||fn.lobbyist)();
   ctx.restore();
@@ -1608,6 +1764,19 @@ function endGame(won, reason) {
   document.getElementById('result-text').style.color=won?'#ffd600':'#f44336';
   const defaultMsg = won ? 'The swamp has been drained.' : 'The deep state wins... for now.';
   document.getElementById('result-sub').textContent = reason || defaultMsg;
+  // Award trophies
+  let trophyGain = 0;
+  if (won) {
+    trophyGain = isOnline ? 10 : 1;
+    trophies += trophyGain;
+    saveProfile();
+  }
+  // Show trophy gain
+  const tEl = document.getElementById('trophy-gain');
+  if (tEl) {
+    tEl.textContent = won ? '+' + trophyGain + ' TROPHIES (' + trophies + ' total)' : '';
+    tEl.style.display = won ? '' : 'none';
+  }
   if (isOnline) cleanupMatch();
 }
 
