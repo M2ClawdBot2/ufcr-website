@@ -353,8 +353,10 @@ function cancelMatchmaking() {
 function sendDeploy(type, x, y) {
   if (!gameRef || !myMatchId) return;
   const role = isHost ? 'hostDeploys' : 'guestDeploys';
+  // Normalize to 0-1 using fixed reference resolution
+  const scaleX = SYNC_W / W, scaleY = SYNC_H / H;
   fbDb.ref('matches/' + myMatchId + '/' + role).push({
-    type, x: x / W, y: y / H,
+    type, x: (x * scaleX) / SYNC_W, y: (y * scaleY) / SYNC_H,
     t: firebase.database.ServerValue.TIMESTAMP
   });
 }
@@ -370,20 +372,21 @@ function syncGameState() {
 
   const towerState = towers.map(t => ({ hp: Math.round(t.hp) }));
 
-  // Normalize to 0-1 range using actual canvas dimensions
-  // Guest will denormalize using its own W/H
+  // Normalize positions to 0-1 using fixed reference resolution
+  // This ensures different screen sizes/DPRs don't cause offset errors
+  const scaleX = SYNC_W / W, scaleY = SYNC_H / H;
   const unitState = units.map(u => {
     let vx = 0, vy = 0;
     if (u.wpIdx < u.waypoints.length) {
       const wp = u.waypoints[u.wpIdx];
       const dx = wp.x - u.x, dy = wp.y - u.y, d = Math.hypot(dx, dy);
-      if (d > 1) { vx = (dx/d) * u.spd / W; vy = (dy/d) * u.spd / H; }
+      if (d > 1) { vx = (dx/d) * u.spd * scaleX / SYNC_W; vy = (dy/d) * u.spd * scaleY / SYNC_H; }
     }
     return {
       t: u.type,
       s: u.side === 'player' ? 0 : 1,
-      x: +(u.x / W).toFixed(4),
-      y: +(u.y / H).toFixed(4),
+      x: +((u.x * scaleX) / SYNC_W).toFixed(4),
+      y: +((u.y * scaleY) / SYNC_H).toFixed(4),
       h: Math.round(u.hp),
       vx: +vx.toFixed(4),
       vy: +vy.toFixed(4),
@@ -462,22 +465,22 @@ function reconcileUnits(hostUnits) {
   }
 
   // Update existing and add new units
+  // Denormalize from 0-1 to guest's actual canvas dimensions
+  const gScaleX = W / SYNC_W, gScaleY = H / SYNC_H;
   hostUnits.forEach(hu => {
     const guestSide = hu.s === 0 ? 'ai' : 'player'; // flip sides
-    const guestX = hu.x * W;
-    const guestY = (1 - hu.y) * H; // flip Y
+    const guestX = hu.x * SYNC_W * gScaleX;   // 0-1 → guest pixels
+    const guestY = (1 - hu.y) * SYNC_H * gScaleY; // 0-1 flipped → guest pixels
 
     const local = units.find(u => u.syncId === hu.id);
     if (local) {
       local.targetX = guestX;
       local.targetY = guestY;
-      // Velocity: X same, Y flipped (normalized then scaled to guest dims)
-      local.velX = (hu.vx || 0) * W;
-      local.velY = -(hu.vy || 0) * H;
+      local.velX = (hu.vx || 0) * SYNC_W * gScaleX;
+      local.velY = -(hu.vy || 0) * SYNC_H * gScaleY;
       local.hp = hu.h;
       local.side = guestSide;
     } else {
-      // New unit — spawn at correct position
       const def = ALL_CARDS[hu.t];
       if (!def) return;
       units.push({
@@ -510,8 +513,10 @@ function listenForOpponentDeploys() {
     processedDeploys.add(snap.key);
     const d = snap.val();
     if (!d) return;
-    const mx = d.x * W;
-    const my = (1 - d.y) * H;
+    // Denormalize from 0-1 to host's actual canvas dimensions
+    const hScaleX = W / SYNC_W, hScaleY = H / SYNC_H;
+    const mx = d.x * SYNC_W * hScaleX;
+    const my = (1 - d.y) * SYNC_H * hScaleY;
     spawnUnit(d.type, mx, my, 'ai');
   });
 }
@@ -577,6 +582,8 @@ function loadCookie(key) {
 //  CONSTANTS
 // ============================================================
 let W = 360, H = 640;
+// Fixed reference resolution for network sync (never changes)
+const SYNC_W = 360, SYNC_H = 640;
 let RIVER_TOP, RIVER_BOT, RIVER_MID, BRIDGE_L, BRIDGE_R, DEPLOY_MIN_Y, DEPLOY_MAX_Y;
 function recalcLayout() {
   RIVER_TOP = H * 0.441;
