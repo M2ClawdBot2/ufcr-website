@@ -195,12 +195,15 @@
 //  FIREBASE CONFIG — Replace with your project config
 // ============================================================
 const firebaseConfig = {
-  apiKey: "AIzaSyDummyKeyReplace",
-  authDomain: "patriot-ufcr.firebaseapp.com",
-  databaseURL: "https://patriot-ufcr-default-rtdb.firebaseio.com",
-  projectId: "patriot-ufcr"
+  apiKey: "AIzaSyA0w9Ec_5pQ8K-cJYY-5piyoZ9xLJfTFIM",
+  authDomain: "ufcr-patriot.firebaseapp.com",
+  databaseURL: "https://ufcr-patriot-default-rtdb.firebaseio.com",
+  projectId: "ufcr-patriot",
+  storageBucket: "ufcr-patriot.firebasestorage.app",
+  messagingSenderId: "813225836179",
+  appId: "1:813225836179:web:1cdd98560f7bb1d9099766"
 };
-const MAX_MATCHES = 10; // 10 concurrent matches = 20 players (free tier)
+const MAX_MATCHES = 50; // 50 concurrent matches = 100 players (100 connections max)
 let fb, fbDb, matchRef, gameRef, playerId, opponentName;
 let isOnline = false, isHost = false, fbInited = false;
 let myMatchId = null;
@@ -218,7 +221,7 @@ function initFirebase() {
 }
 
 // ============================================================
-//  MULTIPLAYER: Matchmaking with 10-match cap
+//  MULTIPLAYER: Matchmaking with 50-match cap
 // ============================================================
 async function startOnline() {
   initFirebase();
