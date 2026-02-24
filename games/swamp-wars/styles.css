@@ -50,6 +50,26 @@ body {
   color: rgba(255,255,255,0.5);
 }
 
+.status {
+  font-size: 0.8rem;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(56,163,255,0.12);
+  color: #38a3ff;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.status.online {
+  background: rgba(46,204,113,0.12);
+  color: #2ecc71;
+}
+
+.status.offline {
+  background: rgba(231,76,60,0.12);
+  color: #e74c3c;
+}
+
 .back {
   color: var(--gold);
   text-decoration: none;

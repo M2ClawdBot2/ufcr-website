@@ -33,6 +33,7 @@ let scoreText;
 let zone;
 let zoneText;
 let dashReady = true;
+let statusEl;
 
 function preload() {}
 
@@ -69,6 +70,7 @@ function create() {
     });
   });
 
+  statusEl = document.getElementById('status');
   connectSocket();
 }
 
@@ -82,7 +84,7 @@ function connectSocket() {
   socket = new WebSocket(SERVER_URL);
 
   socket.addEventListener('open', () => {
-    console.log('Connected');
+    updateStatus('Online', 'online');
   });
 
   socket.addEventListener('message', (event) => {
@@ -94,12 +96,20 @@ function connectSocket() {
       syncPlayers(payload.players);
       scores = payload.scores;
       scoreText.setText(`Red ${Math.floor(scores.red)} — ${Math.floor(scores.blue)} Blue`);
+      updateStatus(`Online • ${payload.players.length} players`, 'online');
     }
   });
 
   socket.addEventListener('close', () => {
-    console.log('Disconnected');
+    updateStatus('Offline', 'offline');
   });
+}
+
+function updateStatus(text, cls) {
+  if (!statusEl) return;
+  statusEl.textContent = text;
+  statusEl.classList.remove('online', 'offline');
+  if (cls) statusEl.classList.add(cls);
 }
 
 function syncPlayers(serverPlayers) {
