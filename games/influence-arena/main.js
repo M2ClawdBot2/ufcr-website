@@ -1,4 +1,4 @@
-const SERVER_URL = 'wss://solitary-limit-2040.m2clawdbot.workers.dev?room=ufcr';
+const SERVER_URL = 'wss://influence-arena-server.m2clawdbot.workers.dev?room=ufcr';
 
 const config = {
   type: Phaser.AUTO,
