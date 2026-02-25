@@ -202,15 +202,10 @@
 // ============================================================
 //  FIREBASE CONFIG
 // ============================================================
-const firebaseConfig = {
-  apiKey: "AIzaSyA0w9Ec_5pQ8K-cJYY-5piyoZ9xLJfTFIM",
-  authDomain: "ufcr-patriot.firebaseapp.com",
-  databaseURL: "https://ufcr-patriot-default-rtdb.firebaseio.com",
-  projectId: "ufcr-patriot",
-  storageBucket: "ufcr-patriot.firebasestorage.app",
-  messagingSenderId: "813225836179",
-  appId: "1:813225836179:web:1cdd98560f7bb1d9099766"
-};
+// NOTE: Do NOT hardcode Firebase keys in this file. Provide them via:
+//  - window.PATRIOT_FIREBASE_CONFIG (set by server), OR
+//  - /games/patriot/firebase-config.json (server-provided, access-controlled if needed)
+let firebaseConfig = null;
 const MAX_MATCHES = 50;
 let fb, fbDb, matchRef, gameRef, playerId, opponentName;
 let isOnline = false, isHost = false, fbInited = false;
@@ -218,10 +213,24 @@ let myMatchId = null;
 let deployListener = null;
 let disconnectRef = null;
 
-function initFirebase() {
+async function loadFirebaseConfig() {
+  if (firebaseConfig) return firebaseConfig;
+  if (window.PATRIOT_FIREBASE_CONFIG) {
+    firebaseConfig = window.PATRIOT_FIREBASE_CONFIG;
+    return firebaseConfig;
+  }
+  const res = await fetch('/games/patriot/firebase-config.json', { cache: 'no-store' });
+  if (!res.ok) throw new Error('Missing firebase-config.json');
+  firebaseConfig = await res.json();
+  return firebaseConfig;
+}
+
+async function initFirebase() {
   if (fbInited) return;
   try {
-    fb = firebase.initializeApp(firebaseConfig);
+    const cfg = await loadFirebaseConfig();
+    if (!cfg || !cfg.apiKey) throw new Error('Invalid Firebase config');
+    fb = firebase.initializeApp(cfg);
     fbDb = firebase.database();
     playerId = 'p_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
     fbInited = true;
@@ -232,7 +241,7 @@ function initFirebase() {
 //  MULTIPLAYER: Matchmaking with 50-match cap
 // ============================================================
 async function startOnline() {
-  initFirebase();
+  await initFirebase();
   if (!fbInited) {
     alert('Online play is being set up. Check back soon!');
     return;
