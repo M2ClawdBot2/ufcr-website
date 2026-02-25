@@ -383,7 +383,39 @@ button, a, input {
   display: none;
 }
 
+.touch-btn.fire {
+  bottom: 160px;
+  right: 30px;
+  background: rgba(56,163,255,0.85);
+}
+
 .touch-btn.active { display: block; }
+
+.joystick {
+  position: fixed;
+  bottom: 70px;
+  left: 30px;
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.2);
+  background: rgba(0,0,0,0.25);
+  display: none;
+  z-index: 5;
+}
+
+.joystick.active { display: block; }
+
+.joystick-knob {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(255,255,255,0.35);
+}
 
 @media (max-width: 900px) {
   .hero { grid-template-columns: 1fr; padding: 24px; }
@@ -393,4 +425,5 @@ button, a, input {
 
 @media (min-width: 900px) {
   .touch-btn { display: none; }
+  .joystick { display: none; }
 }

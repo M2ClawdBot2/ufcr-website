@@ -1,4 +1,5 @@
 const SERVER_BASE = 'wss://influence-arena-server.m2clawdbot.workers.dev';
+const LOG_ENDPOINT = 'https://influence-arena-server.m2clawdbot.workers.dev/log';
 
 const ARENA_WIDTH = 1600;
 const ARENA_HEIGHT = 900;
@@ -47,6 +48,7 @@ let dashReady = true;
 let statusEl;
 let cameraLocked = false;
 let touchMove = { active: false, x: 0, y: 0 };
+let joystickId = null;
 let selectedClass = 'gator';
 let obstacles = [];
 let lastInputSent = 0;
@@ -188,6 +190,7 @@ function connectSocket() {
 
   socket.addEventListener('open', () => {
     updateStatus(mode === 'offline' ? 'Offline' : 'Online', 'online');
+    logEvent('socket_open');
     if (playerName) {
       socket.send(JSON.stringify({ type: 'name', name: playerName }));
     }
@@ -275,8 +278,13 @@ function connectSocket() {
     }
   });
 
-  socket.addEventListener('close', () => {
+  socket.addEventListener('close', (e) => {
     updateStatus('Offline', 'offline');
+    logEvent('socket_close', { code: e.code, reason: e.reason });
+  });
+
+  socket.addEventListener('error', () => {
+    logEvent('socket_error');
   });
 }
 
@@ -529,6 +537,9 @@ function selectClass(classId, label) {
 
 function setupTouchControls() {
   const specialBtn = document.getElementById('specialBtn');
+  const fireBtn = document.getElementById('fireBtn');
+  const joystick = document.getElementById('joystick');
+  const joystickKnob = document.getElementById('joystickKnob');
   if (specialBtn) {
     specialBtn.addEventListener('click', () => {
       initAudio();
@@ -537,36 +548,100 @@ function setupTouchControls() {
     });
   }
 
-  window.addEventListener('touchstart', (e) => {
-    if (!e.touches[0]) return;
-    initAudio();
-    const touch = e.touches[0];
-    const w = window.innerWidth;
-    if (touch.clientX < w * 0.5) {
-      touchMove.active = true;
-      touchMove.x = (touch.clientX - w * 0.25) / (w * 0.25);
-      touchMove.y = (touch.clientY - window.innerHeight * 0.5) / (window.innerHeight * 0.25);
-    } else if (socket && socket.readyState === 1) {
-      socket.send(JSON.stringify({ type: 'fire', dir: { x: 1, y: 0 } }));
+  if (fireBtn) {
+    fireBtn.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      initAudio();
+      if (!socket || socket.readyState !== 1) return;
+      const dir = getMoveVector();
+      const aim = dir.length() === 0 ? { x: 1, y: 0 } : { x: dir.x, y: dir.y };
+      socket.send(JSON.stringify({ type: 'fire', dir: aim }));
       playSound('shoot');
-    }
-  });
+    }, { passive: false });
+  }
 
-  window.addEventListener('touchmove', (e) => {
-    if (!touchMove.active || !e.touches[0]) return;
-    const touch = e.touches[0];
-    const w = window.innerWidth;
-    if (touch.clientX < w * 0.5) {
-      touchMove.x = (touch.clientX - w * 0.25) / (w * 0.25);
-      touchMove.y = (touch.clientY - window.innerHeight * 0.5) / (window.innerHeight * 0.25);
-    }
-  });
+  if (joystick && joystickKnob) {
+    joystick.classList.add('active');
+    if (fireBtn) fireBtn.classList.add('active');
+    if (specialBtn) specialBtn.classList.add('active');
 
-  window.addEventListener('touchend', () => {
-    touchMove.active = false;
-    touchMove.x = 0;
-    touchMove.y = 0;
-  });
+    joystick.addEventListener('touchstart', (e) => {
+      const t = e.changedTouches[0];
+      joystickId = t.identifier;
+      touchMove.active = true;
+      updateJoystick(t);
+    }, { passive: false });
+
+    window.addEventListener('touchmove', (e) => {
+      for (const t of e.changedTouches) {
+        if (t.identifier === joystickId) {
+          updateJoystick(t);
+          break;
+        }
+      }
+    }, { passive: false });
+
+    window.addEventListener('touchend', (e) => {
+      for (const t of e.changedTouches) {
+        if (t.identifier === joystickId) {
+          joystickId = null;
+          touchMove.active = false;
+          touchMove.x = 0;
+          touchMove.y = 0;
+          joystickKnob.style.transform = 'translate(-50%, -50%)';
+          break;
+        }
+      }
+    });
+
+    function updateJoystick(touch) {
+      const rect = joystick.getBoundingClientRect();
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height / 2;
+      const dx = touch.clientX - cx;
+      const dy = touch.clientY - cy;
+      const max = rect.width * 0.4;
+      const dist = Math.hypot(dx, dy) || 1;
+      const clamped = Math.min(max, dist);
+      const nx = (dx / dist) * clamped;
+      const ny = (dy / dist) * clamped;
+      joystickKnob.style.transform = `translate(calc(-50% + ${nx}px), calc(-50% + ${ny}px))`;
+      touchMove.x = (nx / max) || 0;
+      touchMove.y = (ny / max) || 0;
+    }
+  } else {
+    if (specialBtn) specialBtn.classList.add('active');
+    window.addEventListener('touchstart', (e) => {
+      if (!e.touches[0]) return;
+      initAudio();
+      const touch = e.touches[0];
+      const w = window.innerWidth;
+      if (touch.clientX < w * 0.5) {
+        touchMove.active = true;
+        touchMove.x = (touch.clientX - w * 0.25) / (w * 0.25);
+        touchMove.y = (touch.clientY - window.innerHeight * 0.5) / (window.innerHeight * 0.25);
+      } else if (socket && socket.readyState === 1) {
+        socket.send(JSON.stringify({ type: 'fire', dir: { x: 1, y: 0 } }));
+        playSound('shoot');
+      }
+    });
+
+    window.addEventListener('touchmove', (e) => {
+      if (!touchMove.active || !e.touches[0]) return;
+      const touch = e.touches[0];
+      const w = window.innerWidth;
+      if (touch.clientX < w * 0.5) {
+        touchMove.x = (touch.clientX - w * 0.25) / (w * 0.25);
+        touchMove.y = (touch.clientY - window.innerHeight * 0.5) / (window.innerHeight * 0.25);
+      }
+    });
+
+    window.addEventListener('touchend', () => {
+      touchMove.active = false;
+      touchMove.x = 0;
+      touchMove.y = 0;
+    });
+  }
 }
 
 function syncPlayers(serverPlayers) {
@@ -742,6 +817,27 @@ function updateStatus(text, cls) {
   statusEl.classList.remove('online', 'offline');
   if (cls) statusEl.classList.add(cls);
 }
+
+function logEvent(type, data = {}) {
+  try {
+    const payload = {
+      type,
+      data,
+      room: roomCode,
+      mode,
+      ts: Date.now(),
+      ua: navigator.userAgent
+    };
+    navigator.sendBeacon(LOG_ENDPOINT, JSON.stringify(payload));
+  } catch {}
+}
+
+window.addEventListener('error', (e) => {
+  logEvent('client_error', { message: e.message, source: e.filename, line: e.lineno, col: e.colno });
+});
+window.addEventListener('unhandledrejection', (e) => {
+  logEvent('promise_rejection', { reason: `${e.reason || ''}` });
+});
 
 function initAudio() {
   if (!audioCtx) {
