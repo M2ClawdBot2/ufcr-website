@@ -188,14 +188,15 @@ function connectSocket() {
         const s = `${seconds % 60}`.padStart(2, '0');
         timerText.setText(`Time ${m}:${s}`);
       }
+      const humansCount = payload.humans ?? payload.players.filter(p => !p.isBot).length;
       updateStatus(`${mode === 'offline' ? 'Offline' : 'Online'} • ${payload.players.length} players`, 'online');
-      updateLobbyUi(payload.players.length, payload.started, payload.hostId, payload.humans || 0, payload.full);
+      updateLobbyUi(payload.players.length, payload.started, payload.hostId, humansCount, payload.full);
       if (payload.matchOver) {
         const winner = scores.red === scores.blue ? 'DRAW' : (scores.red > scores.blue ? 'RED WINS' : 'BLUE WINS');
         showWinner(winner);
       }
       if (mode === 'online' && !payload.started && window._searching) {
-        window._searchingCount = payload.humans || 0;
+        window._searchingCount = humansCount;
         const ui = window._ui;
         if (ui && ui.searchCount) ui.searchCount.textContent = `Humans: ${window._searchingCount} / 4`;
       }
