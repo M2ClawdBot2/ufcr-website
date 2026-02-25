@@ -43,6 +43,8 @@ let cameraLocked = false;
 let touchMove = { active: false, x: 0, y: 0 };
 let selectedClass = 'gator';
 let obstacles = [];
+let lastInputSent = 0;
+let audioCtx;
 
 function preload() {}
 
@@ -82,10 +84,12 @@ function create() {
 
   this.input.keyboard.on('keydown-SPACE', () => {
     if (!dashReady || !socket || socket.readyState !== 1) return;
+    initAudio();
     dashReady = false;
     const dir = getMoveVector();
     if (dir.length() === 0) return;
     socket.send(JSON.stringify({ type: 'dash' }));
+    playSound('dash');
     this.time.delayedCall(800, () => {
       dashReady = true;
     });
@@ -93,7 +97,9 @@ function create() {
 
   this.input.keyboard.on('keydown-E', () => {
     if (!socket || socket.readyState !== 1) return;
+    initAudio();
     socket.send(JSON.stringify({ type: 'special' }));
+    playSound('special');
   });
 
   this.input.keyboard.on('keydown-ONE', () => selectClass('behemoth', 'Bureaucrat Behemoth'));
@@ -103,12 +109,14 @@ function create() {
 
   this.input.on('pointerdown', (pointer) => {
     if (!socket || socket.readyState !== 1) return;
+    initAudio();
     const scene = game.scene.scenes[0];
     const worldPoint = pointer.positionToCamera(scene.cameras.main);
     const me = players.get(playerId);
     if (!me) return;
     const dir = { x: worldPoint.x - me.circle.x, y: worldPoint.y - me.circle.y };
     socket.send(JSON.stringify({ type: 'fire', dir }));
+    playSound('shoot');
   });
 
   statusEl = document.getElementById('status');
@@ -118,6 +126,9 @@ function create() {
 
 function update() {
   if (!socket || socket.readyState !== 1) return;
+  const now = performance.now();
+  if (now - lastInputSent < 50) return; // 20Hz
+  lastInputSent = now;
   const move = getMoveVector();
   socket.send(JSON.stringify({ type: 'input', input: { x: move.x, y: move.y } }));
 }
@@ -200,6 +211,41 @@ function updateLobbyUi(count, started, hostId) {
   }
 }
 
+function initAudio() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+}
+
+function playSound(type) {
+  if (!audioCtx) return;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  const now = audioCtx.currentTime;
+
+  if (type === 'shoot') {
+    osc.frequency.setValueAtTime(420, now);
+    osc.frequency.exponentialRampToValueAtTime(260, now + 0.08);
+    gain.gain.setValueAtTime(0.15, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+  } else if (type === 'dash') {
+    osc.frequency.setValueAtTime(180, now);
+    osc.frequency.exponentialRampToValueAtTime(90, now + 0.1);
+    gain.gain.setValueAtTime(0.18, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+  } else if (type === 'special') {
+    osc.frequency.setValueAtTime(520, now);
+    osc.frequency.exponentialRampToValueAtTime(120, now + 0.2);
+    gain.gain.setValueAtTime(0.2, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+  }
+
+  osc.connect(gain).connect(audioCtx.destination);
+  osc.start(now);
+  osc.stop(now + 0.25);
+}
+
 function setupOverlay() {
   const overlay = document.getElementById('overlay');
   const lobby = document.getElementById('lobby');
@@ -253,6 +299,7 @@ function setupOverlay() {
   });
 
   startBtn.addEventListener('click', () => {
+    initAudio();
     overlay.classList.add('hidden');
     lobby.classList.remove('hidden');
     selectClass(selectedClass, buttons[1] ? buttons[1].textContent : 'Swamp Gator');
@@ -274,12 +321,15 @@ function setupTouchControls() {
   const specialBtn = document.getElementById('specialBtn');
   if (specialBtn) {
     specialBtn.addEventListener('click', () => {
+      initAudio();
       if (socket && socket.readyState === 1) socket.send(JSON.stringify({ type: 'special' }));
+      playSound('special');
     });
   }
 
   window.addEventListener('touchstart', (e) => {
     if (!e.touches[0]) return;
+    initAudio();
     const touch = e.touches[0];
     const w = window.innerWidth;
     if (touch.clientX < w * 0.5) {
@@ -288,6 +338,7 @@ function setupTouchControls() {
       touchMove.y = (touch.clientY - window.innerHeight * 0.5) / (window.innerHeight * 0.25);
     } else if (socket && socket.readyState === 1) {
       socket.send(JSON.stringify({ type: 'fire', dir: { x: 1, y: 0 } }));
+      playSound('shoot');
     }
   });
 
