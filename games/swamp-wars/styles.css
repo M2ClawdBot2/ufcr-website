@@ -85,12 +85,94 @@ body {
   background: #0a0f1f;
   border-radius: 12px;
   overflow: hidden;
+  position: relative;
+}
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(10,14,26,0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+.overlay.hidden { display: none; }
+
+.panel {
+  width: min(520px, 90vw);
+  background: rgba(15,20,38,0.95);
+  border: 1px solid rgba(255,255,255,0.08);
+  padding: 28px;
+  border-radius: 16px;
+  text-align: center;
+}
+
+.panel h2 {
+  font-family: var(--font-heading);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.panel p { color: rgba(255,255,255,0.6); margin-bottom: 16px; }
+
+.class-grid {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.class-grid button,
+.start {
+  background: rgba(255,255,255,0.06);
+  color: white;
+  border: 1px solid rgba(255,255,255,0.12);
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-family: var(--font-body);
+}
+
+.class-grid button.active {
+  border-color: var(--orange);
+  color: var(--orange);
+}
+
+.start {
+  width: 100%;
+  background: var(--orange);
+  color: white;
+  font-weight: 600;
+}
+
+.hint {
+  margin-top: 10px;
+  font-size: 0.75rem;
+  color: rgba(255,255,255,0.45);
+}
+
+.touch-btn {
+  position: fixed;
+  bottom: 90px;
+  right: 30px;
+  z-index: 5;
+  background: rgba(250,70,22,0.85);
+  color: white;
+  border: none;
+  border-radius: 999px;
+  padding: 14px 18px;
+  font-size: 0.8rem;
 }
 
 .footer {
   margin: 16px 0 28px;
   font-size: 0.8rem;
   color: rgba(255,255,255,0.35);
+}
+
+@media (min-width: 900px) {
+  .touch-btn { display: none; }
 }
 
 @media (max-width: 700px) {

@@ -38,6 +38,8 @@ let zoneText;
 let dashReady = true;
 let statusEl;
 let cameraLocked = false;
+let touchMove = { active: false, x: 0, y: 0 };
+let selectedClass = 'gator';
 
 function preload() {}
 
@@ -107,6 +109,8 @@ function create() {
   });
 
   statusEl = document.getElementById('status');
+  setupOverlay();
+  setupTouchControls();
   connectSocket();
 }
 
@@ -160,9 +164,70 @@ function updateStatus(text, cls) {
 }
 
 function selectClass(classId, label) {
-  if (!socket || socket.readyState !== 1) return;
-  socket.send(JSON.stringify({ type: 'class', classId }));
+  selectedClass = classId;
+  if (socket && socket.readyState === 1) {
+    socket.send(JSON.stringify({ type: 'class', classId }));
+  }
   if (classText) classText.setText(`Class: ${label}`);
+}
+
+function setupOverlay() {
+  const overlay = document.getElementById('overlay');
+  const startBtn = document.getElementById('startBtn');
+  const buttons = overlay.querySelectorAll('button[data-class]');
+
+  buttons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      buttons.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      selectClass(btn.dataset.class, btn.textContent);
+    });
+  });
+
+  if (buttons[1]) buttons[1].classList.add('active');
+
+  startBtn.addEventListener('click', () => {
+    overlay.classList.add('hidden');
+    selectClass(selectedClass, buttons[1] ? buttons[1].textContent : 'Swamp Gator');
+  });
+}
+
+function setupTouchControls() {
+  const specialBtn = document.getElementById('specialBtn');
+  if (specialBtn) {
+    specialBtn.addEventListener('click', () => {
+      if (socket && socket.readyState === 1) socket.send(JSON.stringify({ type: 'special' }));
+    });
+  }
+
+  window.addEventListener('touchstart', (e) => {
+    if (!e.touches[0]) return;
+    const touch = e.touches[0];
+    const w = window.innerWidth;
+    if (touch.clientX < w * 0.5) {
+      touchMove.active = true;
+      touchMove.x = (touch.clientX - w * 0.25) / (w * 0.25);
+      touchMove.y = (touch.clientY - window.innerHeight * 0.5) / (window.innerHeight * 0.25);
+    } else if (socket && socket.readyState === 1) {
+      socket.send(JSON.stringify({ type: 'fire', dir: { x: 1, y: 0 } }));
+    }
+  });
+
+  window.addEventListener('touchmove', (e) => {
+    if (!touchMove.active || !e.touches[0]) return;
+    const touch = e.touches[0];
+    const w = window.innerWidth;
+    if (touch.clientX < w * 0.5) {
+      touchMove.x = (touch.clientX - w * 0.25) / (w * 0.25);
+      touchMove.y = (touch.clientY - window.innerHeight * 0.5) / (window.innerHeight * 0.25);
+    }
+  });
+
+  window.addEventListener('touchend', () => {
+    touchMove.active = false;
+    touchMove.x = 0;
+    touchMove.y = 0;
+  });
 }
 
 function syncPlayers(serverPlayers) {
@@ -262,10 +327,15 @@ function getMoveVector() {
   const up = cursors.up.isDown || wasd.W.isDown;
   const down = cursors.down.isDown || wasd.S.isDown;
 
-  const v = new Phaser.Math.Vector2(
+  let v = new Phaser.Math.Vector2(
     (left ? -1 : 0) + (right ? 1 : 0),
     (up ? -1 : 0) + (down ? 1 : 0)
   );
+
+  if (touchMove.active) {
+    v = new Phaser.Math.Vector2(touchMove.x, touchMove.y);
+  }
+
   if (v.length() > 0) v.normalize();
   return v;
 }
