@@ -40,6 +40,7 @@ let statusEl;
 let cameraLocked = false;
 let touchMove = { active: false, x: 0, y: 0 };
 let selectedClass = 'gator';
+let obstacles = [];
 
 function preload() {}
 
@@ -131,6 +132,10 @@ function connectSocket() {
     const payload = JSON.parse(event.data);
     if (payload.type === 'welcome') {
       playerId = payload.id;
+      if (payload.obstacles) {
+        obstacles = payload.obstacles;
+        drawObstacles();
+      }
     }
     if (payload.type === 'state') {
       syncPlayers(payload.players);
@@ -305,6 +310,14 @@ function syncProjectiles(serverProjectiles) {
       projectiles.delete(id);
     }
   }
+}
+
+function drawObstacles() {
+  const scene = game.scene.scenes[0];
+  obstacles.forEach(o => {
+    const rect = scene.add.rectangle(o.x, o.y, o.w, o.h, 0x142136, 0.9);
+    rect.setStrokeStyle(2, 0x243a5e);
+  });
 }
 
 function showBanner(text) {
