@@ -1,5 +1,8 @@
 const SERVER_BASE = 'wss://influence-arena-server.m2clawdbot.workers.dev';
 
+const ARENA_WIDTH = 1600;
+const ARENA_HEIGHT = 900;
+
 const config = {
   type: Phaser.AUTO,
   parent: 'game',
@@ -58,9 +61,9 @@ function preload() {
 }
 
 function create() {
-  this.physics.world.setBounds(0, 0, 1600, 900);
-  this.cameras.main.setBounds(0, 0, 1600, 900);
-  this.cameras.main.setZoom(1.2);
+  this.physics.world.setBounds(0, 0, ARENA_WIDTH, ARENA_HEIGHT);
+  this.cameras.main.setBounds(0, 0, ARENA_WIDTH, ARENA_HEIGHT);
+  updateCameraZoom(this.cameras.main);
   this.cameras.main.setLerp(0.08, 0.08);
 
   // Grass field
@@ -142,7 +145,15 @@ function create() {
 
   window.addEventListener('resize', () => {
     game.scale.resize(window.innerWidth, window.innerHeight);
+    updateCameraZoom(this.cameras.main);
   });
+}
+
+function updateCameraZoom(camera) {
+  const viewW = game.scale.width || window.innerWidth;
+  const viewH = game.scale.height || window.innerHeight;
+  const zoom = Math.max(viewW / ARENA_WIDTH, viewH / ARENA_HEIGHT);
+  camera.setZoom(zoom);
 }
 
 function update() {
