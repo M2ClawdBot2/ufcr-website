@@ -383,6 +383,7 @@ button, a, input {
   padding: 14px 18px;
   font-size: 0.8rem;
   display: none;
+  pointer-events: auto;
 }
 
 .touch-btn.fire {
@@ -404,6 +405,7 @@ button, a, input {
   background: rgba(0,0,0,0.25);
   display: none;
   z-index: 5;
+  pointer-events: auto;
 }
 
 .joystick.active { display: block; }

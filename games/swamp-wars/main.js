@@ -234,6 +234,7 @@ function connectSocket() {
         updateLobbyRoster(payload.players);
         window._lobbyAllReady = payload.players.filter(p => !p.isBot).every(p => p.ready);
         updateLobbyUi(payload.players.length, payload.started, payload.hostId, humansCount, payload.full);
+        setTouchControls(false);
         if (countdownEl) {
           if (payload.countdown > 0) {
             countdownEl.textContent = `Starting in ${payload.countdown}`;
@@ -242,6 +243,7 @@ function connectSocket() {
             countdownEl.classList.remove('show');
           }
         }
+        setTouchControls(false);
         if (window._ui?.scoreboard) window._ui.scoreboard.classList.remove('active');
         if (mode === 'online' && window._searching) {
           window._searchingCount = humansCount;
@@ -253,6 +255,7 @@ function connectSocket() {
 
       if (countdownEl) countdownEl.classList.remove('show');
       updateLobbyUi(payload.players.length, payload.started, payload.hostId, humansCount, payload.full);
+      setTouchControls(true);
       if (window._ui?.scoreboard) window._ui.scoreboard.classList.add('active');
       if (payload.zone) {
         zone.setPosition(payload.zone.x, payload.zone.y);
@@ -301,6 +304,8 @@ function setupUi() {
   const hud = document.getElementById('hud');
   const homeNotice = document.getElementById('homeNotice');
   const specialBtn = document.getElementById('specialBtn');
+  const fireBtn = document.getElementById('fireBtn');
+  const joystick = document.getElementById('joystick');
   const nameInput = document.getElementById('playerName');
   const scoreboard = document.getElementById('scoreboard');
   scoreRedEl = document.getElementById('scoreRed');
@@ -329,7 +334,7 @@ function setupUi() {
   const cards = characterScreen.querySelectorAll('.card');
   const done = document.getElementById('characterDone');
 
-  window._ui = { home, characterScreen, customScreen, matchLobby, searching, searchCount, gameEl, hud, homeNotice, roomLabel, playersCount, humansCount, startMatch, readyToggle, lobbyList, nameInput, scoreboard };
+  window._ui = { home, characterScreen, customScreen, matchLobby, searching, searchCount, gameEl, hud, homeNotice, roomLabel, playersCount, humansCount, startMatch, readyToggle, lobbyList, nameInput, scoreboard, specialBtn, fireBtn, joystick };
 
   if (nameInput) {
     if (playerName) nameInput.value = playerName;
@@ -434,7 +439,7 @@ function setupUi() {
     searching.classList.remove('hidden');
     gameEl.classList.remove('hidden');
     hud.classList.add('active');
-    if (specialBtn) specialBtn.classList.add('active');
+    setTouchControls(false);
     if (scoreboard) scoreboard.classList.remove('active');
     connectSocket();
     window._searching = true;
@@ -463,7 +468,7 @@ function setupUi() {
     }
     gameEl.classList.remove('hidden');
     hud.classList.add('active');
-    if (specialBtn) specialBtn.classList.add('active');
+    setTouchControls(false);
     if (scoreboard) scoreboard.classList.remove('active');
     connectSocket();
   }
@@ -522,8 +527,21 @@ function returnToHome() {
   ui.searching.classList.add('hidden');
   ui.gameEl.classList.add('hidden');
   ui.hud.classList.remove('active');
-  if (ui.specialBtn) ui.specialBtn.classList.remove('active');
+  setTouchControls(false);
   if (ui.scoreboard) ui.scoreboard.classList.remove('active');
+}
+
+function setTouchControls(on) {
+  if (window._touchUi) {
+    window._touchUi.setActive(on);
+    return;
+  }
+  const ui = window._ui;
+  if (!ui) return;
+  const method = on ? 'add' : 'remove';
+  if (ui.joystick) ui.joystick.classList[method]('active');
+  if (ui.fireBtn) ui.fireBtn.classList[method]('active');
+  if (ui.specialBtn) ui.specialBtn.classList[method]('active');
 }
 
 function showHomeNotice(text) {
@@ -546,12 +564,23 @@ function setupTouchControls() {
   const fireBtn = document.getElementById('fireBtn');
   const joystick = document.getElementById('joystick');
   const joystickKnob = document.getElementById('joystickKnob');
+  const touchUi = {
+    setActive(active) {
+      if (joystick) joystick.classList.toggle('active', active);
+      if (fireBtn) fireBtn.classList.toggle('active', active);
+      if (specialBtn) specialBtn.classList.toggle('active', active);
+    }
+  };
+  window._touchUi = touchUi;
+  touchUi.setActive(false);
+
   if (specialBtn) {
-    specialBtn.addEventListener('click', () => {
+    specialBtn.addEventListener('touchstart', (e) => {
+      e.preventDefault();
       initAudio();
       if (socket && socket.readyState === 1) socket.send(JSON.stringify({ type: 'special' }));
       playSound('special');
-    });
+    }, { passive: false });
   }
 
   if (fireBtn) {
@@ -567,10 +596,6 @@ function setupTouchControls() {
   }
 
   if (joystick && joystickKnob) {
-    joystick.classList.add('active');
-    if (fireBtn) fireBtn.classList.add('active');
-    if (specialBtn) specialBtn.classList.add('active');
-
     joystick.addEventListener('touchstart', (e) => {
       const t = e.changedTouches[0];
       joystickId = t.identifier;
@@ -615,38 +640,6 @@ function setupTouchControls() {
       touchMove.x = (nx / max) || 0;
       touchMove.y = (ny / max) || 0;
     }
-  } else {
-    if (specialBtn) specialBtn.classList.add('active');
-    window.addEventListener('touchstart', (e) => {
-      if (!e.touches[0]) return;
-      initAudio();
-      const touch = e.touches[0];
-      const w = window.innerWidth;
-      if (touch.clientX < w * 0.5) {
-        touchMove.active = true;
-        touchMove.x = (touch.clientX - w * 0.25) / (w * 0.25);
-        touchMove.y = (touch.clientY - window.innerHeight * 0.5) / (window.innerHeight * 0.25);
-      } else if (socket && socket.readyState === 1) {
-        socket.send(JSON.stringify({ type: 'fire', dir: { x: 1, y: 0 } }));
-        playSound('shoot');
-      }
-    });
-
-    window.addEventListener('touchmove', (e) => {
-      if (!touchMove.active || !e.touches[0]) return;
-      const touch = e.touches[0];
-      const w = window.innerWidth;
-      if (touch.clientX < w * 0.5) {
-        touchMove.x = (touch.clientX - w * 0.25) / (w * 0.25);
-        touchMove.y = (touch.clientY - window.innerHeight * 0.5) / (window.innerHeight * 0.25);
-      }
-    });
-
-    window.addEventListener('touchend', () => {
-      touchMove.active = false;
-      touchMove.x = 0;
-      touchMove.y = 0;
-    });
   }
 }
 
