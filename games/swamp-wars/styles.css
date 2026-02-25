@@ -102,6 +102,17 @@ body {
   border-radius: 10px;
   font-family: var(--font-body);
   cursor: pointer;
+  transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+}
+
+.primary:hover,
+.ghost:hover,
+.start:hover,
+.mode-grid button:hover,
+.room-row button:hover,
+.class-grid button:hover {
+  transform: translateY(-1px);
+  border-color: rgba(255,255,255,0.4);
 }
 
 .primary { background: var(--orange); border-color: transparent; }

@@ -6,6 +6,8 @@ const config = {
   width: 960,
   height: 540,
   backgroundColor: '#0A0E1A',
+  resolution: window.devicePixelRatio || 1,
+  render: { antialias: true },
   physics: {
     default: 'arcade',
     arcade: { debug: false }
@@ -57,7 +59,18 @@ function create() {
   // Arena bounds
   this.physics.world.setBounds(0, 0, 1600, 900);
   this.cameras.main.setBounds(0, 0, 1600, 900);
+  this.cameras.main.setZoom(1.2);
+  this.cameras.main.setLerp(0.08, 0.08);
+
+  // Grass field
   this.add.rectangle(800, 450, 1500, 820, 0x0b5f2a).setStrokeStyle(2, 0x0f8b3f);
+  const grass = this.add.graphics();
+  grass.fillStyle(0x0f8b3f, 0.5);
+  for (let x = 60; x < 1540; x += 60) {
+    for (let y = 60; y < 840; y += 60) {
+      grass.fillCircle(x + (y % 120), y, 6);
+    }
+  }
 
   // Influence zone
   zone = this.add.circle(800, 450, 110, 0x1f5b8f, 0.35).setStrokeStyle(2, 0x38a3ff);
@@ -379,7 +392,7 @@ function syncPlayers(serverPlayers) {
     if (!players.has(p.id)) {
       const color = p.team === 'red' ? 0xfa4616 : 0x38a3ff;
       const spriteKey = p.class || 'gator';
-      const sprite = scene.add.image(p.x, p.y, spriteKey).setScale(0.45);
+      const sprite = scene.add.image(p.x, p.y, spriteKey).setScale(0.5);
       const label = scene.add.text(p.x, p.y - 34, p.id === playerId ? 'YOU' : (p.isBot ? 'BOT' : 'PLAYER'), {
         fontFamily: 'Inter',
         fontSize: '10px',
@@ -413,7 +426,7 @@ function syncPlayers(serverPlayers) {
     }
 
     if (!cameraLocked && p.id === playerId) {
-      scene.cameras.main.startFollow(obj.circle, true, 0.08, 0.08);
+      scene.cameras.main.startFollow(obj.sprite, true, 0.08, 0.08);
       cameraLocked = true;
     }
   });
