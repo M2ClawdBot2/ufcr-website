@@ -15,6 +15,11 @@ body {
   background: var(--dark);
   color: var(--white);
   min-height: 100vh;
+  touch-action: manipulation;
+}
+
+button, a, input {
+  touch-action: manipulation;
 }
 
 .hidden { display: none !important; }
@@ -288,7 +293,10 @@ body {
   border-radius: 999px;
   padding: 14px 18px;
   font-size: 0.8rem;
+  display: none;
 }
+
+.touch-btn.active { display: block; }
 
 @media (max-width: 900px) {
   .hero { grid-template-columns: 1fr; padding: 24px; }

@@ -223,6 +223,7 @@ function setupUi() {
   const gameEl = document.getElementById('game');
   const hud = document.getElementById('hud');
   const homeNotice = document.getElementById('homeNotice');
+  const specialBtn = document.getElementById('specialBtn');
 
   const playOnline = document.getElementById('playOnline');
   const offlinePlay = document.getElementById('offlinePlay');
@@ -324,6 +325,7 @@ function setupUi() {
     searching.classList.remove('hidden');
     gameEl.classList.remove('hidden');
     hud.classList.add('active');
+    if (specialBtn) specialBtn.classList.add('active');
     connectSocket();
     window._searching = true;
     window._searchingCount = 0;
@@ -351,6 +353,7 @@ function setupUi() {
     }
     gameEl.classList.remove('hidden');
     hud.classList.add('active');
+    if (specialBtn) specialBtn.classList.add('active');
     connectSocket();
   }
 }
@@ -398,6 +401,7 @@ function returnToHome() {
   ui.searching.classList.add('hidden');
   ui.gameEl.classList.add('hidden');
   ui.hud.classList.remove('active');
+  if (ui.specialBtn) ui.specialBtn.classList.remove('active');
 }
 
 function showHomeNotice(text) {
