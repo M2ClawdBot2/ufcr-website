@@ -28,8 +28,10 @@ let wasd;
 let playerId;
 let socket;
 let players = new Map();
+let projectiles = new Map();
 let scores = { red: 0, blue: 0 };
 let scoreText;
+let timerText;
 let zone;
 let zoneText;
 let dashReady = true;
@@ -57,6 +59,11 @@ function create() {
     fontSize: '16px',
     color: '#ffffff'
   });
+  timerText = this.add.text(24, 48, 'Time 3:00', {
+    fontFamily: 'Inter',
+    fontSize: '14px',
+    color: 'rgba(255,255,255,0.7)'
+  });
 
   // Controls
   cursors = this.input.keyboard.createCursorKeys();
@@ -71,6 +78,16 @@ function create() {
     this.time.delayedCall(800, () => {
       dashReady = true;
     });
+  });
+
+  this.input.on('pointerdown', (pointer) => {
+    if (!socket || socket.readyState !== 1) return;
+    const scene = game.scene.scenes[0];
+    const worldPoint = pointer.positionToCamera(scene.cameras.main);
+    const me = players.get(playerId);
+    if (!me) return;
+    const dir = { x: worldPoint.x - me.circle.x, y: worldPoint.y - me.circle.y };
+    socket.send(JSON.stringify({ type: 'fire', dir }));
   });
 
   statusEl = document.getElementById('status');
@@ -97,9 +114,20 @@ function connectSocket() {
     }
     if (payload.type === 'state') {
       syncPlayers(payload.players);
+      syncProjectiles(payload.projectiles || []);
       scores = payload.scores;
       scoreText.setText(`Red ${Math.floor(scores.red)} — ${Math.floor(scores.blue)} Blue`);
+      if (timerText) {
+        const seconds = Math.max(0, Math.floor(payload.matchTime || 0));
+        const m = Math.floor(seconds / 60);
+        const s = `${seconds % 60}`.padStart(2, '0');
+        timerText.setText(`Time ${m}:${s}`);
+      }
       updateStatus(`Online • ${payload.players.length} players`, 'online');
+      if (payload.matchOver) {
+        const winner = scores.red === scores.blue ? 'DRAW' : (scores.red > scores.blue ? 'RED WINS' : 'BLUE WINS');
+        showBanner(winner);
+      }
     }
   });
 
@@ -129,12 +157,19 @@ function syncPlayers(serverPlayers) {
         fontSize: '10px',
         color: '#ffffff'
       }).setOrigin(0.5);
-      players.set(p.id, { circle, label });
+      const hpBar = scene.add.rectangle(p.x, p.y + 22, 30, 4, 0x2ecc71).setOrigin(0.5);
+      players.set(p.id, { circle, label, hpBar });
     }
 
     const obj = players.get(p.id);
     obj.circle.setPosition(p.x, p.y);
     obj.label.setPosition(p.x, p.y - 26);
+    const hpWidth = Math.max(0, (p.hp / 100) * 30);
+    obj.hpBar.setSize(hpWidth, 4);
+    obj.hpBar.setPosition(p.x, p.y + 22);
+    obj.circle.setAlpha(p.dead ? 0.25 : 1);
+    obj.label.setAlpha(p.dead ? 0.25 : 1);
+    obj.hpBar.setAlpha(p.dead ? 0.25 : 1);
 
     if (!cameraLocked && p.id === playerId) {
       scene.cameras.main.startFollow(obj.circle, true, 0.08, 0.08);
@@ -146,9 +181,47 @@ function syncPlayers(serverPlayers) {
     if (!seen.has(id)) {
       obj.circle.destroy();
       obj.label.destroy();
+      obj.hpBar.destroy();
       players.delete(id);
     }
   }
+}
+
+function syncProjectiles(serverProjectiles) {
+  const scene = game.scene.scenes[0];
+  const seen = new Set();
+
+  serverProjectiles.forEach((proj) => {
+    seen.add(proj.id);
+    if (!projectiles.has(proj.id)) {
+      const color = proj.team === 'red' ? 0xfa4616 : 0x38a3ff;
+      const circle = scene.add.circle(proj.x, proj.y, 5, color, 0.8);
+      projectiles.set(proj.id, circle);
+    }
+    const obj = projectiles.get(proj.id);
+    obj.setPosition(proj.x, proj.y);
+  });
+
+  for (const [id, obj] of projectiles.entries()) {
+    if (!seen.has(id)) {
+      obj.destroy();
+      projectiles.delete(id);
+    }
+  }
+}
+
+function showBanner(text) {
+  const scene = game.scene.scenes[0];
+  const banner = scene.add.rectangle(480, 100, 300, 60, 0x000000, 0.6).setStrokeStyle(2, 0xf0a830);
+  const label = scene.add.text(480, 100, text, {
+    fontFamily: 'Oswald',
+    fontSize: '24px',
+    color: '#f0a830'
+  }).setOrigin(0.5);
+  scene.time.delayedCall(3000, () => {
+    banner.destroy();
+    label.destroy();
+  });
 }
 
 function getMoveVector() {
