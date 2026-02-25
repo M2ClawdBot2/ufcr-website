@@ -35,6 +35,7 @@ let playerId;
 let socket;
 let players = new Map();
 let projectiles = new Map();
+let muzzleFlashes = [];
 let scores = { red: 0, blue: 0 };
 let scoreText;
 let timerText;
@@ -746,15 +747,20 @@ function syncProjectiles(serverProjectiles) {
     if (!projectiles.has(proj.id)) {
       const color = proj.team === 'red' ? 0xfa4616 : 0x38a3ff;
       const circle = scene.add.circle(proj.x, proj.y, 5, color, 0.8);
-      projectiles.set(proj.id, circle);
+      projectiles.set(proj.id, { sprite: circle, lastX: proj.x, lastY: proj.y });
+      spawnMuzzleFlash(proj.x, proj.y, color);
     }
     const obj = projectiles.get(proj.id);
-    obj.setPosition(proj.x, proj.y);
+    if (!obj) return;
+    spawnTrail(obj.lastX, obj.lastY, proj.team === 'red' ? 0xfa4616 : 0x38a3ff);
+    obj.sprite.setPosition(proj.x, proj.y);
+    obj.lastX = proj.x;
+    obj.lastY = proj.y;
   });
 
   for (const [id, obj] of projectiles.entries()) {
     if (!seen.has(id)) {
-      obj.destroy();
+      obj.sprite.destroy();
       projectiles.delete(id);
     }
   }
@@ -829,6 +835,21 @@ function spawnHitParticles(x, y, team) {
       life: 300
     });
   }
+}
+
+function spawnTrail(x, y, color) {
+  const scene = game.scene.scenes[0];
+  const dot = scene.add.circle(x, y, 2, color, 0.35);
+  setTimeout(() => dot.destroy(), 180);
+}
+
+function spawnMuzzleFlash(x, y, color) {
+  const scene = game.scene.scenes[0];
+  const flash = scene.add.circle(x, y, 6, color, 0.9);
+  muzzleFlashes.push(flash);
+  setTimeout(() => {
+    flash.destroy();
+  }, 80);
 }
 
 function getMoveVector() {
