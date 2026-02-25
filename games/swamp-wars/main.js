@@ -152,7 +152,7 @@ function create() {
 function updateCameraZoom(camera) {
   const viewW = game.scale.width || window.innerWidth;
   const viewH = game.scale.height || window.innerHeight;
-  const zoom = Math.max(viewW / ARENA_WIDTH, viewH / ARENA_HEIGHT);
+  const zoom = Math.max(2, viewW / ARENA_WIDTH, viewH / ARENA_HEIGHT);
   camera.setZoom(zoom);
 }
 
