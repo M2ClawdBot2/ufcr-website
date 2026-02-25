@@ -53,7 +53,13 @@ let isHost = false;
 let mode = 'online';
 let searchTimer;
 let playerName = (localStorage.getItem('swampwars_name') || '').trim();
+let clientId = localStorage.getItem('swampwars_cid');
+if (!clientId) {
+  clientId = (crypto && crypto.randomUUID) ? crypto.randomUUID() : Math.random().toString(36).slice(2);
+  localStorage.setItem('swampwars_cid', clientId);
+}
 let isReady = false;
+let countdownEl;
 
 function preload() {
   this.load.image('behemoth', 'assets/behemoth.svg');
@@ -168,7 +174,7 @@ function update() {
 }
 
 function connectSocket() {
-  const url = `${SERVER_BASE}?room=${encodeURIComponent(roomCode)}&mode=${mode}${isHost ? '&host=1' : ''}`;
+  const url = `${SERVER_BASE}?room=${encodeURIComponent(roomCode)}&mode=${mode}${isHost ? '&host=1' : ''}&cid=${encodeURIComponent(clientId)}`;
   socket = new WebSocket(url);
 
   socket.addEventListener('open', () => {
@@ -216,6 +222,14 @@ function connectSocket() {
         updateLobbyRoster(payload.players);
         window._lobbyAllReady = payload.players.filter(p => !p.isBot).every(p => p.ready);
         updateLobbyUi(payload.players.length, payload.started, payload.hostId, humansCount, payload.full);
+        if (countdownEl) {
+          if (payload.countdown > 0) {
+            countdownEl.textContent = `Starting in ${payload.countdown}`;
+            countdownEl.classList.add('show');
+          } else {
+            countdownEl.classList.remove('show');
+          }
+        }
         if (mode === 'online' && window._searching) {
           window._searchingCount = humansCount;
           const ui = window._ui;
@@ -224,6 +238,7 @@ function connectSocket() {
         return;
       }
 
+      if (countdownEl) countdownEl.classList.remove('show');
       updateLobbyUi(payload.players.length, payload.started, payload.hostId, humansCount, payload.full);
 
       syncPlayers(payload.players);
@@ -258,6 +273,7 @@ function setupUi() {
   const homeNotice = document.getElementById('homeNotice');
   const specialBtn = document.getElementById('specialBtn');
   const nameInput = document.getElementById('playerName');
+  countdownEl = document.getElementById('countdown');
 
   const playOnline = document.getElementById('playOnline');
   const offlinePlay = document.getElementById('offlinePlay');
@@ -642,8 +658,13 @@ function updateLobbyRoster(playerList) {
     const name = document.createElement('span');
     name.textContent = p.name || 'Player';
     const ready = document.createElement('span');
-    ready.textContent = p.ready ? 'Ready' : 'Not Ready';
-    ready.className = p.ready ? 'lobby-ready' : 'lobby-notready';
+    if (p.disconnectedAt) {
+      ready.textContent = 'Disconnected';
+      ready.className = 'lobby-notready';
+    } else {
+      ready.textContent = p.ready ? 'Ready' : 'Not Ready';
+      ready.className = p.ready ? 'lobby-ready' : 'lobby-notready';
+    }
     row.appendChild(name);
     row.appendChild(ready);
     ui.lobbyList.appendChild(row);
