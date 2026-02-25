@@ -1,4 +1,4 @@
-const SERVER_URL = 'wss://influence-arena-server.m2clawdbot.workers.dev?room=ufcr';
+const SERVER_BASE = 'wss://influence-arena-server.m2clawdbot.workers.dev';
 
 const config = {
   type: Phaser.AUTO,
@@ -27,6 +27,8 @@ let cursors;
 let wasd;
 let playerId;
 let socket;
+let roomCode = 'global';
+let isHost = false;
 let players = new Map();
 let projectiles = new Map();
 let scores = { red: 0, blue: 0 };
@@ -112,7 +114,6 @@ function create() {
   statusEl = document.getElementById('status');
   setupOverlay();
   setupTouchControls();
-  connectSocket();
 }
 
 function update() {
@@ -122,7 +123,8 @@ function update() {
 }
 
 function connectSocket() {
-  socket = new WebSocket(SERVER_URL);
+  const url = `${SERVER_BASE}?room=${encodeURIComponent(roomCode)}${isHost ? '&host=1' : ''}`;
+  socket = new WebSocket(url);
 
   socket.addEventListener('open', () => {
     updateStatus('Online', 'online');
@@ -135,6 +137,9 @@ function connectSocket() {
       if (payload.obstacles) {
         obstacles = payload.obstacles;
         drawObstacles();
+      }
+      if (payload.hostId) {
+        isHost = payload.hostId === playerId;
       }
     }
     if (payload.type === 'state') {
@@ -149,6 +154,7 @@ function connectSocket() {
         timerText.setText(`Time ${m}:${s}`);
       }
       updateStatus(`Online • ${payload.players.length} players`, 'online');
+      updateLobbyUi(payload.players.length, payload.started, payload.hostId);
       if (payload.matchOver) {
         const winner = scores.red === scores.blue ? 'DRAW' : (scores.red > scores.blue ? 'RED WINS' : 'BLUE WINS');
         showBanner(winner);
@@ -176,9 +182,38 @@ function selectClass(classId, label) {
   if (classText) classText.setText(`Class: ${label}`);
 }
 
+function updateLobbyUi(count, started, hostId) {
+  const ui = window._lobbyUi;
+  if (!ui) return;
+  ui.playersCount.textContent = `Players: ${count}`;
+  if (started) {
+    ui.lobby.classList.add('hidden');
+  } else {
+    ui.lobby.classList.remove('hidden');
+  }
+  if (playerId && hostId === playerId) {
+    ui.startMatch.disabled = false;
+    ui.startMatch.textContent = 'Start Match';
+  } else {
+    ui.startMatch.disabled = true;
+    ui.startMatch.textContent = 'Waiting for host…';
+  }
+}
+
 function setupOverlay() {
   const overlay = document.getElementById('overlay');
+  const lobby = document.getElementById('lobby');
   const startBtn = document.getElementById('startBtn');
+  const startMatch = document.getElementById('startMatch');
+  const roomLabel = document.getElementById('roomLabel');
+  const playersCount = document.getElementById('playersCount');
+
+  const quickPlay = document.getElementById('quickPlay');
+  const offlinePlay = document.getElementById('offlinePlay');
+  const createRoom = document.getElementById('createRoom');
+  const joinRoom = document.getElementById('joinRoom');
+  const roomInput = document.getElementById('roomInput');
+
   const buttons = overlay.querySelectorAll('button[data-class]');
 
   buttons.forEach(btn => {
@@ -191,10 +226,48 @@ function setupOverlay() {
 
   if (buttons[1]) buttons[1].classList.add('active');
 
+  quickPlay.addEventListener('click', () => {
+    roomCode = 'global';
+    isHost = false;
+    roomLabel.textContent = 'Room: Global';
+  });
+
+  offlinePlay.addEventListener('click', () => {
+    roomCode = `offline-${Math.random().toString(36).slice(2, 8)}`;
+    isHost = true;
+    roomLabel.textContent = `Room: Offline`; 
+  });
+
+  createRoom.addEventListener('click', () => {
+    roomCode = Math.random().toString(36).slice(2, 8).toUpperCase();
+    isHost = true;
+    roomLabel.textContent = `Room: ${roomCode}`;
+  });
+
+  joinRoom.addEventListener('click', () => {
+    const code = roomInput.value.trim().toUpperCase();
+    if (!code) return;
+    roomCode = code;
+    isHost = false;
+    roomLabel.textContent = `Room: ${roomCode}`;
+  });
+
   startBtn.addEventListener('click', () => {
     overlay.classList.add('hidden');
+    lobby.classList.remove('hidden');
     selectClass(selectedClass, buttons[1] ? buttons[1].textContent : 'Swamp Gator');
+    connectSocket();
   });
+
+  startMatch.addEventListener('click', () => {
+    if (!socket || socket.readyState !== 1) return;
+    if (!isHost) return;
+    socket.send(JSON.stringify({ type: 'start' }));
+    lobby.classList.add('hidden');
+  });
+
+  // expose for updates
+  window._lobbyUi = { lobby, playersCount, roomLabel, startMatch };
 }
 
 function setupTouchControls() {

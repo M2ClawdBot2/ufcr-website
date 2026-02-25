@@ -27,6 +27,20 @@
   <div class="overlay" id="overlay">
     <div class="panel">
       <h2>Swamp Wars</h2>
+      <p>Choose how to play</p>
+
+      <div class="mode-grid">
+        <button id="quickPlay">Quick Play (Global)</button>
+        <button id="offlinePlay">Offline (AI Only)</button>
+        <button id="createRoom">Create Room</button>
+      </div>
+
+      <div class="room-row">
+        <input id="roomInput" placeholder="Enter room code" />
+        <button id="joinRoom">Join</button>
+      </div>
+
+      <div class="divider"></div>
       <p>Select a character</p>
       <div class="class-grid">
         <button data-class="behemoth">Bureaucrat Behemoth</button>
@@ -34,10 +48,21 @@
         <button data-class="lizard">Lobbyist Lizard</button>
         <button data-class="cobra">Corruption Cobra</button>
       </div>
-      <button class="start" id="startBtn">Enter Arena</button>
+      <button class="start" id="startBtn">Enter Lobby</button>
       <div class="hint">Desktop: WASD/Arrows move · Space dash · Click shoot · E special · 1-4 class</div>
       <div class="hint">Mobile: left thumb move · right tap shoot · bottom-right = special</div>
     </div>
+  </div>
+
+  <div class="overlay hidden" id="lobby">
+    <div class="panel">
+      <h2>Lobby</h2>
+      <p id="roomLabel">Room: —</p>
+      <p id="playersCount">Players: 1</p>
+      <button class="start" id="startMatch">Start Match</button>
+      <div class="hint">Only the room creator can start.</div>
+    </div>
+  </div>
   </div>
 
   <button class="touch-btn special" id="specialBtn">Special</button>
