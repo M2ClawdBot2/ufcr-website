@@ -34,11 +34,14 @@ let zone;
 let zoneText;
 let dashReady = true;
 let statusEl;
+let cameraLocked = false;
 
 function preload() {}
 
 function create() {
   // Arena bounds
+  this.physics.world.setBounds(0, 0, 960, 540);
+  this.cameras.main.setBounds(0, 0, 960, 540);
   this.add.rectangle(480, 270, 880, 460, 0x0f1526).setStrokeStyle(2, 0x1f2b45);
 
   // Influence zone
@@ -132,6 +135,11 @@ function syncPlayers(serverPlayers) {
     const obj = players.get(p.id);
     obj.circle.setPosition(p.x, p.y);
     obj.label.setPosition(p.x, p.y - 26);
+
+    if (!cameraLocked && p.id === playerId) {
+      scene.cameras.main.startFollow(obj.circle, true, 0.08, 0.08);
+      cameraLocked = true;
+    }
   });
 
   for (const [id, obj] of players.entries()) {
