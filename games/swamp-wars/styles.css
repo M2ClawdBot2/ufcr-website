@@ -270,11 +270,13 @@ button, a, input {
   position: fixed;
   top: 60px;
   left: 20px;
-  display: flex;
+  display: none;
   gap: 10px;
   z-index: 5;
   pointer-events: none;
 }
+
+.scoreboard.active { display: flex; }
 
 .score-pill {
   padding: 8px 12px;

@@ -242,6 +242,7 @@ function connectSocket() {
             countdownEl.classList.remove('show');
           }
         }
+        if (window._ui?.scoreboard) window._ui.scoreboard.classList.remove('active');
         if (mode === 'online' && window._searching) {
           window._searchingCount = humansCount;
           const ui = window._ui;
@@ -252,6 +253,7 @@ function connectSocket() {
 
       if (countdownEl) countdownEl.classList.remove('show');
       updateLobbyUi(payload.players.length, payload.started, payload.hostId, humansCount, payload.full);
+      if (window._ui?.scoreboard) window._ui.scoreboard.classList.add('active');
       if (payload.zone) {
         zone.setPosition(payload.zone.x, payload.zone.y);
         zoneText.setPosition(payload.zone.x, payload.zone.y);
@@ -300,6 +302,7 @@ function setupUi() {
   const homeNotice = document.getElementById('homeNotice');
   const specialBtn = document.getElementById('specialBtn');
   const nameInput = document.getElementById('playerName');
+  const scoreboard = document.getElementById('scoreboard');
   scoreRedEl = document.getElementById('scoreRed');
   scoreBlueEl = document.getElementById('scoreBlue');
   countdownEl = document.getElementById('countdown');
@@ -326,7 +329,7 @@ function setupUi() {
   const cards = characterScreen.querySelectorAll('.card');
   const done = document.getElementById('characterDone');
 
-  window._ui = { home, characterScreen, customScreen, matchLobby, searching, searchCount, gameEl, hud, homeNotice, roomLabel, playersCount, humansCount, startMatch, readyToggle, lobbyList, nameInput };
+  window._ui = { home, characterScreen, customScreen, matchLobby, searching, searchCount, gameEl, hud, homeNotice, roomLabel, playersCount, humansCount, startMatch, readyToggle, lobbyList, nameInput, scoreboard };
 
   if (nameInput) {
     if (playerName) nameInput.value = playerName;
@@ -432,6 +435,7 @@ function setupUi() {
     gameEl.classList.remove('hidden');
     hud.classList.add('active');
     if (specialBtn) specialBtn.classList.add('active');
+    if (scoreboard) scoreboard.classList.remove('active');
     connectSocket();
     window._searching = true;
     window._searchingCount = 0;
@@ -460,6 +464,7 @@ function setupUi() {
     gameEl.classList.remove('hidden');
     hud.classList.add('active');
     if (specialBtn) specialBtn.classList.add('active');
+    if (scoreboard) scoreboard.classList.remove('active');
     connectSocket();
   }
 }
@@ -518,6 +523,7 @@ function returnToHome() {
   ui.gameEl.classList.add('hidden');
   ui.hud.classList.remove('active');
   if (ui.specialBtn) ui.specialBtn.classList.remove('active');
+  if (ui.scoreboard) ui.scoreboard.classList.remove('active');
 }
 
 function showHomeNotice(text) {
