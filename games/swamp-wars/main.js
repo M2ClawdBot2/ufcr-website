@@ -32,6 +32,7 @@ let projectiles = new Map();
 let scores = { red: 0, blue: 0 };
 let scoreText;
 let timerText;
+let classText;
 let zone;
 let zoneText;
 let dashReady = true;
@@ -64,6 +65,11 @@ function create() {
     fontSize: '14px',
     color: 'rgba(255,255,255,0.7)'
   });
+  classText = this.add.text(24, 68, 'Class: Swamp Gator', {
+    fontFamily: 'Inter',
+    fontSize: '12px',
+    color: 'rgba(255,255,255,0.6)'
+  });
 
   // Controls
   cursors = this.input.keyboard.createCursorKeys();
@@ -79,6 +85,16 @@ function create() {
       dashReady = true;
     });
   });
+
+  this.input.keyboard.on('keydown-E', () => {
+    if (!socket || socket.readyState !== 1) return;
+    socket.send(JSON.stringify({ type: 'special' }));
+  });
+
+  this.input.keyboard.on('keydown-ONE', () => selectClass('behemoth', 'Bureaucrat Behemoth'));
+  this.input.keyboard.on('keydown-TWO', () => selectClass('gator', 'Swamp Gator'));
+  this.input.keyboard.on('keydown-THREE', () => selectClass('lizard', 'Lobbyist Lizard'));
+  this.input.keyboard.on('keydown-FOUR', () => selectClass('cobra', 'Corruption Cobra'));
 
   this.input.on('pointerdown', (pointer) => {
     if (!socket || socket.readyState !== 1) return;
@@ -143,6 +159,12 @@ function updateStatus(text, cls) {
   if (cls) statusEl.classList.add(cls);
 }
 
+function selectClass(classId, label) {
+  if (!socket || socket.readyState !== 1) return;
+  socket.send(JSON.stringify({ type: 'class', classId }));
+  if (classText) classText.setText(`Class: ${label}`);
+}
+
 function syncPlayers(serverPlayers) {
   const scene = game.scene.scenes[0];
   const seen = new Set();
@@ -164,12 +186,22 @@ function syncPlayers(serverPlayers) {
     const obj = players.get(p.id);
     obj.circle.setPosition(p.x, p.y);
     obj.label.setPosition(p.x, p.y - 26);
-    const hpWidth = Math.max(0, (p.hp / 100) * 30);
+    const hpWidth = Math.max(0, (p.hp / p.maxHp) * 30);
     obj.hpBar.setSize(hpWidth, 4);
     obj.hpBar.setPosition(p.x, p.y + 22);
-    obj.circle.setAlpha(p.dead ? 0.25 : 1);
-    obj.label.setAlpha(p.dead ? 0.25 : 1);
-    obj.hpBar.setAlpha(p.dead ? 0.25 : 1);
+    const invis = p.invisUntil && Date.now() < p.invisUntil;
+    const alpha = p.dead ? 0.2 : (invis ? 0.35 : 1);
+    obj.circle.setAlpha(alpha);
+    obj.label.setAlpha(alpha);
+    obj.hpBar.setAlpha(alpha);
+
+    if (p.id === playerId && classText && p.class) {
+      const label = p.class === 'behemoth' ? 'Bureaucrat Behemoth'
+        : p.class === 'gator' ? 'Swamp Gator'
+        : p.class === 'lizard' ? 'Lobbyist Lizard'
+        : 'Corruption Cobra';
+      classText.setText(`Class: ${label}`);
+    }
 
     if (!cameraLocked && p.id === playerId) {
       scene.cameras.main.startFollow(obj.circle, true, 0.08, 0.08);
