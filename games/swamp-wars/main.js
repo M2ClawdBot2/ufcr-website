@@ -46,7 +46,12 @@ let obstacles = [];
 let lastInputSent = 0;
 let audioCtx;
 
-function preload() {}
+function preload() {
+  this.load.image('behemoth', 'assets/behemoth.svg');
+  this.load.image('gator', 'assets/gator.svg');
+  this.load.image('lizard', 'assets/lizard.svg');
+  this.load.image('cobra', 'assets/cobra.svg');
+}
 
 function create() {
   // Arena bounds
@@ -373,25 +378,29 @@ function syncPlayers(serverPlayers) {
     seen.add(p.id);
     if (!players.has(p.id)) {
       const color = p.team === 'red' ? 0xfa4616 : 0x38a3ff;
-      const circle = scene.add.circle(p.x, p.y, 16, color, 0.95);
-      const label = scene.add.text(p.x, p.y - 26, p.id === playerId ? 'YOU' : (p.isBot ? 'BOT' : 'PLAYER'), {
+      const spriteKey = p.class || 'gator';
+      const sprite = scene.add.image(p.x, p.y, spriteKey).setScale(0.45);
+      const label = scene.add.text(p.x, p.y - 34, p.id === playerId ? 'YOU' : (p.isBot ? 'BOT' : 'PLAYER'), {
         fontFamily: 'Inter',
         fontSize: '10px',
         color: '#ffffff'
       }).setOrigin(0.5);
-      const hpBar = scene.add.rectangle(p.x, p.y + 22, 30, 4, 0x2ecc71).setOrigin(0.5);
-      players.set(p.id, { circle, label, hpBar });
+      const hpBar = scene.add.rectangle(p.x, p.y + 28, 30, 4, 0x2ecc71).setOrigin(0.5);
+      players.set(p.id, { sprite, label, hpBar });
     }
 
     const obj = players.get(p.id);
-    obj.circle.setPosition(p.x, p.y);
-    obj.label.setPosition(p.x, p.y - 26);
+    if (obj.sprite.texture.key !== p.class) {
+      obj.sprite.setTexture(p.class);
+    }
+    obj.sprite.setPosition(p.x, p.y);
+    obj.label.setPosition(p.x, p.y - 34);
     const hpWidth = Math.max(0, (p.hp / p.maxHp) * 30);
     obj.hpBar.setSize(hpWidth, 4);
-    obj.hpBar.setPosition(p.x, p.y + 22);
+    obj.hpBar.setPosition(p.x, p.y + 28);
     const invis = p.invisUntil && Date.now() < p.invisUntil;
     const alpha = p.dead ? 0.2 : (invis ? 0.35 : 1);
-    obj.circle.setAlpha(alpha);
+    obj.sprite.setAlpha(alpha);
     obj.label.setAlpha(alpha);
     obj.hpBar.setAlpha(alpha);
 
@@ -411,7 +420,7 @@ function syncPlayers(serverPlayers) {
 
   for (const [id, obj] of players.entries()) {
     if (!seen.has(id)) {
-      obj.circle.destroy();
+      obj.sprite.destroy();
       obj.label.destroy();
       obj.hpBar.destroy();
       players.delete(id);
