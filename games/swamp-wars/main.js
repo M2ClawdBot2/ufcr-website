@@ -55,13 +55,13 @@ function preload() {
 
 function create() {
   // Arena bounds
-  this.physics.world.setBounds(0, 0, 960, 540);
-  this.cameras.main.setBounds(0, 0, 960, 540);
-  this.add.rectangle(480, 270, 880, 460, 0x0f1526).setStrokeStyle(2, 0x1f2b45);
+  this.physics.world.setBounds(0, 0, 1600, 900);
+  this.cameras.main.setBounds(0, 0, 1600, 900);
+  this.add.rectangle(800, 450, 1500, 820, 0x0b5f2a).setStrokeStyle(2, 0x0f8b3f);
 
   // Influence zone
-  zone = this.add.circle(480, 270, 80, 0x1f5b8f, 0.35).setStrokeStyle(2, 0x38a3ff);
-  zoneText = this.add.text(480, 270, 'INFLUENCE', {
+  zone = this.add.circle(800, 450, 110, 0x1f5b8f, 0.35).setStrokeStyle(2, 0x38a3ff);
+  zoneText = this.add.text(800, 450, 'INFLUENCE', {
     fontFamily: 'Oswald',
     fontSize: '18px',
     color: '#f0a830'
@@ -454,15 +454,15 @@ function syncProjectiles(serverProjectiles) {
 function drawObstacles() {
   const scene = game.scene.scenes[0];
   obstacles.forEach(o => {
-    const rect = scene.add.rectangle(o.x, o.y, o.w, o.h, 0x142136, 0.9);
-    rect.setStrokeStyle(2, 0x243a5e);
+    const rect = scene.add.rectangle(o.x, o.y, o.w, o.h, 0x2b6b3d, 1);
+    rect.setStrokeStyle(2, 0x1f4f2f);
   });
 }
 
 function showBanner(text) {
   const scene = game.scene.scenes[0];
-  const banner = scene.add.rectangle(480, 100, 300, 60, 0x000000, 0.6).setStrokeStyle(2, 0xf0a830);
-  const label = scene.add.text(480, 100, text, {
+  const banner = scene.add.rectangle(800, 80, 300, 60, 0x000000, 0.6).setStrokeStyle(2, 0xf0a830);
+  const label = scene.add.text(800, 80, text, {
     fontFamily: 'Oswald',
     fontSize: '24px',
     color: '#f0a830'
