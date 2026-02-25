@@ -50,6 +50,7 @@ let obstacles = [];
 let lastInputSent = 0;
 let audioCtx;
 let roomCode = 'global';
+let lastHitFlash = new Map();
 let isHost = false;
 let mode = 'online';
 let searchTimer;
@@ -598,6 +599,16 @@ function syncPlayers(serverPlayers) {
     obj.label.setAlpha(alpha);
     obj.hpBar.setAlpha(alpha);
 
+    if (p.hitAt) {
+      const last = lastHitFlash.get(p.id) || 0;
+      if (p.hitAt > last) {
+        lastHitFlash.set(p.id, p.hitAt);
+        obj.sprite.setTintFill(0xffffff);
+        if (p.id === playerId) playSound('hit');
+        setTimeout(() => obj.sprite.clearTint(), 120);
+      }
+    }
+
     if (!cameraLocked && p.id === playerId) {
       scene.cameras.main.startFollow(obj.sprite, true, 0.08, 0.08);
       cameraLocked = true;
@@ -754,6 +765,11 @@ function playSound(type) {
     osc.frequency.exponentialRampToValueAtTime(120, now + 0.2);
     gain.gain.setValueAtTime(0.2, now);
     gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+  } else if (type === 'hit') {
+    osc.frequency.setValueAtTime(620, now);
+    osc.frequency.exponentialRampToValueAtTime(240, now + 0.06);
+    gain.gain.setValueAtTime(0.25, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
   }
 
   osc.connect(gain).connect(audioCtx.destination);
