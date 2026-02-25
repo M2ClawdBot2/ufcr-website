@@ -41,6 +41,7 @@ let timerText;
 let classText;
 let scoreRedEl;
 let scoreBlueEl;
+let hitParticles = [];
 let zone;
 let zoneText;
 let zoneLockoutText;
@@ -176,8 +177,26 @@ function updateCameraZoom(camera) {
 }
 
 function update() {
-  if (!socket || socket.readyState !== 1) return;
   const now = performance.now();
+
+  // particle updates
+  if (hitParticles.length) {
+    for (let i = hitParticles.length - 1; i >= 0; i--) {
+      const p = hitParticles[i];
+      p.life -= 16;
+      p.vy += 0.03;
+      p.x += p.vx;
+      p.y += p.vy;
+      p.sprite.setPosition(p.x, p.y);
+      p.sprite.setAlpha(Math.max(0, p.life / 300));
+      if (p.life <= 0) {
+        p.sprite.destroy();
+        hitParticles.splice(i, 1);
+      }
+    }
+  }
+
+  if (!socket || socket.readyState !== 1) return;
   if (now - lastInputSent < 50) return; // 20Hz
   lastInputSent = now;
   const move = getMoveVector();
@@ -683,7 +702,13 @@ function syncPlayers(serverPlayers) {
       if (p.hitAt > last) {
         lastHitFlash.set(p.id, p.hitAt);
         obj.sprite.setTintFill(0xffffff);
-        if (p.id === playerId) playSound('hit');
+        if (p.hitX && p.hitY) spawnHitParticles(p.hitX, p.hitY, p.hitBy);
+        if (p.id === playerId) {
+          playSound('hit');
+          if (scene && scene.cameras && scene.cameras.main) {
+            scene.cameras.main.shake(80, 0.004);
+          }
+        }
         setTimeout(() => obj.sprite.clearTint(), 120);
       }
     }
@@ -788,6 +813,22 @@ function showWinner(text) {
   el.textContent = text;
   el.classList.add('show');
   setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+function spawnHitParticles(x, y, team) {
+  const scene = game.scene.scenes[0];
+  const color = team === 'red' ? 0xfa4616 : 0x38a3ff;
+  for (let i = 0; i < 8; i++) {
+    const circle = scene.add.circle(x, y, 3, color, 0.9);
+    hitParticles.push({
+      sprite: circle,
+      x,
+      y,
+      vx: (Math.random() - 0.5) * 3,
+      vy: (Math.random() - 0.7) * 3,
+      life: 300
+    });
+  }
 }
 
 function getMoveVector() {
