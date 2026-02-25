@@ -38,6 +38,8 @@ let scores = { red: 0, blue: 0 };
 let scoreText;
 let timerText;
 let classText;
+let scoreRedEl;
+let scoreBlueEl;
 let zone;
 let zoneText;
 let zoneLockoutText;
@@ -259,6 +261,8 @@ function connectSocket() {
       syncPlayers(payload.players);
       syncProjectiles(payload.projectiles || []);
       scoreText.setText(`Red ${Math.floor(scores.red)} — ${Math.floor(scores.blue)} Blue`);
+      if (scoreRedEl) scoreRedEl.textContent = `Red ${Math.floor(scores.red)}`;
+      if (scoreBlueEl) scoreBlueEl.textContent = `Blue ${Math.floor(scores.blue)}`;
       if (payload.matchOver) {
         const winner = scores.red === scores.blue ? 'DRAW' : (scores.red > scores.blue ? 'RED WINS' : 'BLUE WINS');
         showWinner(winner);
@@ -288,6 +292,8 @@ function setupUi() {
   const homeNotice = document.getElementById('homeNotice');
   const specialBtn = document.getElementById('specialBtn');
   const nameInput = document.getElementById('playerName');
+  scoreRedEl = document.getElementById('scoreRed');
+  scoreBlueEl = document.getElementById('scoreBlue');
   countdownEl = document.getElementById('countdown');
 
   const playOnline = document.getElementById('playOnline');

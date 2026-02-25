@@ -266,6 +266,28 @@ button, a, input {
 .status.online { background: rgba(46,204,113,0.12); color: #2ecc71; }
 .status.offline { background: rgba(231,76,60,0.12); color: #e74c3c; }
 
+.scoreboard {
+  position: fixed;
+  top: 60px;
+  left: 20px;
+  display: flex;
+  gap: 10px;
+  z-index: 5;
+  pointer-events: none;
+}
+
+.score-pill {
+  padding: 8px 12px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: rgba(0,0,0,0.55);
+}
+
+.score-pill.red { color: #fa4616; border: 1px solid rgba(250,70,22,0.4); }
+.score-pill.blue { color: #38a3ff; border: 1px solid rgba(56,163,255,0.4); }
+
 .lobby-list {
   margin: 12px 0;
   display: grid;
