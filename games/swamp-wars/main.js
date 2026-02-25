@@ -52,6 +52,8 @@ let roomCode = 'global';
 let isHost = false;
 let mode = 'online';
 let searchTimer;
+let playerName = (localStorage.getItem('swampwars_name') || '').trim();
+let isReady = false;
 
 function preload() {
   this.load.image('behemoth', 'assets/behemoth.svg');
@@ -171,6 +173,12 @@ function connectSocket() {
 
   socket.addEventListener('open', () => {
     updateStatus(mode === 'offline' ? 'Offline' : 'Online', 'online');
+    if (playerName) {
+      socket.send(JSON.stringify({ type: 'name', name: playerName }));
+    }
+    if (mode === 'custom') {
+      socket.send(JSON.stringify({ type: 'ready', ready: isReady }));
+    }
     if (mode === 'offline') {
       socket.send(JSON.stringify({ type: 'start' }));
     }
@@ -180,6 +188,9 @@ function connectSocket() {
     const payload = JSON.parse(event.data);
     if (payload.type === 'welcome') {
       playerId = payload.id;
+      if (payload.player && payload.player.name) {
+        playerName = payload.player.name;
+      }
       if (payload.obstacles) {
         obstacles = payload.obstacles;
         drawObstacles();
@@ -198,11 +209,13 @@ function connectSocket() {
       }
       const humansCount = payload.humans ?? payload.players.filter(p => !p.isBot).length;
       updateStatus(`${mode === 'offline' ? 'Offline' : 'Online'} • ${payload.players.length} players`, 'online');
-      updateLobbyUi(payload.players.length, payload.started, payload.hostId, humansCount, payload.full);
 
       if (!payload.started) {
         clearPlayers();
         clearProjectiles();
+        updateLobbyRoster(payload.players);
+        window._lobbyAllReady = payload.players.filter(p => !p.isBot).every(p => p.ready);
+        updateLobbyUi(payload.players.length, payload.started, payload.hostId, humansCount, payload.full);
         if (mode === 'online' && window._searching) {
           window._searchingCount = humansCount;
           const ui = window._ui;
@@ -210,6 +223,8 @@ function connectSocket() {
         }
         return;
       }
+
+      updateLobbyUi(payload.players.length, payload.started, payload.hostId, humansCount, payload.full);
 
       syncPlayers(payload.players);
       syncProjectiles(payload.projectiles || []);
@@ -242,6 +257,7 @@ function setupUi() {
   const hud = document.getElementById('hud');
   const homeNotice = document.getElementById('homeNotice');
   const specialBtn = document.getElementById('specialBtn');
+  const nameInput = document.getElementById('playerName');
 
   const playOnline = document.getElementById('playOnline');
   const offlinePlay = document.getElementById('offlinePlay');
@@ -256,6 +272,8 @@ function setupUi() {
   const customBack = document.getElementById('customBack');
 
   const startMatch = document.getElementById('startMatch');
+  const readyToggle = document.getElementById('readyToggle');
+  const lobbyList = document.getElementById('lobbyList');
   const roomLabel = document.getElementById('roomLabel');
   const playersCount = document.getElementById('playersCount');
   const humansCount = document.getElementById('humansCount');
@@ -263,12 +281,24 @@ function setupUi() {
   const cards = characterScreen.querySelectorAll('.card');
   const done = document.getElementById('characterDone');
 
-  window._ui = { home, characterScreen, customScreen, matchLobby, searching, searchCount, gameEl, hud, homeNotice, roomLabel, playersCount, humansCount, startMatch };
+  window._ui = { home, characterScreen, customScreen, matchLobby, searching, searchCount, gameEl, hud, homeNotice, roomLabel, playersCount, humansCount, startMatch, readyToggle, lobbyList, nameInput };
+
+  if (nameInput) {
+    if (playerName) nameInput.value = playerName;
+    nameInput.addEventListener('input', () => {
+      playerName = nameInput.value.trim().slice(0, 16);
+      localStorage.setItem('swampwars_name', playerName);
+      if (socket && socket.readyState === 1) {
+        socket.send(JSON.stringify({ type: 'name', name: playerName }));
+      }
+    });
+  }
 
   playOnline.addEventListener('click', () => {
     mode = 'online';
     roomCode = 'global';
     isHost = false;
+    isReady = true;
     startSearch();
   });
 
@@ -276,6 +306,7 @@ function setupUi() {
     mode = 'offline';
     roomCode = `offline-${Math.random().toString(36).slice(2, 8)}`;
     isHost = true;
+    isReady = true;
     startLobby();
   });
 
@@ -293,6 +324,7 @@ function setupUi() {
     mode = 'custom';
     roomCode = Math.random().toString(36).slice(2, 8).toUpperCase();
     isHost = true;
+    isReady = false;
     roomLabel.textContent = `Room: ${roomCode}`;
     startLobby();
   });
@@ -307,6 +339,7 @@ function setupUi() {
     mode = 'custom';
     roomCode = code;
     isHost = false;
+    isReady = false;
     roomLabel.textContent = `Room: ${roomCode}`;
     startLobby();
   });
@@ -331,6 +364,16 @@ function setupUi() {
     characterScreen.classList.add('hidden');
     home.classList.remove('hidden');
   });
+
+  if (readyToggle) {
+    readyToggle.addEventListener('click', () => {
+      isReady = !isReady;
+      readyToggle.textContent = isReady ? 'Ready ✓' : 'Ready Up';
+      if (socket && socket.readyState === 1) {
+        socket.send(JSON.stringify({ type: 'ready', ready: isReady }));
+      }
+    });
+  }
 
   startMatch.addEventListener('click', () => {
     if (!socket || socket.readyState !== 1) return;
@@ -397,14 +440,24 @@ function updateLobbyUi(count, started, hostId, humans, full) {
     if (mode === 'offline') ui.matchLobby.classList.add('hidden');
   }
 
-  if (mode === 'custom' && ui.startMatch) {
-    if (playerId && hostId === playerId) {
-      ui.startMatch.disabled = false;
-      ui.startMatch.textContent = 'Start Match';
-    } else {
-      ui.startMatch.disabled = true;
-      ui.startMatch.textContent = 'Waiting for host…';
+  if (mode === 'custom') {
+    if (ui.readyToggle) {
+      ui.readyToggle.classList.remove('hidden');
+      ui.readyToggle.textContent = isReady ? 'Ready ✓' : 'Ready Up';
     }
+
+    if (ui.startMatch) {
+      const allReady = window._lobbyAllReady === true;
+      if (playerId && hostId === playerId) {
+        ui.startMatch.disabled = !allReady;
+        ui.startMatch.textContent = allReady ? 'Start Match' : 'Waiting for ready…';
+      } else {
+        ui.startMatch.disabled = true;
+        ui.startMatch.textContent = 'Waiting for host…';
+      }
+    }
+  } else if (ui.readyToggle) {
+    ui.readyToggle.classList.add('hidden');
   }
 }
 
@@ -488,7 +541,8 @@ function syncPlayers(serverPlayers) {
     if (!players.has(p.id)) {
       const spriteKey = p.class || 'gator';
       const sprite = scene.add.image(p.x, p.y, spriteKey).setScale(0.5);
-      const label = scene.add.text(p.x, p.y - 34, p.id === playerId ? 'YOU' : (p.isBot ? 'BOT' : 'PLAYER'), {
+      const labelText = p.id === playerId ? (p.name || 'YOU') : (p.name || (p.isBot ? 'BOT' : 'PLAYER'));
+      const label = scene.add.text(p.x, p.y - 34, labelText, {
         fontFamily: 'Inter',
         fontSize: '10px',
         color: '#ffffff'
@@ -503,6 +557,8 @@ function syncPlayers(serverPlayers) {
     }
     obj.sprite.setPosition(p.x, p.y);
     obj.label.setPosition(p.x, p.y - 34);
+    const labelText = p.id === playerId ? (p.name || 'YOU') : (p.name || (p.isBot ? 'BOT' : 'PLAYER'));
+    if (obj.label.text !== labelText) obj.label.setText(labelText);
     const hpWidth = Math.max(0, (p.hp / p.maxHp) * 30);
     obj.hpBar.setSize(hpWidth, 4);
     obj.hpBar.setPosition(p.x, p.y + 28);
@@ -574,6 +630,24 @@ function clearProjectiles() {
     obj.destroy();
     projectiles.delete(id);
   }
+}
+
+function updateLobbyRoster(playerList) {
+  const ui = window._ui;
+  if (!ui || !ui.lobbyList) return;
+  ui.lobbyList.innerHTML = '';
+  playerList.filter(p => !p.isBot).forEach((p) => {
+    const row = document.createElement('div');
+    row.className = 'lobby-row';
+    const name = document.createElement('span');
+    name.textContent = p.name || 'Player';
+    const ready = document.createElement('span');
+    ready.textContent = p.ready ? 'Ready' : 'Not Ready';
+    ready.className = p.ready ? 'lobby-ready' : 'lobby-notready';
+    row.appendChild(name);
+    row.appendChild(ready);
+    ui.lobbyList.appendChild(row);
+  });
 }
 
 function drawObstacles() {

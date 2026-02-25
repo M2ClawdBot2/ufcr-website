@@ -29,6 +29,10 @@
       </div>
       <div class="hero-card">
         <h3>Play</h3>
+        <div class="name-row">
+          <label for="playerName">Name</label>
+          <input id="playerName" maxlength="16" placeholder="Swamp Ranger" />
+        </div>
         <div class="menu-grid">
           <button id="playOnline">Play Online Match</button>
           <button id="offlinePlay">Offline Play</button>
@@ -90,6 +94,8 @@
       <p id="roomLabel">Room: —</p>
       <p id="playersCount">Players: 1</p>
       <p id="humansCount">Humans: 1</p>
+      <div class="lobby-list" id="lobbyList"></div>
+      <button class="ghost" id="readyToggle">Ready Up</button>
       <button class="start" id="startMatch">Start Match</button>
       <div class="hint">Only the room creator can start.</div>
     </div>

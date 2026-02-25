@@ -94,6 +94,27 @@ button, a, input {
   border-radius: 16px;
 }
 
+.name-row {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.name-row label {
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.6);
+}
+
+.name-row input {
+  background: rgba(0,0,0,0.35);
+  border: 1px solid rgba(255,255,255,0.12);
+  color: white;
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
 .hero-card h3 {
   font-family: var(--font-heading);
   text-transform: uppercase;
@@ -244,6 +265,33 @@ button, a, input {
 
 .status.online { background: rgba(46,204,113,0.12); color: #2ecc71; }
 .status.offline { background: rgba(231,76,60,0.12); color: #e74c3c; }
+
+.lobby-list {
+  margin: 12px 0;
+  display: grid;
+  gap: 6px;
+  font-size: 0.9rem;
+  color: rgba(255,255,255,0.8);
+}
+
+.lobby-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: rgba(0,0,0,0.25);
+  border: 1px solid rgba(255,255,255,0.06);
+}
+
+.lobby-ready {
+  color: #2ecc71;
+  font-weight: 600;
+}
+
+.lobby-notready {
+  color: #f0a830;
+  font-weight: 600;
+}
 
 #game {
   position: fixed;
