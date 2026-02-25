@@ -174,7 +174,7 @@ function syncPlayers(serverPlayers) {
     if (!players.has(p.id)) {
       const color = p.team === 'red' ? 0xfa4616 : 0x38a3ff;
       const circle = scene.add.circle(p.x, p.y, 16, color, 0.95);
-      const label = scene.add.text(p.x, p.y - 26, p.id === playerId ? 'YOU' : 'PLAYER', {
+      const label = scene.add.text(p.x, p.y - 26, p.id === playerId ? 'YOU' : (p.isBot ? 'BOT' : 'PLAYER'), {
         fontFamily: 'Inter',
         fontSize: '10px',
         color: '#ffffff'
