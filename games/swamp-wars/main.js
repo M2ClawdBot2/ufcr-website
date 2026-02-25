@@ -3,8 +3,8 @@ const SERVER_BASE = 'wss://influence-arena-server.m2clawdbot.workers.dev';
 const config = {
   type: Phaser.AUTO,
   parent: 'game',
-  width: 960,
-  height: 540,
+  width: window.innerWidth,
+  height: window.innerHeight,
   backgroundColor: '#0A0E1A',
   resolution: window.devicePixelRatio || 1,
   render: { antialias: true },
@@ -18,7 +18,7 @@ const config = {
     update
   },
   scale: {
-    mode: Phaser.Scale.FIT,
+    mode: Phaser.Scale.RESIZE,
     autoCenter: Phaser.Scale.CENTER_BOTH
   }
 };
@@ -29,8 +29,6 @@ let cursors;
 let wasd;
 let playerId;
 let socket;
-let roomCode = 'global';
-let isHost = false;
 let players = new Map();
 let projectiles = new Map();
 let scores = { red: 0, blue: 0 };
@@ -47,6 +45,10 @@ let selectedClass = 'gator';
 let obstacles = [];
 let lastInputSent = 0;
 let audioCtx;
+let roomCode = 'global';
+let isHost = false;
+let mode = 'online';
+let searchTimer;
 
 function preload() {
   this.load.image('behemoth', 'assets/behemoth.svg');
@@ -76,7 +78,7 @@ function create() {
   zone = this.add.circle(800, 450, 110, 0x1f5b8f, 0.35).setStrokeStyle(2, 0x38a3ff);
   zoneText = this.add.text(800, 450, 'INFLUENCE', {
     fontFamily: 'Oswald',
-    fontSize: '18px',
+    fontSize: '20px',
     color: '#f0a830'
   }).setOrigin(0.5);
 
@@ -84,17 +86,17 @@ function create() {
     fontFamily: 'Inter',
     fontSize: '16px',
     color: '#ffffff'
-  });
+  }).setScrollFactor(0);
   timerText = this.add.text(24, 48, 'Time 3:00', {
     fontFamily: 'Inter',
     fontSize: '14px',
     color: 'rgba(255,255,255,0.7)'
-  });
+  }).setScrollFactor(0);
   classText = this.add.text(24, 68, 'Class: Swamp Gator', {
     fontFamily: 'Inter',
     fontSize: '12px',
     color: 'rgba(255,255,255,0.6)'
-  });
+  }).setScrollFactor(0);
 
   // Controls
   cursors = this.input.keyboard.createCursorKeys();
@@ -132,13 +134,13 @@ function create() {
     const worldPoint = pointer.positionToCamera(scene.cameras.main);
     const me = players.get(playerId);
     if (!me) return;
-    const dir = { x: worldPoint.x - me.circle.x, y: worldPoint.y - me.circle.y };
+    const dir = { x: worldPoint.x - me.sprite.x, y: worldPoint.y - me.sprite.y };
     socket.send(JSON.stringify({ type: 'fire', dir }));
     playSound('shoot');
   });
 
   statusEl = document.getElementById('status');
-  setupOverlay();
+  setupUi();
   setupTouchControls();
 }
 
@@ -152,7 +154,7 @@ function update() {
 }
 
 function connectSocket() {
-  const url = `${SERVER_BASE}?room=${encodeURIComponent(roomCode)}${isHost ? '&host=1' : ''}`;
+  const url = `${SERVER_BASE}?room=${encodeURIComponent(roomCode)}&mode=${mode}${isHost ? '&host=1' : ''}`;
   socket = new WebSocket(url);
 
   socket.addEventListener('open', () => {
@@ -183,11 +185,15 @@ function connectSocket() {
         timerText.setText(`Time ${m}:${s}`);
       }
       updateStatus(`Online • ${payload.players.length} players`, 'online');
-      updateLobbyUi(payload.players.length, payload.started, payload.hostId);
+      updateLobbyUi(payload.players.length, payload.started, payload.hostId, payload.humans || 0, payload.full);
       if (payload.matchOver) {
         const winner = scores.red === scores.blue ? 'DRAW' : (scores.red > scores.blue ? 'RED WINS' : 'BLUE WINS');
-        showBanner(winner);
+        showWinner(winner);
       }
+    }
+    if (payload.type === 'full') {
+      showHomeNotice('Game Full');
+      returnToHome();
     }
   });
 
@@ -196,29 +202,152 @@ function connectSocket() {
   });
 }
 
-function updateStatus(text, cls) {
-  if (!statusEl) return;
-  statusEl.textContent = text;
-  statusEl.classList.remove('online', 'offline');
-  if (cls) statusEl.classList.add(cls);
-}
+function setupUi() {
+  const home = document.getElementById('home');
+  const characterScreen = document.getElementById('characterScreen');
+  const customScreen = document.getElementById('customScreen');
+  const matchLobby = document.getElementById('matchLobby');
+  const gameEl = document.getElementById('game');
+  const hud = document.getElementById('hud');
+  const homeNotice = document.getElementById('homeNotice');
 
-function selectClass(classId, label) {
-  selectedClass = classId;
-  if (socket && socket.readyState === 1) {
-    socket.send(JSON.stringify({ type: 'class', classId }));
+  const playOnline = document.getElementById('playOnline');
+  const offlinePlay = document.getElementById('offlinePlay');
+  const customLobby = document.getElementById('customLobby');
+  const swapCharacter = document.getElementById('swapCharacter');
+
+  const createRoom = document.getElementById('createRoom');
+  const joinRoom = document.getElementById('joinRoom');
+  const joinRow = document.getElementById('joinRow');
+  const joinSubmit = document.getElementById('joinSubmit');
+  const roomInput = document.getElementById('roomInput');
+  const customBack = document.getElementById('customBack');
+
+  const startMatch = document.getElementById('startMatch');
+  const roomLabel = document.getElementById('roomLabel');
+  const playersCount = document.getElementById('playersCount');
+  const humansCount = document.getElementById('humansCount');
+
+  const classButtons = characterScreen.querySelectorAll('button[data-class]');
+  const done = document.getElementById('characterDone');
+
+  window._ui = { home, characterScreen, customScreen, matchLobby, gameEl, hud, homeNotice, roomLabel, playersCount, humansCount, startMatch };
+
+  joinRow.classList.add('hidden');
+
+  playOnline.addEventListener('click', () => {
+    mode = 'online';
+    roomCode = 'global';
+    isHost = false;
+    startOnlineSearch();
+  });
+
+  offlinePlay.addEventListener('click', () => {
+    mode = 'offline';
+    roomCode = `offline-${Math.random().toString(36).slice(2, 8)}`;
+    isHost = true;
+    startLobby();
+  });
+
+  customLobby.addEventListener('click', () => {
+    home.classList.add('hidden');
+    customScreen.classList.remove('hidden');
+  });
+
+  swapCharacter.addEventListener('click', () => {
+    home.classList.add('hidden');
+    characterScreen.classList.remove('hidden');
+  });
+
+  createRoom.addEventListener('click', () => {
+    mode = 'custom';
+    roomCode = Math.random().toString(36).slice(2, 8).toUpperCase();
+    isHost = true;
+    roomLabel.textContent = `Room: ${roomCode}`;
+    startLobby();
+  });
+
+  joinRoom.addEventListener('click', () => {
+    joinRow.classList.toggle('hidden');
+  });
+
+  joinSubmit.addEventListener('click', () => {
+    const code = roomInput.value.trim().toUpperCase();
+    if (!code) return;
+    mode = 'custom';
+    roomCode = code;
+    isHost = false;
+    roomLabel.textContent = `Room: ${roomCode}`;
+    startLobby();
+  });
+
+  customBack.addEventListener('click', () => {
+    customScreen.classList.add('hidden');
+    home.classList.remove('hidden');
+  });
+
+  classButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      classButtons.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      selectClass(btn.dataset.class, btn.textContent);
+    });
+  });
+  if (classButtons[1]) classButtons[1].classList.add('active');
+
+  done.addEventListener('click', () => {
+    characterScreen.classList.add('hidden');
+    home.classList.remove('hidden');
+  });
+
+  startMatch.addEventListener('click', () => {
+    if (!socket || socket.readyState !== 1) return;
+    if (!isHost) return;
+    socket.send(JSON.stringify({ type: 'start' }));
+    matchLobby.classList.add('hidden');
+  });
+
+  function startOnlineSearch() {
+    homeNotice.textContent = 'Searching for players…';
+    startLobby();
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => {
+      const humans = window._lastHumans || 1;
+      if (humans < 2) {
+        showHomeNotice('Not enough online');
+        returnToHome();
+      }
+    }, 30000);
   }
-  if (classText) classText.setText(`Class: ${label}`);
+
+  function startLobby() {
+    home.classList.add('hidden');
+    customScreen.classList.add('hidden');
+    characterScreen.classList.add('hidden');
+    matchLobby.classList.remove('hidden');
+    gameEl.classList.remove('hidden');
+    hud.classList.add('active');
+    connectSocket();
+  }
 }
 
-function updateLobbyUi(count, started, hostId) {
-  const ui = window._lobbyUi;
+function updateLobbyUi(count, started, hostId, humans, full) {
+  const ui = window._ui;
   if (!ui) return;
   ui.playersCount.textContent = `Players: ${count}`;
+  ui.humansCount.textContent = `Humans: ${humans}`;
+  window._lastHumans = humans;
+
+  if (full) {
+    showHomeNotice('Game Full');
+    returnToHome();
+    return;
+  }
+
   if (started) {
-    ui.lobby.classList.add('hidden');
+    ui.matchLobby.classList.add('hidden');
   } else {
-    ui.lobby.classList.remove('hidden');
+    ui.matchLobby.classList.remove('hidden');
   }
   if (playerId && hostId === playerId) {
     ui.startMatch.disabled = false;
@@ -229,116 +358,31 @@ function updateLobbyUi(count, started, hostId) {
   }
 }
 
-function initAudio() {
-  if (!audioCtx) {
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  }
-  if (audioCtx.state === 'suspended') audioCtx.resume();
+function returnToHome() {
+  if (socket) socket.close();
+  const ui = window._ui;
+  if (!ui) return;
+  ui.home.classList.remove('hidden');
+  ui.customScreen.classList.add('hidden');
+  ui.characterScreen.classList.add('hidden');
+  ui.matchLobby.classList.add('hidden');
+  ui.gameEl.classList.add('hidden');
+  ui.hud.classList.remove('active');
 }
 
-function playSound(type) {
-  if (!audioCtx) return;
-  const osc = audioCtx.createOscillator();
-  const gain = audioCtx.createGain();
-  const now = audioCtx.currentTime;
-
-  if (type === 'shoot') {
-    osc.frequency.setValueAtTime(420, now);
-    osc.frequency.exponentialRampToValueAtTime(260, now + 0.08);
-    gain.gain.setValueAtTime(0.15, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
-  } else if (type === 'dash') {
-    osc.frequency.setValueAtTime(180, now);
-    osc.frequency.exponentialRampToValueAtTime(90, now + 0.1);
-    gain.gain.setValueAtTime(0.18, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
-  } else if (type === 'special') {
-    osc.frequency.setValueAtTime(520, now);
-    osc.frequency.exponentialRampToValueAtTime(120, now + 0.2);
-    gain.gain.setValueAtTime(0.2, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
-  }
-
-  osc.connect(gain).connect(audioCtx.destination);
-  osc.start(now);
-  osc.stop(now + 0.25);
+function showHomeNotice(text) {
+  const ui = window._ui;
+  if (!ui) return;
+  ui.homeNotice.textContent = text;
+  setTimeout(() => { ui.homeNotice.textContent = ''; }, 4000);
 }
 
-function setupOverlay() {
-  const home = document.getElementById('home');
-  const lobby = document.getElementById('lobby');
-  const gameEl = document.getElementById('game');
-  const hud = document.getElementById('hud');
-  const footer = document.getElementById('footer');
-  const startBtn = document.getElementById('startBtn');
-  const startMatch = document.getElementById('startMatch');
-  const roomLabel = document.getElementById('roomLabel');
-  const playersCount = document.getElementById('playersCount');
-
-  const quickPlay = document.getElementById('quickPlay');
-  const offlinePlay = document.getElementById('offlinePlay');
-  const createRoom = document.getElementById('createRoom');
-  const joinRoom = document.getElementById('joinRoom');
-  const roomInput = document.getElementById('roomInput');
-
-  const buttons = home.querySelectorAll('button[data-class]');
-
-  buttons.forEach(btn => {
-    btn.addEventListener('click', () => {
-      buttons.forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      selectClass(btn.dataset.class, btn.textContent);
-    });
-  });
-
-  if (buttons[1]) buttons[1].classList.add('active');
-
-  quickPlay.addEventListener('click', () => {
-    roomCode = 'global';
-    isHost = false;
-    roomLabel.textContent = 'Room: Global';
-  });
-
-  offlinePlay.addEventListener('click', () => {
-    roomCode = `offline-${Math.random().toString(36).slice(2, 8)}`;
-    isHost = true;
-    roomLabel.textContent = `Room: Offline`; 
-  });
-
-  createRoom.addEventListener('click', () => {
-    roomCode = Math.random().toString(36).slice(2, 8).toUpperCase();
-    isHost = true;
-    roomLabel.textContent = `Room: ${roomCode}`;
-  });
-
-  joinRoom.addEventListener('click', () => {
-    const code = roomInput.value.trim().toUpperCase();
-    if (!code) return;
-    roomCode = code;
-    isHost = false;
-    roomLabel.textContent = `Room: ${roomCode}`;
-  });
-
-  startBtn.addEventListener('click', () => {
-    initAudio();
-    home.classList.add('hidden');
-    lobby.classList.remove('hidden');
-    gameEl.classList.remove('hidden');
-    hud.classList.add('active');
-    footer.classList.add('active');
-    selectClass(selectedClass, buttons[1] ? buttons[1].textContent : 'Swamp Gator');
-    connectSocket();
-  });
-
-  startMatch.addEventListener('click', () => {
-    if (!socket || socket.readyState !== 1) return;
-    if (!isHost) return;
-    socket.send(JSON.stringify({ type: 'start' }));
-    lobby.classList.add('hidden');
-  });
-
-  // expose for updates
-  window._lobbyUi = { lobby, playersCount, roomLabel, startMatch, hud, footer, gameEl, home };
+function selectClass(classId, label) {
+  selectedClass = classId;
+  if (socket && socket.readyState === 1) {
+    socket.send(JSON.stringify({ type: 'class', classId }));
+  }
+  if (classText) classText.setText(`Class: ${label}`);
 }
 
 function setupTouchControls() {
@@ -390,7 +434,6 @@ function syncPlayers(serverPlayers) {
   serverPlayers.forEach((p) => {
     seen.add(p.id);
     if (!players.has(p.id)) {
-      const color = p.team === 'red' ? 0xfa4616 : 0x38a3ff;
       const spriteKey = p.class || 'gator';
       const sprite = scene.add.image(p.x, p.y, spriteKey).setScale(0.5);
       const label = scene.add.text(p.x, p.y - 34, p.id === playerId ? 'YOU' : (p.isBot ? 'BOT' : 'PLAYER'), {
@@ -417,17 +460,17 @@ function syncPlayers(serverPlayers) {
     obj.label.setAlpha(alpha);
     obj.hpBar.setAlpha(alpha);
 
+    if (!cameraLocked && p.id === playerId) {
+      scene.cameras.main.startFollow(obj.sprite, true, 0.08, 0.08);
+      cameraLocked = true;
+    }
+
     if (p.id === playerId && classText && p.class) {
       const label = p.class === 'behemoth' ? 'Bureaucrat Behemoth'
         : p.class === 'gator' ? 'Swamp Gator'
         : p.class === 'lizard' ? 'Lobbyist Lizard'
         : 'Corruption Cobra';
       classText.setText(`Class: ${label}`);
-    }
-
-    if (!cameraLocked && p.id === playerId) {
-      scene.cameras.main.startFollow(obj.sprite, true, 0.08, 0.08);
-      cameraLocked = true;
     }
   });
 
@@ -472,18 +515,11 @@ function drawObstacles() {
   });
 }
 
-function showBanner(text) {
-  const scene = game.scene.scenes[0];
-  const banner = scene.add.rectangle(800, 80, 300, 60, 0x000000, 0.6).setStrokeStyle(2, 0xf0a830);
-  const label = scene.add.text(800, 80, text, {
-    fontFamily: 'Oswald',
-    fontSize: '24px',
-    color: '#f0a830'
-  }).setOrigin(0.5);
-  scene.time.delayedCall(3000, () => {
-    banner.destroy();
-    label.destroy();
-  });
+function showWinner(text) {
+  const el = document.getElementById('winner');
+  el.textContent = text;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 3000);
 }
 
 function getMoveVector() {
@@ -503,4 +539,46 @@ function getMoveVector() {
 
   if (v.length() > 0) v.normalize();
   return v;
+}
+
+function updateStatus(text, cls) {
+  if (!statusEl) return;
+  statusEl.textContent = text;
+  statusEl.classList.remove('online', 'offline');
+  if (cls) statusEl.classList.add(cls);
+}
+
+function initAudio() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+}
+
+function playSound(type) {
+  if (!audioCtx) return;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  const now = audioCtx.currentTime;
+
+  if (type === 'shoot') {
+    osc.frequency.setValueAtTime(420, now);
+    osc.frequency.exponentialRampToValueAtTime(260, now + 0.08);
+    gain.gain.setValueAtTime(0.15, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+  } else if (type === 'dash') {
+    osc.frequency.setValueAtTime(180, now);
+    osc.frequency.exponentialRampToValueAtTime(90, now + 0.1);
+    gain.gain.setValueAtTime(0.18, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+  } else if (type === 'special') {
+    osc.frequency.setValueAtTime(520, now);
+    osc.frequency.exponentialRampToValueAtTime(120, now + 0.2);
+    gain.gain.setValueAtTime(0.2, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+  }
+
+  osc.connect(gain).connect(audioCtx.destination);
+  osc.start(now);
+  osc.stop(now + 0.25);
 }

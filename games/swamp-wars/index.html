@@ -26,57 +26,69 @@
         <p class="label">UFCR ARCADE</p>
         <h1>Swamp Wars</h1>
         <p class="sub">Fast 2v2 control battles. Pick a creature. Hold the zone. Win the swamp.</p>
-        <div class="hero-buttons">
-          <button class="primary" id="quickPlay">Quick Play (Global)</button>
-          <button class="ghost" id="offlinePlay">Offline (AI Only)</button>
-        </div>
       </div>
       <div class="hero-card">
-        <h3>Multiplayer</h3>
-        <div class="mode-grid">
-          <button id="createRoom">Create Room</button>
+        <h3>Play</h3>
+        <div class="menu-grid">
+          <button id="playOnline">Play Online Match</button>
+          <button id="offlinePlay">Offline Play</button>
+          <button id="customLobby">Custom Lobby</button>
+          <button id="swapCharacter">Swap Character</button>
         </div>
-        <div class="room-row">
-          <input id="roomInput" placeholder="Enter room code" />
-          <button id="joinRoom">Join</button>
-        </div>
-        <div class="divider"></div>
-        <h3>Choose a Creature</h3>
-        <div class="class-grid">
-          <button data-class="behemoth">Bureaucrat Behemoth</button>
-          <button data-class="gator">Swamp Gator</button>
-          <button data-class="lizard">Lobbyist Lizard</button>
-          <button data-class="cobra">Corruption Cobra</button>
-        </div>
-        <button class="start" id="startBtn">Enter Lobby</button>
-        <div class="hint">Desktop: WASD/Arrows · Space dash · Click shoot · E special · 1-4 class</div>
-        <div class="hint">Mobile: left thumb move · right tap shoot · bottom-right = special</div>
+        <div class="notice" id="homeNotice"></div>
       </div>
     </div>
   </div>
 
-  <div class="hud" id="hud">
-    <div class="meta">2v2 • Control Mode</div>
-    <div class="status" id="status">Connecting…</div>
+  <div class="screen hidden" id="characterScreen">
+    <div class="panel">
+      <h2>Select Character</h2>
+      <div class="class-grid">
+        <button data-class="behemoth">Bureaucrat Behemoth</button>
+        <button data-class="gator">Swamp Gator</button>
+        <button data-class="lizard">Lobbyist Lizard</button>
+        <button data-class="cobra">Corruption Cobra</button>
+      </div>
+      <button class="start" id="characterDone">Done</button>
+    </div>
   </div>
 
-  <div id="game" class="hidden"></div>
+  <div class="screen hidden" id="customScreen">
+    <div class="panel">
+      <h2>Custom Lobby</h2>
+      <div class="menu-grid">
+        <button id="createRoom">Start Lobby</button>
+        <button id="joinRoom">Join Lobby</button>
+      </div>
+      <div class="room-row" id="joinRow">
+        <input id="roomInput" placeholder="Enter room code" />
+        <button id="joinSubmit">Join</button>
+      </div>
+      <button class="ghost" id="customBack">Back</button>
+    </div>
+  </div>
 
-  <div class="overlay hidden" id="lobby">
+  <div class="screen hidden" id="matchLobby">
     <div class="panel">
       <h2>Lobby</h2>
       <p id="roomLabel">Room: —</p>
       <p id="playersCount">Players: 1</p>
+      <p id="humansCount">Humans: 1</p>
       <button class="start" id="startMatch">Start Match</button>
       <div class="hint">Only the room creator can start.</div>
     </div>
   </div>
 
-  <button class="touch-btn special" id="specialBtn">Special</button>
-
-  <div class="footer" id="footer">
-    <span>WASD/Arrows move · Space dash · Click to shoot · E special · 1-4 class</span>
+  <div class="hud" id="hud">
+    <div class="meta" id="modeLabel">2v2 • Control Mode</div>
+    <div class="status" id="status">Connecting…</div>
   </div>
+
+  <div id="game" class="hidden"></div>
+
+  <div class="winner" id="winner"></div>
+
+  <button class="touch-btn special" id="specialBtn">Special</button>
 
   <script src="main.js"></script>
 </body>
