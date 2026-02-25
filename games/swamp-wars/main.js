@@ -189,10 +189,7 @@ function connectSocket() {
       }
     }
     if (payload.type === 'state') {
-      syncPlayers(payload.players);
-      syncProjectiles(payload.projectiles || []);
       scores = payload.scores;
-      scoreText.setText(`Red ${Math.floor(scores.red)} — ${Math.floor(scores.blue)} Blue`);
       if (timerText) {
         const seconds = Math.max(0, Math.floor(payload.matchTime || 0));
         const m = Math.floor(seconds / 60);
@@ -202,14 +199,24 @@ function connectSocket() {
       const humansCount = payload.humans ?? payload.players.filter(p => !p.isBot).length;
       updateStatus(`${mode === 'offline' ? 'Offline' : 'Online'} • ${payload.players.length} players`, 'online');
       updateLobbyUi(payload.players.length, payload.started, payload.hostId, humansCount, payload.full);
+
+      if (!payload.started) {
+        clearPlayers();
+        clearProjectiles();
+        if (mode === 'online' && window._searching) {
+          window._searchingCount = humansCount;
+          const ui = window._ui;
+          if (ui && ui.searchCount) ui.searchCount.textContent = `Humans: ${window._searchingCount} / 4`;
+        }
+        return;
+      }
+
+      syncPlayers(payload.players);
+      syncProjectiles(payload.projectiles || []);
+      scoreText.setText(`Red ${Math.floor(scores.red)} — ${Math.floor(scores.blue)} Blue`);
       if (payload.matchOver) {
         const winner = scores.red === scores.blue ? 'DRAW' : (scores.red > scores.blue ? 'RED WINS' : 'BLUE WINS');
         showWinner(winner);
-      }
-      if (mode === 'online' && !payload.started && window._searching) {
-        window._searchingCount = humansCount;
-        const ui = window._ui;
-        if (ui && ui.searchCount) ui.searchCount.textContent = `Humans: ${window._searchingCount} / 4`;
       }
     }
     if (payload.type === 'full') {
@@ -549,6 +556,23 @@ function syncProjectiles(serverProjectiles) {
       obj.destroy();
       projectiles.delete(id);
     }
+  }
+}
+
+function clearPlayers() {
+  for (const [id, obj] of players.entries()) {
+    obj.sprite.destroy();
+    obj.label.destroy();
+    obj.hpBar.destroy();
+    players.delete(id);
+  }
+  cameraLocked = false;
+}
+
+function clearProjectiles() {
+  for (const [id, obj] of projectiles.entries()) {
+    obj.destroy();
+    projectiles.delete(id);
   }
 }
 
