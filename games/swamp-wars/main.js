@@ -344,7 +344,11 @@ function setupUi() {
     home.classList.add('hidden');
     customScreen.classList.add('hidden');
     characterScreen.classList.add('hidden');
-    matchLobby.classList.remove('hidden');
+    if (mode === 'offline') {
+      matchLobby.classList.add('hidden');
+    } else {
+      matchLobby.classList.remove('hidden');
+    }
     gameEl.classList.remove('hidden');
     hud.classList.add('active');
     connectSocket();
@@ -368,7 +372,8 @@ function updateLobbyUi(count, started, hostId, humans, full) {
     ui.matchLobby.classList.add('hidden');
     ui.searching.classList.add('hidden');
   } else {
-    if (mode === 'custom' || mode === 'offline') ui.matchLobby.classList.remove('hidden');
+    if (mode === 'custom') ui.matchLobby.classList.remove('hidden');
+    if (mode === 'offline') ui.matchLobby.classList.add('hidden');
   }
 
   if (mode === 'custom' && ui.startMatch) {
