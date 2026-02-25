@@ -40,6 +40,7 @@ let timerText;
 let classText;
 let zone;
 let zoneText;
+let zoneLockoutText;
 let dashReady = true;
 let statusEl;
 let cameraLocked = false;
@@ -89,6 +90,11 @@ function create() {
     fontFamily: 'Oswald',
     fontSize: '20px',
     color: '#f0a830'
+  }).setOrigin(0.5);
+  zoneLockoutText = this.add.text(800, 480, '', {
+    fontFamily: 'Oswald',
+    fontSize: '14px',
+    color: '#ffffff'
   }).setOrigin(0.5);
 
   scoreText = this.add.text(24, 24, 'Red 0 — 0 Blue', {
@@ -240,6 +246,14 @@ function connectSocket() {
 
       if (countdownEl) countdownEl.classList.remove('show');
       updateLobbyUi(payload.players.length, payload.started, payload.hostId, humansCount, payload.full);
+      if (payload.zone) {
+        zone.setPosition(payload.zone.x, payload.zone.y);
+        zoneText.setPosition(payload.zone.x, payload.zone.y);
+        zoneLockoutText.setPosition(payload.zone.x, payload.zone.y + 26);
+      }
+      if (zoneLockoutText) {
+        zoneLockoutText.setText(payload.zoneLockout > 0 ? `LOCKED ${payload.zoneLockout}` : '');
+      }
 
       syncPlayers(payload.players);
       syncProjectiles(payload.projectiles || []);
