@@ -247,8 +247,11 @@ function playSound(type) {
 }
 
 function setupOverlay() {
-  const overlay = document.getElementById('overlay');
+  const home = document.getElementById('home');
   const lobby = document.getElementById('lobby');
+  const gameEl = document.getElementById('game');
+  const hud = document.getElementById('hud');
+  const footer = document.getElementById('footer');
   const startBtn = document.getElementById('startBtn');
   const startMatch = document.getElementById('startMatch');
   const roomLabel = document.getElementById('roomLabel');
@@ -260,7 +263,7 @@ function setupOverlay() {
   const joinRoom = document.getElementById('joinRoom');
   const roomInput = document.getElementById('roomInput');
 
-  const buttons = overlay.querySelectorAll('button[data-class]');
+  const buttons = home.querySelectorAll('button[data-class]');
 
   buttons.forEach(btn => {
     btn.addEventListener('click', () => {
@@ -300,8 +303,11 @@ function setupOverlay() {
 
   startBtn.addEventListener('click', () => {
     initAudio();
-    overlay.classList.add('hidden');
+    home.classList.add('hidden');
     lobby.classList.remove('hidden');
+    gameEl.classList.remove('hidden');
+    hud.classList.add('active');
+    footer.classList.add('active');
     selectClass(selectedClass, buttons[1] ? buttons[1].textContent : 'Swamp Gator');
     connectSocket();
   });
@@ -314,7 +320,7 @@ function setupOverlay() {
   });
 
   // expose for updates
-  window._lobbyUi = { lobby, playersCount, roomLabel, startMatch };
+  window._lobbyUi = { lobby, playersCount, roomLabel, startMatch, hud, footer, gameEl, home };
 }
 
 function setupTouchControls() {
