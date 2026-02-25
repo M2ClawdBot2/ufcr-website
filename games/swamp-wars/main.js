@@ -196,6 +196,8 @@ function connectSocket() {
       }
       if (mode === 'online' && !payload.started && window._searching) {
         window._searchingCount = payload.humans || 0;
+        const ui = window._ui;
+        if (ui && ui.searchCount) ui.searchCount.textContent = `Humans: ${window._searchingCount} / 4`;
       }
     }
     if (payload.type === 'full') {
@@ -216,6 +218,7 @@ function setupUi() {
   const customScreen = document.getElementById('customScreen');
   const matchLobby = document.getElementById('matchLobby');
   const searching = document.getElementById('searching');
+  const searchCount = document.getElementById('searchCount');
   const gameEl = document.getElementById('game');
   const hud = document.getElementById('hud');
   const homeNotice = document.getElementById('homeNotice');
@@ -240,7 +243,7 @@ function setupUi() {
   const cards = characterScreen.querySelectorAll('.card');
   const done = document.getElementById('characterDone');
 
-  window._ui = { home, characterScreen, customScreen, matchLobby, searching, gameEl, hud, homeNotice, roomLabel, playersCount, humansCount, startMatch };
+  window._ui = { home, characterScreen, customScreen, matchLobby, searching, searchCount, gameEl, hud, homeNotice, roomLabel, playersCount, humansCount, startMatch };
 
   playOnline.addEventListener('click', () => {
     mode = 'online';
@@ -325,7 +328,7 @@ function setupUi() {
     window._searchingCount = 0;
     clearTimeout(searchTimer);
     searchTimer = setTimeout(() => {
-      if (window._searchingCount >= 1) {
+      if (window._searchingCount >= 2) {
         socket.send(JSON.stringify({ type: 'start' }));
         searching.classList.add('hidden');
       } else {
@@ -351,7 +354,7 @@ function updateLobbyUi(count, started, hostId, humans, full) {
   const ui = window._ui;
   if (!ui) return;
   ui.playersCount.textContent = `Players: ${count}`;
-  ui.humansCount.textContent = `Humans: ${humans}`;
+  ui.humansCount.textContent = `Humans: ${humans} / 4`;
   window._lastHumans = humans;
 
   if (full) {
@@ -365,6 +368,16 @@ function updateLobbyUi(count, started, hostId, humans, full) {
     ui.searching.classList.add('hidden');
   } else {
     if (mode === 'custom' || mode === 'offline') ui.matchLobby.classList.remove('hidden');
+  }
+
+  if (mode === 'custom' && ui.startMatch) {
+    if (playerId && hostId === playerId) {
+      ui.startMatch.disabled = false;
+      ui.startMatch.textContent = 'Start Match';
+    } else {
+      ui.startMatch.disabled = true;
+      ui.startMatch.textContent = 'Waiting for host…';
+    }
   }
 }
 
