@@ -58,7 +58,6 @@ function preload() {
 }
 
 function create() {
-  // Arena bounds
   this.physics.world.setBounds(0, 0, 1600, 900);
   this.cameras.main.setBounds(0, 0, 1600, 900);
   this.cameras.main.setZoom(1.2);
@@ -74,7 +73,6 @@ function create() {
     }
   }
 
-  // Influence zone
   zone = this.add.circle(800, 450, 110, 0x1f5b8f, 0.35).setStrokeStyle(2, 0x38a3ff);
   zoneText = this.add.text(800, 450, 'INFLUENCE', {
     fontFamily: 'Oswald',
@@ -98,7 +96,6 @@ function create() {
     color: 'rgba(255,255,255,0.6)'
   }).setScrollFactor(0);
 
-  // Controls
   cursors = this.input.keyboard.createCursorKeys();
   wasd = this.input.keyboard.addKeys('W,A,S,D');
 
@@ -142,6 +139,10 @@ function create() {
   statusEl = document.getElementById('status');
   setupUi();
   setupTouchControls();
+
+  window.addEventListener('resize', () => {
+    game.scale.resize(window.innerWidth, window.innerHeight);
+  });
 }
 
 function update() {
@@ -158,7 +159,10 @@ function connectSocket() {
   socket = new WebSocket(url);
 
   socket.addEventListener('open', () => {
-    updateStatus('Online', 'online');
+    updateStatus(mode === 'offline' ? 'Offline' : 'Online', 'online');
+    if (mode === 'offline') {
+      socket.send(JSON.stringify({ type: 'start' }));
+    }
   });
 
   socket.addEventListener('message', (event) => {
@@ -184,16 +188,20 @@ function connectSocket() {
         const s = `${seconds % 60}`.padStart(2, '0');
         timerText.setText(`Time ${m}:${s}`);
       }
-      updateStatus(`Online • ${payload.players.length} players`, 'online');
+      updateStatus(`${mode === 'offline' ? 'Offline' : 'Online'} • ${payload.players.length} players`, 'online');
       updateLobbyUi(payload.players.length, payload.started, payload.hostId, payload.humans || 0, payload.full);
       if (payload.matchOver) {
         const winner = scores.red === scores.blue ? 'DRAW' : (scores.red > scores.blue ? 'RED WINS' : 'BLUE WINS');
         showWinner(winner);
       }
+      if (mode === 'online' && !payload.started && window._searching) {
+        window._searchingCount = payload.humans || 0;
+      }
     }
     if (payload.type === 'full') {
       showHomeNotice('Game Full');
       returnToHome();
+      return;
     }
   });
 
@@ -207,6 +215,7 @@ function setupUi() {
   const characterScreen = document.getElementById('characterScreen');
   const customScreen = document.getElementById('customScreen');
   const matchLobby = document.getElementById('matchLobby');
+  const searching = document.getElementById('searching');
   const gameEl = document.getElementById('game');
   const hud = document.getElementById('hud');
   const homeNotice = document.getElementById('homeNotice');
@@ -228,18 +237,16 @@ function setupUi() {
   const playersCount = document.getElementById('playersCount');
   const humansCount = document.getElementById('humansCount');
 
-  const classButtons = characterScreen.querySelectorAll('button[data-class]');
+  const cards = characterScreen.querySelectorAll('.card');
   const done = document.getElementById('characterDone');
 
-  window._ui = { home, characterScreen, customScreen, matchLobby, gameEl, hud, homeNotice, roomLabel, playersCount, humansCount, startMatch };
-
-  joinRow.classList.add('hidden');
+  window._ui = { home, characterScreen, customScreen, matchLobby, searching, gameEl, hud, homeNotice, roomLabel, playersCount, humansCount, startMatch };
 
   playOnline.addEventListener('click', () => {
     mode = 'online';
     roomCode = 'global';
     isHost = false;
-    startOnlineSearch();
+    startSearch();
   });
 
   offlinePlay.addEventListener('click', () => {
@@ -286,14 +293,16 @@ function setupUi() {
     home.classList.remove('hidden');
   });
 
-  classButtons.forEach(btn => {
-    btn.addEventListener('click', () => {
-      classButtons.forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      selectClass(btn.dataset.class, btn.textContent);
+  cards.forEach(card => {
+    card.addEventListener('click', () => {
+      cards.forEach(c => c.classList.remove('active'));
+      card.classList.add('active');
+      const classId = card.dataset.class;
+      const label = card.querySelector('h4').textContent;
+      selectClass(classId, label);
     });
   });
-  if (classButtons[1]) classButtons[1].classList.add('active');
+  if (cards[1]) cards[1].classList.add('active');
 
   done.addEventListener('click', () => {
     characterScreen.classList.add('hidden');
@@ -302,21 +311,28 @@ function setupUi() {
 
   startMatch.addEventListener('click', () => {
     if (!socket || socket.readyState !== 1) return;
-    if (!isHost) return;
     socket.send(JSON.stringify({ type: 'start' }));
     matchLobby.classList.add('hidden');
   });
 
-  function startOnlineSearch() {
-    homeNotice.textContent = 'Searching for players…';
-    startLobby();
+  function startSearch() {
+    home.classList.add('hidden');
+    searching.classList.remove('hidden');
+    gameEl.classList.remove('hidden');
+    hud.classList.add('active');
+    connectSocket();
+    window._searching = true;
+    window._searchingCount = 0;
     clearTimeout(searchTimer);
     searchTimer = setTimeout(() => {
-      const humans = window._lastHumans || 1;
-      if (humans < 2) {
+      if (window._searchingCount >= 1) {
+        socket.send(JSON.stringify({ type: 'start' }));
+        searching.classList.add('hidden');
+      } else {
         showHomeNotice('Not enough online');
         returnToHome();
       }
+      window._searching = false;
     }, 30000);
   }
 
@@ -346,15 +362,9 @@ function updateLobbyUi(count, started, hostId, humans, full) {
 
   if (started) {
     ui.matchLobby.classList.add('hidden');
+    ui.searching.classList.add('hidden');
   } else {
-    ui.matchLobby.classList.remove('hidden');
-  }
-  if (playerId && hostId === playerId) {
-    ui.startMatch.disabled = false;
-    ui.startMatch.textContent = 'Start Match';
-  } else {
-    ui.startMatch.disabled = true;
-    ui.startMatch.textContent = 'Waiting for host…';
+    if (mode === 'custom' || mode === 'offline') ui.matchLobby.classList.remove('hidden');
   }
 }
 
@@ -366,6 +376,7 @@ function returnToHome() {
   ui.customScreen.classList.add('hidden');
   ui.characterScreen.classList.add('hidden');
   ui.matchLobby.classList.add('hidden');
+  ui.searching.classList.add('hidden');
   ui.gameEl.classList.add('hidden');
   ui.hud.classList.remove('active');
 }

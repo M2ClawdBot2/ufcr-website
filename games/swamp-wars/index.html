@@ -41,13 +41,29 @@
   </div>
 
   <div class="screen hidden" id="characterScreen">
-    <div class="panel">
+    <div class="panel wide">
       <h2>Select Character</h2>
-      <div class="class-grid">
-        <button data-class="behemoth">Bureaucrat Behemoth</button>
-        <button data-class="gator">Swamp Gator</button>
-        <button data-class="lizard">Lobbyist Lizard</button>
-        <button data-class="cobra">Corruption Cobra</button>
+      <div class="card-grid">
+        <div class="card" data-class="behemoth">
+          <img src="assets/behemoth.svg" alt="Behemoth" />
+          <h4>Bureaucrat Behemoth</h4>
+          <p>Tank. High HP. Slow. Splash hits.</p>
+        </div>
+        <div class="card" data-class="gator">
+          <img src="assets/gator.svg" alt="Gator" />
+          <h4>Swamp Gator</h4>
+          <p>Bruiser. Balanced stats. Dash knockback.</p>
+        </div>
+        <div class="card" data-class="lizard">
+          <img src="assets/lizard.svg" alt="Lizard" />
+          <h4>Lobbyist Lizard</h4>
+          <p>Skirmisher. Fast. Rapid fire boost.</p>
+        </div>
+        <div class="card" data-class="cobra">
+          <img src="assets/cobra.svg" alt="Cobra" />
+          <h4>Corruption Cobra</h4>
+          <p>Assassin. Invisible burst. Fragile.</p>
+        </div>
       </div>
       <button class="start" id="characterDone">Done</button>
     </div>
@@ -60,7 +76,7 @@
         <button id="createRoom">Start Lobby</button>
         <button id="joinRoom">Join Lobby</button>
       </div>
-      <div class="room-row" id="joinRow">
+      <div class="room-row hidden" id="joinRow">
         <input id="roomInput" placeholder="Enter room code" />
         <button id="joinSubmit">Join</button>
       </div>
@@ -76,6 +92,14 @@
       <p id="humansCount">Humans: 1</p>
       <button class="start" id="startMatch">Start Match</button>
       <div class="hint">Only the room creator can start.</div>
+    </div>
+  </div>
+
+  <div class="screen hidden" id="searching">
+    <div class="panel">
+      <h2>Searching for Players…</h2>
+      <div class="spinner"></div>
+      <p class="hint">Waiting up to 30 seconds.</p>
     </div>
   </div>
 
