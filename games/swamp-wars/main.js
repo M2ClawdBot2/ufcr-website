@@ -243,7 +243,6 @@ function connectSocket() {
             countdownEl.classList.remove('show');
           }
         }
-        setTouchControls(false);
         if (window._ui?.scoreboard) window._ui.scoreboard.classList.remove('active');
         if (mode === 'online' && window._searching) {
           window._searchingCount = humansCount;
