@@ -684,24 +684,28 @@ function setupTouchControls() {
   touchUi.setActive(false);
 
   if (specialBtn) {
-    specialBtn.addEventListener('touchstart', (e) => {
-      e.preventDefault();
+    const fireSpecial = (e) => {
+      if (e) e.preventDefault();
       initAudio();
       if (socket && socket.readyState === 1) socket.send(JSON.stringify({ type: 'special' }));
       playSound('special');
-    }, { passive: false });
+    };
+    specialBtn.addEventListener('touchstart', fireSpecial, { passive: false });
+    specialBtn.addEventListener('click', fireSpecial);
   }
 
   if (fireBtn) {
-    fireBtn.addEventListener('touchstart', (e) => {
-      e.preventDefault();
+    const fireShot = (e) => {
+      if (e) e.preventDefault();
       initAudio();
       if (!socket || socket.readyState !== 1) return;
       const dir = getMoveVector();
       const aim = dir.length() === 0 ? { x: 1, y: 0 } : { x: dir.x, y: dir.y };
       socket.send(JSON.stringify({ type: 'fire', dir: aim }));
       playSound('shoot');
-    }, { passive: false });
+    };
+    fireBtn.addEventListener('touchstart', fireShot, { passive: false });
+    fireBtn.addEventListener('click', fireShot);
   }
 
   if (joystick && joystickKnob) {
