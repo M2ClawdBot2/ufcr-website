@@ -697,7 +697,10 @@ function syncPlayers(serverPlayers) {
     seen.add(p.id);
     if (!players.has(p.id)) {
       const spriteKey = p.class || 'gator';
+      const ringColor = p.team === 'red' ? 0xfa4616 : 0x38a3ff;
+      const ring = scene.add.circle(p.x, p.y + 10, 16, ringColor, 0.22).setStrokeStyle(2, ringColor);
       const sprite = scene.add.image(p.x, p.y, spriteKey).setScale(0.5);
+      sprite.setTint(p.team === 'red' ? 0xffa08a : 0x9ad2ff);
       const labelText = p.id === playerId ? (p.name || 'YOU') : (p.name || (p.isBot ? 'BOT' : 'PLAYER'));
       const label = scene.add.text(p.x, p.y - 34, labelText, {
         fontFamily: 'Inter',
@@ -705,7 +708,7 @@ function syncPlayers(serverPlayers) {
         color: '#ffffff'
       }).setOrigin(0.5);
       const hpBar = scene.add.rectangle(p.x, p.y + 28, 30, 4, 0x2ecc71).setOrigin(0.5);
-      players.set(p.id, { sprite, label, hpBar });
+      players.set(p.id, { sprite, label, hpBar, ring });
     }
 
     const obj = players.get(p.id);
@@ -714,6 +717,7 @@ function syncPlayers(serverPlayers) {
     }
     obj.sprite.setPosition(p.x, p.y);
     obj.label.setPosition(p.x, p.y - 34);
+    if (obj.ring) obj.ring.setPosition(p.x, p.y + 10);
     const labelText = p.id === playerId ? (p.name || 'YOU') : (p.name || (p.isBot ? 'BOT' : 'PLAYER'));
     if (obj.label.text !== labelText) obj.label.setText(labelText);
     const hpWidth = Math.max(0, (p.hp / p.maxHp) * 30);
@@ -760,6 +764,7 @@ function syncPlayers(serverPlayers) {
       obj.sprite.destroy();
       obj.label.destroy();
       obj.hpBar.destroy();
+      if (obj.ring) obj.ring.destroy();
       players.delete(id);
     }
   }
