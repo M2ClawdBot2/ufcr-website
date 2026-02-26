@@ -55,6 +55,8 @@ let selectedClass = 'gator';
 let obstacles = [];
 let lastInputSent = 0;
 let audioCtx;
+let ambientOsc;
+let ambientGain;
 let roomCode = 'global';
 let lastHitFlash = new Map();
 let isHost = false;
@@ -572,6 +574,7 @@ function returnToHome() {
   setTouchControls(false);
   if (ui.scoreboard) ui.scoreboard.classList.remove('active');
   if (ui.summary) ui.summary.classList.add('hidden');
+  stopAmbient();
 }
 
 function setTouchControls(on) {
@@ -928,6 +931,16 @@ function initAudio() {
     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   }
   if (audioCtx.state === 'suspended') audioCtx.resume();
+
+  if (!ambientOsc) {
+    ambientOsc = audioCtx.createOscillator();
+    ambientGain = audioCtx.createGain();
+    ambientOsc.type = 'sine';
+    ambientOsc.frequency.setValueAtTime(110, audioCtx.currentTime);
+    ambientGain.gain.setValueAtTime(0.02, audioCtx.currentTime);
+    ambientOsc.connect(ambientGain).connect(audioCtx.destination);
+    ambientOsc.start();
+  }
 }
 
 function playSound(type) {
@@ -937,28 +950,38 @@ function playSound(type) {
   const now = audioCtx.currentTime;
 
   if (type === 'shoot') {
-    osc.frequency.setValueAtTime(420, now);
-    osc.frequency.exponentialRampToValueAtTime(260, now + 0.08);
-    gain.gain.setValueAtTime(0.15, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+    osc.frequency.setValueAtTime(460, now);
+    osc.frequency.exponentialRampToValueAtTime(220, now + 0.07);
+    gain.gain.setValueAtTime(0.12, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.11);
   } else if (type === 'dash') {
-    osc.frequency.setValueAtTime(180, now);
-    osc.frequency.exponentialRampToValueAtTime(90, now + 0.1);
-    gain.gain.setValueAtTime(0.18, now);
+    osc.frequency.setValueAtTime(200, now);
+    osc.frequency.exponentialRampToValueAtTime(70, now + 0.1);
+    gain.gain.setValueAtTime(0.16, now);
     gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
   } else if (type === 'special') {
-    osc.frequency.setValueAtTime(520, now);
-    osc.frequency.exponentialRampToValueAtTime(120, now + 0.2);
-    gain.gain.setValueAtTime(0.2, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+    osc.frequency.setValueAtTime(560, now);
+    osc.frequency.exponentialRampToValueAtTime(120, now + 0.18);
+    gain.gain.setValueAtTime(0.18, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
   } else if (type === 'hit') {
-    osc.frequency.setValueAtTime(620, now);
-    osc.frequency.exponentialRampToValueAtTime(240, now + 0.06);
-    gain.gain.setValueAtTime(0.25, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+    osc.frequency.setValueAtTime(740, now);
+    osc.frequency.exponentialRampToValueAtTime(260, now + 0.05);
+    gain.gain.setValueAtTime(0.2, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.07);
   }
 
   osc.connect(gain).connect(audioCtx.destination);
   osc.start(now);
   osc.stop(now + 0.25);
+}
+
+function stopAmbient() {
+  if (ambientOsc) {
+    ambientOsc.stop();
+    ambientOsc.disconnect();
+    ambientGain.disconnect();
+    ambientOsc = null;
+    ambientGain = null;
+  }
 }
