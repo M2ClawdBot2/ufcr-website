@@ -13,28 +13,6 @@ function buildTerrain() {
   const flower = 58;
   const grid = Array.from({ length: height }, () => Array.from({ length: width }, () => (Math.random() < 0.12 ? flower : grass)));
 
-  // simple ponds using known water tiles
-  const waterTop = [19, 20, 21];
-  const waterMid = [37, 38, 39];
-  const waterBot = [55, 56, 57];
-
-  const ponds = [
-    { x: 2, y: 2, w: 3, h: 3 },
-    { x: 22, y: 3, w: 3, h: 3 },
-    { x: 4, y: 12, w: 4, h: 3 }
-  ];
-
-  ponds.forEach(p => {
-    for (let yy = 0; yy < p.h; yy++) {
-      for (let xx = 0; xx < p.w; xx++) {
-        const tx = p.x + xx;
-        const ty = p.y + yy;
-        const row = yy === 0 ? waterTop : (yy === p.h - 1 ? waterBot : waterMid);
-        const tile = row[Math.min(xx, row.length - 1)];
-        if (grid[ty] && grid[ty][tx] != null) grid[ty][tx] = tile;
-      }
-    }
-  });
 
   return grid;
 }
