@@ -24,45 +24,6 @@ const KENNEY_TERRAIN = parseCsv(`
 2,1,2,1,2,37,38,38,38,38,38,38,38,38,38,38,38,39,3,1,2,1,1,1,1,1,1,2,2,1
 `);
 
-const KENNEY_OBJECTS = parseCsv(`
-0,0,6,0,0,0,145,0,0,0,145,95,95,113,113,95,113,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,145,95,0,0,145,0,95,113,95,113,113,0,95,0,0,0,0,0,0,0,6,0,95,0,
-0,0,0,0,0,0,145,0,0,113,145,113,113,113,113,95,0,0,0,0,0,0,0,95,6,0,0,6,0,95,
-0,0,0,0,0,0,146,111,111,111,148,0,113,95,0,50,0,0,0,6,0,0,0,0,95,95,0,95,0,0,
-111,111,131,111,111,111,166,0,0,0,145,0,0,0,0,0,6,0,0,0,0,0,0,0,0,113,113,0,0,0,
-0,0,0,0,0,0,0,0,0,0,145,0,48,0,12,0,0,0,0,0,0,0,0,0,0,95,113,95,0,0,
-95,0,0,0,0,0,0,0,110,111,165,111,129,111,112,0,113,113,0,0,0,0,0,0,0,0,113,113,95,113,
-113,95,95,0,95,0,0,0,0,0,0,0,145,0,0,0,0,95,95,0,0,0,0,0,0,113,95,113,95,113,
-0,113,113,113,113,0,0,0,0,0,0,0,145,0,0,113,113,113,82,0,0,0,0,0,0,95,95,113,113,0,
-0,95,113,0,0,0,0,13,0,0,128,111,148,0,0,0,95,0,0,0,0,0,0,0,95,113,113,95,0,0,
-0,0,0,0,0,0,0,0,0,6,145,0,164,111,111,129,111,111,111,130,0,113,95,113,113,113,95,0,0,0,
-0,0,0,0,0,0,0,0,0,0,145,0,0,0,0,145,0,0,0,145,0,113,95,89,0,113,113,0,95,0,
-0,0,0,0,0,0,0,0,0,0,167,0,0,0,0,145,0,81,0,164,111,111,129,111,112,95,0,113,0,0,
-0,0,0,0,0,0,0,0,0,0,164,131,131,131,131,166,6,0,81,0,0,113,145,89,0,0,0,113,0,0,
-0,0,0,0,0,0,0,0,0,0,0,149,149,149,149,0,0,0,0,0,0,0,145,113,0,6,0,0,0,95,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,145,0,6,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,145,0,0,0,0,113,0,0
-`);
-
-const KENNEY_SHADOWS = parseCsv(`
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,198,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,198,0,0,0,0,0,0,
-0,0,0,0,198,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,198,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-`);
 
 function parseCsv(text) {
   return text
@@ -164,16 +125,40 @@ function create() {
   const terrainLayer = terrain.createLayer(0, tiles, mapOriginX, mapOriginY);
   terrainLayer.setScale(tileScale);
 
-  const objects = this.make.tilemap({ data: KENNEY_OBJECTS, tileWidth: 16, tileHeight: 16 });
-  const objTiles = objects.addTilesetImage('kenneyTiles', null, 16, 16, 1, 1);
-  const objectLayer = objects.createLayer(0, objTiles, mapOriginX, mapOriginY);
-  objectLayer.setScale(tileScale);
+  const decoMap = this.make.tilemap({ tileWidth: 16, tileHeight: 16, width: 30, height: 17 });
+  const decoTiles = decoMap.addTilesetImage('kenneyTiles', null, 16, 16, 1, 1);
+  const decoLayer = decoMap.createBlankLayer('decor', decoTiles, mapOriginX, mapOriginY);
+  decoLayer.setScale(tileScale);
 
-  const shadows = this.make.tilemap({ data: KENNEY_SHADOWS, tileWidth: 16, tileHeight: 16 });
-  const shadowTiles = shadows.addTilesetImage('kenneyTiles', null, 16, 16, 1, 1);
-  const shadowLayer = shadows.createLayer(0, shadowTiles, mapOriginX, mapOriginY);
-  shadowLayer.setScale(tileScale);
-  shadowLayer.setAlpha(0.6);
+  // Place trees/bushes on obstacle spots
+  const treeTiles = [145, 146, 149, 150, 151];
+  const bushTiles = [95, 96, 97, 98];
+  const obstaclePoints = [
+    { x: 520, y: 260 },
+    { x: 1080, y: 260 },
+    { x: 520, y: 640 },
+    { x: 1080, y: 640 },
+    { x: 800, y: 160 },
+    { x: 800, y: 740 },
+    { x: 320, y: 450 },
+    { x: 1280, y: 450 }
+  ];
+
+  obstaclePoints.forEach((p) => {
+    const tx = Math.round((p.x - mapOriginX) / (16 * tileScale));
+    const ty = Math.round((p.y - mapOriginY) / (16 * tileScale));
+    const tile = treeTiles[Math.floor(Math.random() * treeTiles.length)];
+    decoLayer.putTileAt(tile, tx, ty);
+  });
+
+  for (let i = 0; i < 10; i++) {
+    const x = 140 + Math.random() * 1320;
+    const y = 140 + Math.random() * 620;
+    const tx = Math.floor((x - mapOriginX) / (16 * tileScale));
+    const ty = Math.floor((y - mapOriginY) / (16 * tileScale));
+    const tile = bushTiles[Math.floor(Math.random() * bushTiles.length)];
+    decoLayer.putTileAt(tile, tx, ty);
+  }
 
   zone = this.add.circle(800, 450, 110, 0x1f5b8f, 0.35).setStrokeStyle(2, 0x38a3ff);
   zoneText = this.add.text(800, 450, 'INFLUENCE', {
