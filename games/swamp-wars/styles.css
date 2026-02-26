@@ -22,6 +22,16 @@ button, a, input {
   touch-action: manipulation;
 }
 
+button {
+  font-family: var(--font-body);
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  transition: transform 120ms ease, box-shadow 120ms ease, background 120ms ease;
+}
+
+button:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(0,0,0,0.25); }
+button:active { transform: translateY(0); }
+
 .hidden { display: none !important; }
 
 .nav {
@@ -29,6 +39,8 @@ button, a, input {
   align-items: center;
   justify-content: space-between;
   padding: 24px 40px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  backdrop-filter: blur(6px);
 }
 
 .brand {
@@ -64,7 +76,7 @@ button, a, input {
   display: grid;
   grid-template-columns: 1.1fr 0.9fr;
   gap: 32px;
-  padding: 40px 60px 80px;
+  padding: 48px 60px 80px;
 }
 
 .hero-copy h1 {
@@ -90,8 +102,9 @@ button, a, input {
 .hero-card {
   background: rgba(0,24,69,0.7);
   border: 1px solid rgba(255,255,255,0.08);
-  padding: 24px;
-  border-radius: 16px;
+  padding: 26px;
+  border-radius: 18px;
+  box-shadow: 0 16px 40px rgba(0,0,0,0.35);
 }
 
 .name-row {
@@ -125,7 +138,7 @@ button, a, input {
 
 .menu-grid {
   display: grid;
-  gap: 10px;
+  gap: 12px;
 }
 
 .notice {
@@ -148,9 +161,10 @@ button, a, input {
   width: min(420px, 90vw);
   background: rgba(15,20,38,0.95);
   border: 1px solid rgba(255,255,255,0.08);
-  padding: 28px;
-  border-radius: 16px;
+  padding: 30px;
+  border-radius: 20px;
   text-align: center;
+  box-shadow: 0 18px 50px rgba(0,0,0,0.45);
 }
 
 .panel.wide {
@@ -241,17 +255,17 @@ button, a, input {
   top: 0;
   left: 0;
   right: 0;
-  padding: 12px 20px;
-  background: rgba(0,0,0,0.35);
-  backdrop-filter: blur(8px);
+  padding: 12px 22px;
+  background: rgba(0,0,0,0.4);
+  backdrop-filter: blur(10px);
   z-index: 4;
-  justify-content: flex-end;
+  justify-content: space-between;
   gap: 12px;
 }
 
 .hud.active { display: flex; }
 
-.meta { font-size: 0.8rem; color: rgba(255,255,255,0.6); }
+.meta { font-size: 0.8rem; color: rgba(255,255,255,0.7); letter-spacing: 0.08em; text-transform: uppercase; }
 
 .status {
   font-size: 0.75rem;
