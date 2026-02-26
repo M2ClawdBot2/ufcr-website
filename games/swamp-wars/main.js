@@ -43,6 +43,8 @@ let classText;
 let scoreRedEl;
 let scoreBlueEl;
 let hitParticles = [];
+let lastScoreRed = 0;
+let lastScoreBlue = 0;
 let zone;
 let zoneText;
 let zoneLockoutText;
@@ -304,9 +306,25 @@ function connectSocket() {
 
       syncPlayers(payload.players);
       syncProjectiles(payload.projectiles || []);
-      scoreText.setText(`Red ${Math.floor(scores.red)} — ${Math.floor(scores.blue)} Blue`);
-      if (scoreRedEl) scoreRedEl.textContent = `Red ${Math.floor(scores.red)}`;
-      if (scoreBlueEl) scoreBlueEl.textContent = `Blue ${Math.floor(scores.blue)}`;
+      const redScore = Math.floor(scores.red);
+      const blueScore = Math.floor(scores.blue);
+      scoreText.setText(`Red ${redScore} — ${blueScore} Blue`);
+      if (scoreRedEl) {
+        scoreRedEl.textContent = `Red ${redScore}`;
+        if (redScore > lastScoreRed) {
+          scoreRedEl.classList.add('pulse');
+          setTimeout(() => scoreRedEl.classList.remove('pulse'), 300);
+        }
+      }
+      if (scoreBlueEl) {
+        scoreBlueEl.textContent = `Blue ${blueScore}`;
+        if (blueScore > lastScoreBlue) {
+          scoreBlueEl.classList.add('pulse');
+          setTimeout(() => scoreBlueEl.classList.remove('pulse'), 300);
+        }
+      }
+      lastScoreRed = redScore;
+      lastScoreBlue = blueScore;
       if (payload.matchOver) {
         const winner = scores.red === scores.blue ? 'DRAW' : (scores.red > scores.blue ? 'RED WINS' : 'BLUE WINS');
         showWinner(winner);
