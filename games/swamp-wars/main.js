@@ -293,6 +293,13 @@ function connectSocket() {
       if (payload.matchOver) {
         const winner = scores.red === scores.blue ? 'DRAW' : (scores.red > scores.blue ? 'RED WINS' : 'BLUE WINS');
         showWinner(winner);
+        const ui = window._ui;
+        if (ui?.summary && ui.summaryTitle && ui.summaryScore) {
+          ui.summaryTitle.textContent = winner;
+          ui.summaryScore.textContent = `Red ${Math.floor(scores.red)} — ${Math.floor(scores.blue)} Blue`;
+          ui.summary.classList.remove('hidden');
+        }
+        setTouchControls(false);
       }
     }
     if (payload.type === 'full') {
@@ -327,6 +334,10 @@ function setupUi() {
   const joystick = document.getElementById('joystick');
   const nameInput = document.getElementById('playerName');
   const scoreboard = document.getElementById('scoreboard');
+  const summary = document.getElementById('summary');
+  const summaryTitle = document.getElementById('summaryTitle');
+  const summaryScore = document.getElementById('summaryScore');
+  const summaryBack = document.getElementById('summaryBack');
   scoreRedEl = document.getElementById('scoreRed');
   scoreBlueEl = document.getElementById('scoreBlue');
   countdownEl = document.getElementById('countdown');
@@ -353,7 +364,7 @@ function setupUi() {
   const cards = characterScreen.querySelectorAll('.card');
   const done = document.getElementById('characterDone');
 
-  window._ui = { home, characterScreen, customScreen, matchLobby, searching, searchCount, gameEl, hud, homeNotice, roomLabel, playersCount, humansCount, startMatch, readyToggle, lobbyList, nameInput, scoreboard, specialBtn, fireBtn, joystick };
+  window._ui = { home, characterScreen, customScreen, matchLobby, searching, searchCount, gameEl, hud, homeNotice, roomLabel, playersCount, humansCount, startMatch, readyToggle, lobbyList, nameInput, scoreboard, specialBtn, fireBtn, joystick, summary, summaryTitle, summaryScore, summaryBack };
 
   if (nameInput) {
     if (playerName) nameInput.value = playerName;
@@ -371,6 +382,7 @@ function setupUi() {
     roomCode = 'global';
     isHost = false;
     isReady = true;
+    if (summary) summary.classList.add('hidden');
     startSearch();
   });
 
@@ -379,17 +391,20 @@ function setupUi() {
     roomCode = `offline-${Math.random().toString(36).slice(2, 8)}`;
     isHost = true;
     isReady = true;
+    if (summary) summary.classList.add('hidden');
     startLobby();
   });
 
   customLobby.addEventListener('click', () => {
     home.classList.add('hidden');
     customScreen.classList.remove('hidden');
+    if (summary) summary.classList.add('hidden');
   });
 
   swapCharacter.addEventListener('click', () => {
     home.classList.add('hidden');
     characterScreen.classList.remove('hidden');
+    if (summary) summary.classList.add('hidden');
   });
 
   createRoom.addEventListener('click', () => {
@@ -435,6 +450,7 @@ function setupUi() {
   done.addEventListener('click', () => {
     characterScreen.classList.add('hidden');
     home.classList.remove('hidden');
+    if (summary) summary.classList.add('hidden');
   });
 
   if (readyToggle) {
@@ -452,6 +468,13 @@ function setupUi() {
     socket.send(JSON.stringify({ type: 'start' }));
     matchLobby.classList.add('hidden');
   });
+
+  if (summaryBack) {
+    summaryBack.addEventListener('click', () => {
+      if (summary) summary.classList.add('hidden');
+      returnToHome();
+    });
+  }
 
   function startSearch() {
     home.classList.add('hidden');
@@ -548,6 +571,7 @@ function returnToHome() {
   ui.hud.classList.remove('active');
   setTouchControls(false);
   if (ui.scoreboard) ui.scoreboard.classList.remove('active');
+  if (ui.summary) ui.summary.classList.add('hidden');
 }
 
 function setTouchControls(on) {
