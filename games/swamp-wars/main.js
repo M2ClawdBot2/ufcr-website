@@ -4,32 +4,39 @@ const LOG_ENDPOINT = 'https://influence-arena-server.m2clawdbot.workers.dev/log'
 const ARENA_WIDTH = 1600;
 const ARENA_HEIGHT = 900;
 
-const KENNEY_TERRAIN = parseCsv(`
-2,2,2,1,58,1,2,2,1,1,1,1,3,3,1,1,1,3,2,2,58,2,2,3,1,2,1,1,1,1,
-3,3,3,2,58,3,1,1,1,1,2,1,2,1,2,3,1,1,1,1,58,1,2,2,1,1,1,1,2,1,
-1,2,4,74,23,1,1,1,2,2,2,2,1,3,1,3,1,1,1,3,58,1,1,3,2,1,2,1,1,1,
-2,1,58,1,1,1,1,1,3,2,2,2,2,1,1,1,1,2,1,1,58,2,1,1,1,1,1,3,2,1,
-2,1,58,1,1,2,1,1,1,1,1,1,1,1,3,1,1,19,20,20,76,20,21,1,1,3,1,1,3,2,
-1,1,58,1,1,1,2,2,1,1,1,1,1,1,1,1,1,37,38,38,38,38,92,20,21,1,1,1,1,1,
-1,2,22,74,74,74,5,2,3,2,1,1,1,1,1,2,1,55,56,94,38,38,38,38,39,2,1,1,1,1,
-1,1,1,1,1,1,58,1,2,1,2,2,1,2,1,1,2,1,1,37,38,38,38,38,39,1,1,3,2,1,
-2,1,1,2,1,1,58,2,1,2,1,1,1,1,1,1,1,1,1,55,56,56,56,56,57,2,1,1,1,2,
-3,1,1,2,1,2,58,1,2,1,1,3,2,1,1,1,1,1,1,1,1,3,1,3,1,1,1,1,1,1,
-20,20,20,20,20,20,76,20,21,1,3,2,2,1,1,1,1,1,2,3,1,3,1,1,1,1,1,1,2,1,
-38,38,38,38,38,38,38,38,39,1,1,1,1,1,1,1,1,1,1,2,2,1,1,1,1,1,1,1,1,2,
-38,38,38,38,38,38,38,38,92,20,20,20,20,20,21,1,1,1,1,1,1,1,3,1,1,1,2,3,1,3,
-38,38,38,38,38,38,38,38,38,38,38,38,38,38,39,2,1,1,1,2,1,1,1,1,1,1,2,2,2,2,
-56,56,56,56,56,94,38,38,38,38,38,38,38,38,92,20,20,21,1,1,3,2,2,1,1,2,1,3,1,2,
-1,2,2,1,1,37,38,38,38,38,38,38,38,38,38,38,38,39,1,3,2,2,1,1,3,3,1,1,2,1,
-2,1,2,1,2,37,38,38,38,38,38,38,38,38,38,38,38,39,3,1,2,1,1,1,1,1,1,2,2,1
-`);
+const KENNEY_TERRAIN = buildTerrain();
 
+function buildTerrain() {
+  const width = 30;
+  const height = 17;
+  const grass = 1;
+  const flower = 58;
+  const grid = Array.from({ length: height }, () => Array.from({ length: width }, () => (Math.random() < 0.12 ? flower : grass)));
 
-function parseCsv(text) {
-  return text
-    .trim()
-    .split('\n')
-    .map(row => row.split(',').filter(Boolean).map(v => parseInt(v, 10)));
+  // simple ponds using known water tiles
+  const waterTop = [19, 20, 21];
+  const waterMid = [37, 38, 39];
+  const waterBot = [55, 56, 57];
+
+  const ponds = [
+    { x: 2, y: 2, w: 3, h: 3 },
+    { x: 22, y: 3, w: 3, h: 3 },
+    { x: 4, y: 12, w: 4, h: 3 }
+  ];
+
+  ponds.forEach(p => {
+    for (let yy = 0; yy < p.h; yy++) {
+      for (let xx = 0; xx < p.w; xx++) {
+        const tx = p.x + xx;
+        const ty = p.y + yy;
+        const row = yy === 0 ? waterTop : (yy === p.h - 1 ? waterBot : waterMid);
+        const tile = row[Math.min(xx, row.length - 1)];
+        if (grid[ty] && grid[ty][tx] != null) grid[ty][tx] = tile;
+      }
+    }
+  });
+
+  return grid;
 }
 
 const config = {
@@ -917,11 +924,7 @@ function updateLobbyRoster(playerList) {
 }
 
 function drawObstacles() {
-  const scene = game.scene.scenes[0];
-  obstacles.forEach(o => {
-    const rect = scene.add.rectangle(o.x, o.y, o.w, o.h, 0x2b6b3d, 1);
-    rect.setStrokeStyle(2, 0x1f4f2f);
-  });
+  // visuals handled by tree rows in tilemap
 }
 
 function showWinner(text) {
