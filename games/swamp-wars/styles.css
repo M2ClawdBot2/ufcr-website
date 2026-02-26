@@ -426,6 +426,13 @@ button:active { transform: translateY(0); }
   background: rgba(56,163,255,0.85);
 }
 
+@media (max-width: 600px) {
+  .joystick { bottom: 80px; left: 24px; width: 120px; height: 120px; }
+  .touch-btn { right: 18px; padding: 16px 20px; font-size: 0.9rem; }
+  .touch-btn.fire { bottom: 190px; }
+  .touch-btn.special { bottom: 120px; }
+}
+
 .touch-btn.active { display: block; pointer-events: auto; }
 
 .joystick {
