@@ -94,6 +94,21 @@ function create() {
     }
   }
 
+  // Map dressing
+  const decor = this.add.graphics();
+  decor.fillStyle(0x0a4a24, 0.4);
+  for (let i = 0; i < 12; i++) {
+    const x = 120 + Math.random() * 1360;
+    const y = 120 + Math.random() * 660;
+    decor.fillCircle(x, y, 14 + Math.random() * 10);
+  }
+  decor.fillStyle(0x1b6e3a, 0.55);
+  for (let i = 0; i < 10; i++) {
+    const x = 160 + Math.random() * 1280;
+    const y = 160 + Math.random() * 580;
+    decor.fillEllipse(x, y, 40 + Math.random() * 30, 16 + Math.random() * 12);
+  }
+
   zone = this.add.circle(800, 450, 110, 0x1f5b8f, 0.35).setStrokeStyle(2, 0x38a3ff);
   zoneText = this.add.text(800, 450, 'INFLUENCE', {
     fontFamily: 'Oswald',
