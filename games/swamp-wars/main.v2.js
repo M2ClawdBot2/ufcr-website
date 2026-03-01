@@ -9,10 +9,31 @@ const KENNEY_TERRAIN = buildTerrain();
 function buildTerrain() {
   const width = 30;
   const height = 17;
+  const water = 42;
   const grass = 1;
-  const flower = 58;
-  const grid = Array.from({ length: height }, () => Array.from({ length: width }, () => (Math.random() < 0.12 ? flower : grass)));
+  const grassAlt = 2;
+  const shore = 17;
+  const grid = Array.from({ length: height }, () => Array.from({ length: width }, () => water));
 
+  const cx = (width - 1) / 2;
+  const cy = (height - 1) / 2;
+  const rx = 13;
+  const ry = 7;
+
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const dx = (x - cx) / rx;
+      const dy = (y - cy) / ry;
+      const d = dx * dx + dy * dy;
+      if (d <= 1) {
+        if (d > 0.88) {
+          grid[y][x] = shore;
+        } else {
+          grid[y][x] = (x + y) % 7 === 0 ? grassAlt : grass;
+        }
+      }
+    }
+  }
 
   return grid;
 }
@@ -115,27 +136,23 @@ function create() {
   const decoLayer = decoMap.createBlankLayer('decor', decoTiles, mapOriginX, mapOriginY);
   decoLayer.setScale(tileScale);
 
-  // Rows of trees at obstacle rectangles
+  // Deterministic tree clusters to frame the island
   const treeTiles = [145, 146, 149, 150, 151];
-  const obstacleRects = [
-    { x: 520, y: 260, w: 120, h: 80 },
-    { x: 1080, y: 260, w: 120, h: 80 },
-    { x: 520, y: 640, w: 120, h: 80 },
-    { x: 1080, y: 640, w: 120, h: 80 },
-    { x: 800, y: 160, w: 220, h: 60 },
-    { x: 800, y: 740, w: 220, h: 60 },
-    { x: 320, y: 450, w: 90, h: 180 },
-    { x: 1280, y: 450, w: 90, h: 180 }
+  const treeClusters = [
+    { x: 4, y: 3, w: 3, h: 2 },
+    { x: 23, y: 3, w: 3, h: 2 },
+    { x: 4, y: 12, w: 3, h: 2 },
+    { x: 23, y: 12, w: 3, h: 2 },
+    { x: 13, y: 2, w: 4, h: 2 },
+    { x: 13, y: 13, w: 4, h: 2 },
+    { x: 2, y: 7, w: 2, h: 3 },
+    { x: 26, y: 7, w: 2, h: 3 }
   ];
 
-  obstacleRects.forEach((o) => {
-    const startX = Math.floor((o.x - o.w / 2 - mapOriginX) / (16 * tileScale));
-    const endX = Math.ceil((o.x + o.w / 2 - mapOriginX) / (16 * tileScale));
-    const startY = Math.floor((o.y - o.h / 2 - mapOriginY) / (16 * tileScale));
-    const endY = Math.ceil((o.y + o.h / 2 - mapOriginY) / (16 * tileScale));
-    for (let tx = startX; tx <= endX; tx++) {
-      for (let ty = startY; ty <= endY; ty++) {
-        const tile = treeTiles[Math.floor(Math.random() * treeTiles.length)];
+  treeClusters.forEach((cluster) => {
+    for (let tx = cluster.x; tx < cluster.x + cluster.w; tx++) {
+      for (let ty = cluster.y; ty < cluster.y + cluster.h; ty++) {
+        const tile = treeTiles[(tx + ty) % treeTiles.length];
         decoLayer.putTileAt(tile, tx, ty);
       }
     }
