@@ -9,29 +9,13 @@ const KENNEY_TERRAIN = buildTerrain();
 function buildTerrain() {
   const width = 30;
   const height = 17;
-  const water = 42;
   const grass = 1;
   const grassAlt = 2;
-  const shore = 17;
-  const grid = Array.from({ length: height }, () => Array.from({ length: width }, () => water));
-
-  const cx = (width - 1) / 2;
-  const cy = (height - 1) / 2;
-  const rx = 13;
-  const ry = 7;
+  const grid = Array.from({ length: height }, () => Array.from({ length: width }, () => grass));
 
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
-      const dx = (x - cx) / rx;
-      const dy = (y - cy) / ry;
-      const d = dx * dx + dy * dy;
-      if (d <= 1) {
-        if (d > 0.88) {
-          grid[y][x] = shore;
-        } else {
-          grid[y][x] = (x + y) % 7 === 0 ? grassAlt : grass;
-        }
-      }
+      grid[y][x] = (x + y) % 7 === 0 ? grassAlt : grass;
     }
   }
 
@@ -136,27 +120,7 @@ function create() {
   const decoLayer = decoMap.createBlankLayer('decor', decoTiles, mapOriginX, mapOriginY);
   decoLayer.setScale(tileScale);
 
-  // Deterministic tree clusters to frame the island
-  const treeTiles = [145, 146, 149, 150, 151];
-  const treeClusters = [
-    { x: 4, y: 3, w: 3, h: 2 },
-    { x: 23, y: 3, w: 3, h: 2 },
-    { x: 4, y: 12, w: 3, h: 2 },
-    { x: 23, y: 12, w: 3, h: 2 },
-    { x: 13, y: 2, w: 4, h: 2 },
-    { x: 13, y: 13, w: 4, h: 2 },
-    { x: 2, y: 7, w: 2, h: 3 },
-    { x: 26, y: 7, w: 2, h: 3 }
-  ];
-
-  treeClusters.forEach((cluster) => {
-    for (let tx = cluster.x; tx < cluster.x + cluster.w; tx++) {
-      for (let ty = cluster.y; ty < cluster.y + cluster.h; ty++) {
-        const tile = treeTiles[(tx + ty) % treeTiles.length];
-        decoLayer.putTileAt(tile, tx, ty);
-      }
-    }
-  });
+  // No decorative tiles (avoid red/shipwreck tiles)
 
   zone = this.add.circle(800, 450, 110, 0x1f5b8f, 0.35).setStrokeStyle(2, 0x38a3ff);
   zoneText = this.add.text(800, 450, 'INFLUENCE', {
