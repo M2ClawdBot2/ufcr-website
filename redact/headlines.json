@@ -583,5 +583,96 @@
     "source": "Breitbart",
     "context": "Two Detroit police officers were suspended after cooperating with Border Patrol agents, sparking outrage over sanctuary city policies.",
     "difficulty": "medium"
+  },
+  {
+    "id": 46,
+    "date": "2026-04-06",
+    "headline": "Justice Jackson authors unanimous SCOTUS opinion handing Trump an immigration win",
+    "redacted": [
+      "Jackson",
+      "SCOTUS",
+      "Immigration"
+    ],
+    "source": "Fox News",
+    "context": "The Supreme Court unanimously told appeals courts to defer to immigration judges in asylum reviews, giving the Trump administration a legal boost.",
+    "difficulty": "medium"
+  },
+  {
+    "id": 47,
+    "date": "2026-04-07",
+    "headline": "5 big immigration changes taking effect across the US",
+    "redacted": [
+      "Immigration",
+      "Changes",
+      "Visas"
+    ],
+    "source": "Fox News",
+    "context": "A rundown of new federal immigration rules highlighted sweeping changes to visas, travel, and citizenship procedures.",
+    "difficulty": "easy"
+  },
+  {
+    "id": 48,
+    "date": "2026-04-08",
+    "headline": "Judge Orders Trump Admin to Return Illegal Aliens Deported to El Salvador",
+    "redacted": [
+      "Judge",
+      "Return",
+      "ElSalvador"
+    ],
+    "source": "Breitbart",
+    "context": "A federal judge ordered the administration to facilitate the return of deported Venezuelan migrants sent to El Salvador.",
+    "difficulty": "medium"
+  },
+  {
+    "id": 49,
+    "date": "2026-04-09",
+    "headline": "Illegal Alien Lured Migrant Children to Idaho to Labor Traffic Them",
+    "redacted": [
+      "Migrant",
+      "Idaho",
+      "Traffic"
+    ],
+    "source": "Breitbart",
+    "context": "ICE announced charges against a Guatemalan national accused of luring unaccompanied minors to Idaho for labor trafficking.",
+    "difficulty": "hard"
+  },
+  {
+    "id": 50,
+    "date": "2026-04-10",
+    "headline": "Harvard president admits faculty activism chills speech on campus",
+    "redacted": [
+      "Harvard",
+      "Activism",
+      "Speech"
+    ],
+    "source": "Washington Examiner",
+    "context": "Harvard President Alan Garber said faculty activism has narrowed debate and chilled free expression on campus.",
+    "difficulty": "easy"
+  },
+  {
+    "id": 51,
+    "date": "2026-04-11",
+    "headline": "'Pure Bullsh*t': Macron Targets Free Speech In Push For More Control",
+    "redacted": [
+      "Macron",
+      "Speech",
+      "Control"
+    ],
+    "source": "Daily Caller",
+    "context": "Emmanuel Macron criticized unfettered speech while France pursues broader government regulation of online and offline expression.",
+    "difficulty": "medium"
+  },
+  {
+    "id": 52,
+    "date": "2026-04-12",
+    "headline": "Trump admin ramps up key border security move that is expected to run over 1,400 miles: 'Important tool'",
+    "redacted": [
+      "Border",
+      "Security",
+      "Miles"
+    ],
+    "source": "Fox News",
+    "context": "The administration awarded new contracts to expand the high-tech border barrier and surveillance system along the southern border.",
+    "difficulty": "medium"
   }
 ]

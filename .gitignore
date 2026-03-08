@@ -10,3 +10,9 @@ logs/
 *.log
 .DS_Store
 .vscode/
+
+# wrangler files
+.wrangler
+.dev.vars*
+!.dev.vars.example
+!.env.example
