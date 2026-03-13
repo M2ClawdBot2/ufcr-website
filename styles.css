@@ -855,8 +855,10 @@ a { text-decoration: none; color: inherit; }
 
 .featured-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 24px;
+  max-width: 1000px;
+  margin: 0 auto;
 }
 
 .featured-card {
@@ -907,8 +909,12 @@ a { text-decoration: none; color: inherit; }
   box-shadow: 0 8px 20px rgba(0,0,0,0.25);
 }
 
+@media (max-width: 1024px) {
+  .featured-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
 @media (max-width: 768px) {
-  .featured-grid { grid-template-columns: repeat(2, 1fr); }
+  .featured-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 /* ========== MINIGAMES ========== */
